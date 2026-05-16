@@ -1,0 +1,291 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Avancement</h1>
+
+  <div class="card">
+    <div class="container primTable">
+
+      <div class="flex justify-content-between align-items-center mb-3">
+        <h3>
+          <i class="pi pi-sort-amount-up-alt" style="font-size: 28px; margin-right: 6px;"></i>
+          Liste des avancements
+        </h3>
+        <p-button
+          label="Ajouter un avancement"
+          icon="pi pi-plus"
+          styleClass="p-button-success"
+          (onClick)="showAddAvancementDialog()">
+        </p-button>
+      </div>
+
+      <p-table
+        #dtAvancement
+        [value]="avancements"
+        [rows]="5"
+        [paginator]="true"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        [responsiveLayout]="'scroll'"
+        [globalFilterFields]="['agentMatricule','agentNom','agentPrenom','dateEffet','echelle','echelon','motif']"
+        [loading]="loading"
+      >
+
+        <ng-template pTemplate="caption">
+          <div class="flex align-items-center justify-content-between">
+            <p-button
+              label="Effacer"
+              [outlined]="true"
+              icon="pi pi-filter-slash"
+              (onClick)="clearAvancement(dtAvancement)">
+            </p-button>
+
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input
+                pInputText
+                type="text"
+                [(ngModel)]="searchAvancement"
+                (input)="dtAvancement.filterGlobal($any($event.target).value, 'contains')"
+                placeholder="Rechercher..."
+              />
+            </span>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th><p-columnFilter field="agentMatricule" type="text" display="menu" />Matricule</th>
+            <th><p-columnFilter field="dateEffet" type="date" display="menu" />Date d'effet</th>
+            <th><p-columnFilter field="echelle" type="text" display="menu" />Echelle</th>
+            <th><p-columnFilter field="echelon" type="text" display="menu" />Echelon</th>
+            <th><p-columnFilter field="motif" type="text" display="menu" />Motif</th>
+            <th>Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td><strong>{{ item.agentMatricule }}</strong></td>
+            <td>{{ item.dateEffet | date:'dd/MM/yyyy' }}</td>
+            <td>{{ item.echelle }}</td>
+            <td>{{ item.echelon }}</td>
+            <td>{{ item.motif }}</td>
+            <td class="actions-cell">
+              <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" pTooltip="Visualiser" (click)="onViewAvancement(item)"></button>
+              <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Modifier" (click)="onEditAvancement(item)"></button>
+              <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" pTooltip="Supprimer" (click)="onDeleteAvancement(item)"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="6" class="text-center">Aucun avancement trouvé.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" header="Détails d'avancement" [(visible)]="displayDialogAvancement" [modal]="true" [style]="{ width: '450px' }">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="selectedAvancement">
+    <div class="w-full"><p-floatLabel><input pInputText id="v_mat" [ngModel]="selectedAvancement.agentMatricule + ' - ' + selectedAvancement.agentNom + ' ' + selectedAvancement.agentPrenom" [disabled]="true" /><label for="v_mat">Agent</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><p-datepicker id="v_de" [ngModel]="selectedAvancement.dateEffet" [disabled]="true" dateFormat="dd/mm/yy" appendTo="body"></p-datepicker><label for="v_de">Date d'effet</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><input pInputText id="v_echelle" [ngModel]="selectedAvancement.echelle" [disabled]="true" /><label for="v_echelle">Echelle</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><input pInputText id="v_echelon" [ngModel]="selectedAvancement.echelon" [disabled]="true" /><label for="v_echelon">Echelon</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><textarea pInputTextarea id="v_motif" [ngModel]="selectedAvancement.motif" rows="3" [disabled]="true" class="w-full"></textarea><label for="v_motif">Motif</label></p-floatLabel></div>
+  </div>
+  
+  <ng-template pTemplate="footer"><p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialogAvancement=false"></p-button></ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" header="Ajouter un avancement" [(visible)]="displayAddAvancement" [modal]="true" [style]="{ width: '550px' }">
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select [options]="agents" [(ngModel)]="newAvancement.agentId" optionLabel="matricule" optionValue="id" [filter]="true" filterBy="matricule,nom,prenom"
+                  id="matricule" name="matricule" #matricule="ngModel" required
+                  appendTo="body" styleClass="shared-field-dropdown w-full"
+                  [class.ng-dirty]="matricule.invalid && matricule.touched">
+          <ng-template let-agent pTemplate="item">
+            <span>{{ agent.matricule }} - {{ agent.nom }} {{ agent.prenom }}</span>
+          </ng-template>
+        </p-select>
+        <label for="matricule">Agent <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="matricule.invalid && matricule.touched">L'agent est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateEffet" name="dateEffet" [(ngModel)]="newAvancement.dateEffet" #dateEffet="ngModel" required
+                      dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"
+                      [class.ng-dirty]="dateEffet.invalid && dateEffet.touched"></p-datepicker>
+        <label for="dateEffet">Date d'effet <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateEffet.invalid && dateEffet.touched">La date d'effet est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="echelle" name="echelle" [(ngModel)]="newAvancement.echelle" #echelle="ngModel" required
+               [class.ng-dirty]="echelle.invalid && echelle.touched" />
+        <label for="echelle">Echelle <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="echelle.invalid && echelle.touched">L'échelle est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="echelon" name="echelon" [(ngModel)]="newAvancement.echelon" #echelon="ngModel" required
+               [class.ng-dirty]="echelon.invalid && echelon.touched" />
+        <label for="echelon">Echelon <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="echelon.invalid && echelon.touched">L'échelon est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="motif" name="motif" rows="2" [(ngModel)]="newAvancement.motif" class="w-full"></textarea>
+        <label for="motif">Motif</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="indemResidence" name="indemResidence" [(ngModel)]="newAvancement.indemResidence" #indemResidence="ngModel" required
+               [class.ng-dirty]="indemResidence.invalid && indemResidence.touched" />
+        <label for="indemResidence">Indemnité résidence <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="indemResidence.invalid && indemResidence.touched">L'indemnité de résidence est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="indemSujestion" name="indemSujestion" [(ngModel)]="newAvancement.indemSujestion" #indemSujestion="ngModel" required
+               [class.ng-dirty]="indemSujestion.invalid && indemSujestion.touched" />
+        <label for="indemSujestion">Indemnité sujétion <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="indemSujestion.invalid && indemSujestion.touched">L'indemnité de sujétion est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="indemTechnicite" name="indemTechnicite" [(ngModel)]="newAvancement.indemTechnicite" #indemTechnicite="ngModel" required
+               [class.ng-dirty]="indemTechnicite.invalid && indemTechnicite.touched" />
+        <label for="indemTechnicite">Indemnité technicité <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="indemTechnicite.invalid && indemTechnicite.touched">L'indemnité de technicité est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="indemEncadrement" name="indemEncadrement" [(ngModel)]="newAvancement.indemEncadrement" #indemEncadrement="ngModel" required
+               [class.ng-dirty]="indemEncadrement.invalid && indemEncadrement.touched" />
+        <label for="indemEncadrement">Indemnité encadrement <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="indemEncadrement.invalid && indemEncadrement.touched">L'indemnité d'encadrement est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="allocAdmin" name="allocAdmin" [(ngModel)]="newAvancement.allocAdmin" #allocAdmin="ngModel" required
+               [class.ng-dirty]="allocAdmin.invalid && allocAdmin.touched" />
+        <label for="allocAdmin">Allocation admin <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="allocAdmin.invalid && allocAdmin.touched">L'allocation administrative est obligatoire.</small>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Ajouter" icon="pi pi-check" severity="success" (onClick)="createAvancement()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayAddAvancement=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" header="Modifier un avancement" [(visible)]="displayEditAvancement" [modal]="true" [style]="{ width: '550px' }">
+  <form #editForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="editAvancement">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select [options]="agents" [(ngModel)]="editAvancement.agentId" optionLabel="matricule" optionValue="id" [filter]="true" filterBy="matricule,nom,prenom"
+                  id="e_matricule" name="matricule" #e_matricule="ngModel" required
+                  appendTo="body" styleClass="shared-field-dropdown w-full"
+                  [class.ng-dirty]="e_matricule.invalid && e_matricule.touched">
+          <ng-template let-agent pTemplate="item">
+            <span>{{ agent.matricule }} - {{ agent.nom }} {{ agent.prenom }}</span>
+          </ng-template>
+        </p-select>
+        <label for="e_matricule">Agent <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_matricule.invalid && e_matricule.touched">L'agent est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="e_dateEffet" name="dateEffet" [(ngModel)]="editAvancement.dateEffet" #e_dateEffet="ngModel" required
+                      dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"
+                      [class.ng-dirty]="e_dateEffet.invalid && e_dateEffet.touched"></p-datepicker>
+        <label for="e_dateEffet">Date d'effet <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_dateEffet.invalid && e_dateEffet.touched">La date d'effet est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="e_echelle" name="echelle" [(ngModel)]="editAvancement.echelle" #e_echelle="ngModel" required
+               [class.ng-dirty]="e_echelle.invalid && e_echelle.touched" />
+        <label for="e_echelle">Echelle <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_echelle.invalid && e_echelle.touched">L'échelle est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="e_echelon" name="echelon" [(ngModel)]="editAvancement.echelon" #e_echelon="ngModel" required
+               [class.ng-dirty]="e_echelon.invalid && e_echelon.touched" />
+        <label for="e_echelon">Echelon <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_echelon.invalid && e_echelon.touched">L'échelon est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="e_motif" name="motif" rows="2" [(ngModel)]="editAvancement.motif" class="w-full"></textarea>
+        <label for="e_motif">Motif</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="e_indemResidence" name="indemResidence" [(ngModel)]="editAvancement.indemResidence" #e_indemResidence="ngModel" required
+               [class.ng-dirty]="e_indemResidence.invalid && e_indemResidence.touched" />
+        <label for="e_indemResidence">Indemnité résidence <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_indemResidence.invalid && e_indemResidence.touched">L'indemnité de résidence est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="e_indemSujestion" name="indemSujestion" [(ngModel)]="editAvancement.indemSujestion" #e_indemSujestion="ngModel" required
+               [class.ng-dirty]="e_indemSujestion.invalid && e_indemSujestion.touched" />
+        <label for="e_indemSujestion">Indemnité sujétion <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_indemSujestion.invalid && e_indemSujestion.touched">L'indemnité de sujétion est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="e_indemTechnicite" name="indemTechnicite" [(ngModel)]="editAvancement.indemTechnicite" #e_indemTechnicite="ngModel" required
+               [class.ng-dirty]="e_indemTechnicite.invalid && e_indemTechnicite.touched" />
+        <label for="e_indemTechnicite">Indemnité technicité <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_indemTechnicite.invalid && e_indemTechnicite.touched">L'indemnité de technicité est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="e_indemEncadrement" name="indemEncadrement" [(ngModel)]="editAvancement.indemEncadrement" #e_indemEncadrement="ngModel" required
+               [class.ng-dirty]="e_indemEncadrement.invalid && e_indemEncadrement.touched" />
+        <label for="e_indemEncadrement">Indemnité encadrement <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_indemEncadrement.invalid && e_indemEncadrement.touched">L'indemnité d'encadrement est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="e_allocAdmin" name="allocAdmin" [(ngModel)]="editAvancement.allocAdmin" #e_allocAdmin="ngModel" required
+               [class.ng-dirty]="e_allocAdmin.invalid && e_allocAdmin.touched" />
+        <label for="e_allocAdmin">Allocation admin <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_allocAdmin.invalid && e_allocAdmin.touched">L'allocation administrative est obligatoire.</small>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Modifier" icon="pi pi-check" severity="success" (onClick)="updateAvancement()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayEditAvancement=false"></p-button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,268 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Services Antérieurs</h1>
+
+  <div class="card">
+    <div class="container primTable">
+
+      <div class="flex justify-content-between align-items-center mb-3">
+        <h3>
+          <i class="pi pi-history" style="font-size: 28px; margin-right: 6px;"></i>
+          Liste des services antérieurs
+        </h3>
+        <p-button
+          label="Ajouter un service antérieur"
+          icon="pi pi-plus"
+          styleClass="p-button-success"
+          (onClick)="showAddServiceDialog()"
+        ></p-button>
+      </div>
+
+      <p-table
+        #dtServices
+        [value]="services"
+        [rows]="5"
+        [paginator]="true"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        [responsiveLayout]="'scroll'"
+        [globalFilterFields]="['agentMatricule','agentNom','agentPrenom','dateDebut','finValidite','localite','activite','typeContrat','grade']"
+        [loading]="loading"
+      >
+
+        <ng-template pTemplate="caption">
+          <div class="flex align-items-center justify-content-between">
+            <p-button
+              label="Effacer"
+              [outlined]="true"
+              icon="pi pi-filter-slash"
+              (onClick)="clearServices(dtServices)"
+            ></p-button>
+
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input
+                pInputText
+                type="text"
+                [(ngModel)]="searchService"
+                (input)="dtServices.filterGlobal($any($event.target).value, 'contains')"
+                placeholder="Rechercher..."
+              />
+            </span>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th><p-columnFilter field="agentMatricule" type="text" display="menu" />Matricule</th>
+            <th><p-columnFilter field="dateDebut" type="date" display="menu" />Date début</th>
+            <th><p-columnFilter field="finValidite" type="date" display="menu" />Fin validité</th>
+            <th><p-columnFilter field="localite" type="text" display="menu" />Localité</th>
+            <th><p-columnFilter field="activite" type="text" display="menu" />Activité</th>
+            <th><p-columnFilter field="typeContrat" type="text" display="menu" />Type contrat</th>
+            <th>Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td><strong>{{ item.agentMatricule }}</strong></td>
+            <td>{{ item.dateDebut | date:'dd/MM/yyyy' }}</td>
+            <td>{{ item.finValidite | date:'dd/MM/yyyy' }}</td>
+            <td>{{ item.localite }}</td>
+            <td>{{ item.activite }}</td>
+            <td>{{ item.typeContrat }}</td>
+            <td class="actions-cell">
+              <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" pTooltip="Visualiser" (click)="onViewService(item)"></button>
+              <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Modifier" (click)="onEditService(item)"></button>
+              <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" pTooltip="Supprimer" (click)="onDeleteService(item)"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="7" class="text-center">Aucun service trouvé.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" header="Détails du service" [(visible)]="displayDialogService" [modal]="true" [style]="{ width: '450px' }">
+  <ng-container *ngIf="selectedService">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full"><p-floatLabel><input pInputText id="v_mat" [ngModel]="selectedService.agentMatricule + ' - ' + selectedService.agentNom + ' ' + selectedService.agentPrenom" [disabled]="true" /><label for="v_mat">Agent</label></p-floatLabel></div>
+      <div class="w-full"><p-floatLabel><p-datepicker id="v_dd" [ngModel]="selectedService.dateDebut" [disabled]="true" dateFormat="dd/mm/yy" appendTo="body"></p-datepicker><label for="v_dd">Date début</label></p-floatLabel></div>
+      <div class="w-full"><p-floatLabel><p-datepicker id="v_fv" [ngModel]="selectedService.finValidite" [disabled]="true" dateFormat="dd/mm/yy" appendTo="body"></p-datepicker><label for="v_fv">Fin validité</label></p-floatLabel></div>
+      <div class="w-full"><p-floatLabel><input pInputText id="v_loc" [ngModel]="selectedService.localite" [disabled]="true" /><label for="v_loc">Localité</label></p-floatLabel></div>
+      <div class="w-full"><p-floatLabel><input pInputText id="v_act" [ngModel]="selectedService.activite" [disabled]="true" /><label for="v_act">Activité</label></p-floatLabel></div>
+      <div class="w-full"><p-floatLabel><input pInputText id="v_tc" [ngModel]="selectedService.typeContrat" [disabled]="true" /><label for="v_tc">Type contrat</label></p-floatLabel></div>
+    </div>
+  </ng-container>
+  
+  <ng-template pTemplate="footer"><p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialogService=false"></p-button></ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" header="Ajouter un service antérieur" [(visible)]="displayAddService" [modal]="true" [style]="{ width: '550px' }">
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select [options]="agents" [(ngModel)]="newService.agentId" optionLabel="matricule" optionValue="id" [filter]="true" filterBy="matricule,nom,prenom"
+                  id="matricule" name="matricule" #matricule="ngModel" required
+                  appendTo="body" styleClass="shared-field-dropdown w-full"
+                  [class.ng-dirty]="matricule.invalid && matricule.touched">
+          <ng-template let-agent pTemplate="item">
+            <span>{{ agent.matricule }} - {{ agent.nom }} {{ agent.prenom }}</span>
+          </ng-template>
+        </p-select>
+        <label for="matricule">Agent <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="matricule.invalid && matricule.touched">L'agent est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateDebut" name="dateDebut" [(ngModel)]="newService.dateDebut" #dateDebut="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="dateDebut.invalid && dateDebut.touched"></p-datepicker>
+        <label for="dateDebut">Date début <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateDebut.invalid && dateDebut.touched">La date de début est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="finValidite" name="finValidite" [(ngModel)]="newService.finValidite" #finValidite="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="finValidite.invalid && finValidite.touched"></p-datepicker>
+        <label for="finValidite">Fin validité <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="finValidite.invalid && finValidite.touched">La fin de validité est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="localite" name="localite" [(ngModel)]="newService.localite" #localite="ngModel" required
+               [class.ng-dirty]="localite.invalid && localite.touched" />
+        <label for="localite">Localité <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="localite.invalid && localite.touched">La localité est obligatoire.</small>
+    </div>
+    
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="activite" name="activite" [options]="activiteList" [(ngModel)]="newService.activite" #activite="ngModel" required
+                    optionLabel="label" optionValue="value" appendTo="body"
+                    [styleClass]="newService.activite ? 'p-filled w-full shared-field-dropdown' : 'w-full shared-field-dropdown'"
+                    [class.ng-dirty]="activite.invalid && activite.touched"></p-dropdown>
+        <label for="activite">Activité <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="activite.invalid && activite.touched">L'activité est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="typeContrat" name="typeContrat" [options]="typeContratList" [(ngModel)]="newService.typeContrat" #typeContrat="ngModel" required
+                    optionLabel="label" optionValue="value" appendTo="body"
+                    [styleClass]="newService.typeContrat ? 'p-filled w-full shared-field-dropdown' : 'w-full shared-field-dropdown'"
+                    [class.ng-dirty]="typeContrat.invalid && typeContrat.touched"></p-dropdown>
+        <label for="typeContrat">Type contrat <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="typeContrat.invalid && typeContrat.touched">Le type de contrat est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="grade" name="grade" [(ngModel)]="newService.grade" #grade="ngModel" required
+               [class.ng-dirty]="grade.invalid && grade.touched" />
+        <label for="grade">Grade <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="grade.invalid && grade.touched">Le grade est obligatoire.</small>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Ajouter" icon="pi pi-check" severity="success" (onClick)="addService()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayAddService=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" header="Modifier un service antérieur" [(visible)]="displayEditService" [modal]="true" [style]="{ width: '550px' }">
+  <form #editForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="editService">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select [options]="agents" [(ngModel)]="editService.agentId" optionLabel="matricule" optionValue="id" [filter]="true" filterBy="matricule,nom,prenom"
+                  id="e_matricule" name="matricule" #e_matricule="ngModel" required
+                  appendTo="body" styleClass="shared-field-dropdown w-full"
+                  [class.ng-dirty]="e_matricule.invalid && e_matricule.touched">
+          <ng-template let-agent pTemplate="item">
+            <span>{{ agent.matricule }} - {{ agent.nom }} {{ agent.prenom }}</span>
+          </ng-template>
+        </p-select>
+        <label for="e_matricule">Agent <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_matricule.invalid && e_matricule.touched">L'agent est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="e_dateDebut" name="dateDebut" [(ngModel)]="editService.dateDebut" #e_dateDebut="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="e_dateDebut.invalid && e_dateDebut.touched"></p-datepicker>
+        <label for="e_dateDebut">Date début <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_dateDebut.invalid && e_dateDebut.touched">La date de début est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="e_finValidite" name="finValidite" [(ngModel)]="editService.finValidite" #e_finValidite="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="e_finValidite.invalid && e_finValidite.touched"></p-datepicker>
+        <label for="e_finValidite">Fin validité <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_finValidite.invalid && e_finValidite.touched">La fin de validité est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="e_localite" name="localite" [(ngModel)]="editService.localite" #e_localite="ngModel" required
+               [class.ng-dirty]="e_localite.invalid && e_localite.touched" />
+        <label for="e_localite">Localité <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_localite.invalid && e_localite.touched">La localité est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="e_activite" name="activite" [options]="activiteList" [(ngModel)]="editService.activite" #e_activite="ngModel" required
+                    optionLabel="label" optionValue="value" appendTo="body"
+                    [styleClass]="editService.activite ? 'p-filled w-full shared-field-dropdown' : 'w-full shared-field-dropdown'"
+                    [class.ng-dirty]="e_activite.invalid && (e_activite.dirty || e_activite.touched)"></p-dropdown>
+        <label for="e_activite">Activité <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_activite.invalid && (e_activite.dirty || e_activite.touched)">L'activité est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="e_typeContrat" name="typeContrat" [options]="typeContratList" [(ngModel)]="editService.typeContrat" #e_typeContrat="ngModel" required
+                    optionLabel="label" optionValue="value" appendTo="body"
+                    [styleClass]="editService.typeContrat ? 'p-filled w-full shared-field-dropdown' : 'w-full shared-field-dropdown'"
+                    [class.ng-dirty]="e_typeContrat.invalid && (e_typeContrat.dirty || e_typeContrat.touched)"></p-dropdown>
+        <label for="e_typeContrat">Type contrat <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_typeContrat.invalid && (e_typeContrat.dirty || e_typeContrat.touched)">Le type de contrat est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="e_grade" name="grade" [(ngModel)]="editService.grade" #e_grade="ngModel" required
+               [class.ng-dirty]="e_grade.invalid && e_grade.touched" />
+        <label for="e_grade">Grade <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_grade.invalid && e_grade.touched">Le grade est obligatoire.</small>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Modifier" icon="pi pi-check" severity="success" (onClick)="updateService()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayEditService=false"></p-button>
+  </ng-template>
+</p-dialog>

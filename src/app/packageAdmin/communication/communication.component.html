@@ -1,0 +1,267 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Données de Communication</h1>
+
+  <div class="card">
+    <div class="container primTable">
+
+      <div class="flex justify-content-between align-items-center mb-3">
+        <h3>
+          <i class="pi pi-phone" style="font-size: 28px; margin-right: 6px;"></i>
+          Liste des communications
+        </h3>
+        <p-button
+          label="Ajouter une communication"
+          icon="pi pi-plus"
+          styleClass="p-button-success"
+          (onClick)="showAddComDialog()"
+        ></p-button>
+      </div>
+
+      <p-table
+        #dtCom
+        [value]="communications"
+        dataKey="id"
+        [rows]="5"
+        [paginator]="true"
+        [rowsPerPageOptions]="[5,10,20]"
+        [responsiveLayout]="'scroll'"
+        [loading]="loading"
+        [globalFilterFields]="['agentMatricule','agentNom','agentPrenom','email','telephoneDomicile','fax','gsm']"
+      >
+
+        <ng-template pTemplate="caption">
+          <div class="flex align-items-center justify-content-between">
+            <p-button
+              label="Effacer"
+              [outlined]="true"
+              icon="pi pi-filter-slash"
+              (onClick)="clearCom(dtCom)"
+            ></p-button>
+
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input
+                pInputText
+                type="text"
+                [(ngModel)]="searchCom"
+                (input)="dtCom.filterGlobal($any($event.target).value, 'contains')"
+                placeholder="Rechercher..."
+              />
+            </span>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th><p-columnFilter field="agentMatricule" type="text" display="menu" />Matricule</th>
+            <th><p-columnFilter field="email" type="text" display="menu" />E-mail</th>
+            <th><p-columnFilter field="telephoneDomicile" type="text" display="menu" />Téléphone</th>
+            <th><p-columnFilter field="fax" type="text" display="menu" />Fax</th>
+            <th><p-columnFilter field="gsm" type="text" display="menu" />GSM</th>
+            <th>Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td><strong>{{ item.agentMatricule }}</strong></td>
+            <td>{{ item.email }}</td>
+            <td>{{ item.telephoneDomicile }}</td>
+            <td>{{ item.fax }}</td>
+            <td>{{ item.gsm }}</td>
+            <td class="actions-cell">
+              <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" pTooltip="Visualiser" (click)="onViewCom(item)"></button>
+              <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Modifier" (click)="onEditCom(item)"></button>
+              <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" pTooltip="Supprimer" (click)="deleteCom(item)"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="6" class="text-center">Aucune donnée trouvée.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================================
+     View dialog — single column, no form
+     ===================================================================== -->
+<p-dialog
+  styleClass="pdialogfon"
+  header="Détails"
+  [(visible)]="displayDialogCom"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '480px' }"
+>
+  <div class="p-fluid" *ngIf="selectedCom">
+    <p-floatLabel><input pInputText id="v_mat"  [ngModel]="selectedCom.agentMatricule + ' - ' + selectedCom.agentNom + ' ' + selectedCom.agentPrenom"         [disabled]="true" /><label for="v_mat">Agent</label></p-floatLabel>
+    <p-floatLabel><input pInputText id="v_rec"  [ngModel]="selectedCom.dateRecrutement"   [disabled]="true" /><label for="v_rec">Date recrutement</label></p-floatLabel>
+    <p-floatLabel><input pInputText id="v_mail" [ngModel]="selectedCom.email"             [disabled]="true" /><label for="v_mail">E-mail</label></p-floatLabel>
+    <p-floatLabel><input pInputText id="v_tel"  [ngModel]="selectedCom.telephoneDomicile" [disabled]="true" /><label for="v_tel">Téléphone</label></p-floatLabel>
+    <p-floatLabel><input pInputText id="v_fax"  [ngModel]="selectedCom.fax"               [disabled]="true" /><label for="v_fax">Fax</label></p-floatLabel>
+    <p-floatLabel><input pInputText id="v_gsm"  [ngModel]="selectedCom.gsm"               [disabled]="true" /><label for="v_gsm">GSM</label></p-floatLabel>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialogCom=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+
+<!-- =====================================================================
+     Add dialog — 2-column layout (opt-in via pdialogfon--two-col)
+     ===================================================================== -->
+<p-dialog
+  styleClass="pdialogfon pdialogfon--two-col"
+  header="Ajouter une communication"
+  [(visible)]="displayAddCom"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '780px' }"
+>
+  <form #addForm="ngForm">
+    <div class="p-fluid">
+      <div>
+        <p-floatLabel>
+          <p-select [options]="agents" [(ngModel)]="newCom.agentId" optionLabel="matricule" optionValue="id" [filter]="true" filterBy="matricule,nom,prenom"
+                      id="matricule" name="matricule" #matricule="ngModel" required
+                      appendTo="body" styleClass="shared-field-dropdown w-full"
+                      [class.ng-dirty]="matricule.invalid && matricule.touched">
+            <ng-template let-agent pTemplate="item">
+              <span>{{ agent.matricule }} - {{ agent.nom }} {{ agent.prenom }}</span>
+            </ng-template>
+          </p-select>          <label for="matricule">Agent <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="matricule.invalid && matricule.touched">L'agent est obligatoire.</small>
+      </div>
+      <div>
+        <p-floatLabel>
+          <p-datepicker id="dateRecrutement" name="dateRecrutement" [(ngModel)]="newCom.dateRecrutement" #dateRecrutement="ngModel" required
+                        dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"
+                        [class.ng-dirty]="dateRecrutement.invalid && dateRecrutement.touched"></p-datepicker>
+          <label for="dateRecrutement">Date de recrutement <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="dateRecrutement.invalid && dateRecrutement.touched">La date de recrutement est obligatoire.</small>
+      </div>
+      <div>
+        <p-floatLabel>
+          <input pInputText id="email" name="email" type="email" [(ngModel)]="newCom.email" #email="ngModel" required
+                 [class.ng-dirty]="email.invalid && email.touched">
+          <label for="email">E-mail <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="email.invalid && email.touched">L'e-mail est obligatoire.</small>
+      </div>
+      <div>
+        <p-floatLabel>
+          <input pInputText id="gsm" name="gsm" [(ngModel)]="newCom.gsm" #gsm="ngModel" required
+                 [class.ng-dirty]="gsm.invalid && gsm.touched">
+          <label for="gsm">GSM <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="gsm.invalid && gsm.touched">Le GSM est obligatoire.</small>
+      </div>
+      <div>
+        <p-floatLabel>
+          <input pInputText id="telephoneDomicile" name="telephoneDomicile" [(ngModel)]="newCom.telephoneDomicile" #telephoneDomicile="ngModel" required
+                 [class.ng-dirty]="telephoneDomicile.invalid && telephoneDomicile.touched">
+          <label for="telephoneDomicile">Téléphone domicile <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="telephoneDomicile.invalid && telephoneDomicile.touched">Le téléphone est obligatoire.</small>
+      </div>
+      <div>
+        <p-floatLabel>
+          <input pInputText id="fax" name="fax" [(ngModel)]="newCom.fax" #fax="ngModel" required
+                 [class.ng-dirty]="fax.invalid && fax.touched">
+          <label for="fax">Fax <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="fax.invalid && fax.touched">Le fax est obligatoire.</small>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayAddCom=false"></p-button>
+    <p-button label="Ajouter" icon="pi pi-check" severity="success" (onClick)="addCom()"></p-button>
+  </ng-template>
+</p-dialog>
+
+
+<!-- =====================================================================
+     Edit dialog — 2-column layout
+     ===================================================================== -->
+<p-dialog
+  styleClass="pdialogfon pdialogfon--two-col"
+  header="Modifier une communication"
+  [(visible)]="displayEditCom"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{ width: '780px' }"
+>
+  <form #editForm="ngForm">
+    <div class="p-fluid" *ngIf="editCom">
+      <div>
+        <p-floatLabel>
+          <p-select [options]="agents" [(ngModel)]="editCom.agentId" optionLabel="matricule" optionValue="id" [filter]="true" filterBy="matricule,nom,prenom"
+                      id="e_matricule" name="matricule" #e_matricule="ngModel" required
+                      appendTo="body" styleClass="shared-field-dropdown w-full"
+                      [class.ng-dirty]="e_matricule.invalid && e_matricule.touched">
+            <ng-template let-agent pTemplate="item">
+              <span>{{ agent.matricule }} - {{ agent.nom }} {{ agent.prenom }}</span>
+            </ng-template>
+          </p-select>          <label for="e_matricule">Agent <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="e_matricule.invalid && e_matricule.touched">L'agent est obligatoire.</small>
+      </div>
+      <div>
+        <p-floatLabel>
+          <p-datepicker id="e_dateRecrutement" name="dateRecrutement" [(ngModel)]="editCom.dateRecrutement" #e_dateRecrutement="ngModel" required
+                        dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"
+                        [class.ng-dirty]="e_dateRecrutement.invalid && e_dateRecrutement.touched"></p-datepicker>
+          <label for="e_dateRecrutement">Date de recrutement <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="e_dateRecrutement.invalid && e_dateRecrutement.touched">La date de recrutement est obligatoire.</small>
+      </div>
+      <div>
+        <p-floatLabel>
+          <input pInputText id="e_email" name="email" type="email" [(ngModel)]="editCom.email" #e_email="ngModel" required
+                 [class.ng-dirty]="e_email.invalid && e_email.touched">
+          <label for="e_email">E-mail <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="e_email.invalid && e_email.touched">L'e-mail est obligatoire.</small>
+      </div>
+      <div>
+        <p-floatLabel>
+          <input pInputText id="e_gsm" name="gsm" [(ngModel)]="editCom.gsm" #e_gsm="ngModel" required
+                 [class.ng-dirty]="e_gsm.invalid && e_gsm.touched">
+          <label for="e_gsm">GSM <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="e_gsm.invalid && e_gsm.touched">Le GSM est obligatoire.</small>
+      </div>
+      <div>
+        <p-floatLabel>
+          <input pInputText id="e_telephoneDomicile" name="telephoneDomicile" [(ngModel)]="editCom.telephoneDomicile" #e_telephoneDomicile="ngModel" required
+                 [class.ng-dirty]="e_telephoneDomicile.invalid && e_telephoneDomicile.touched">
+          <label for="e_telephoneDomicile">Téléphone domicile <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="e_telephoneDomicile.invalid && e_telephoneDomicile.touched">Le téléphone est obligatoire.</small>
+      </div>
+      <div>
+        <p-floatLabel>
+          <input pInputText id="e_fax" name="fax" [(ngModel)]="editCom.fax" #e_fax="ngModel" required
+                 [class.ng-dirty]="e_fax.invalid && e_fax.touched">
+          <label for="e_fax">Fax <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="e_fax.invalid && e_fax.touched">Le fax est obligatoire.</small>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler"  icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayEditCom=false"></p-button>
+    <p-button label="Modifier" icon="pi pi-check" severity="success" (onClick)="updateCom()"></p-button>
+  </ng-template>
+</p-dialog>

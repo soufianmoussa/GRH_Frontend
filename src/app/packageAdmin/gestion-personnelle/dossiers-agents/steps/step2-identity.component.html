@@ -1,0 +1,52 @@
+<div class="step-container" *ngIf="state.draft() as d">
+  <div class="step-header">
+    <h3>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP2.TITLE' | translate }}</h3>
+    <p>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP2.SUBTITLE' | translate }}</p>
+  </div>
+
+  <div class="step-form grid">
+    <div class="field col-12 md:col-6">
+      <label for="nom">{{ 'GESTION_PERSONNELLE.GLOBAL.NOM' | translate }} <span class="required">*</span></label>
+      <input pInputText id="nom" [(ngModel)]="d.nom" [disabled]="state.mode() === 'view'" class="w-full" />
+    </div>
+
+    <div class="field col-12 md:col-6">
+      <label for="prenom">{{ 'GESTION_PERSONNELLE.GLOBAL.PRENOM' | translate }} <span class="required">*</span></label>
+      <input pInputText id="prenom" [(ngModel)]="d.prenom" [disabled]="state.mode() === 'view'" class="w-full" />
+    </div>
+
+    <div class="field col-12 md:col-6">
+      <label for="cin">{{ 'GESTION_PERSONNELLE.GLOBAL.CIN' | translate }} <span class="required">*</span></label>
+      <input pInputText id="cin" [(ngModel)]="d.cin" [disabled]="state.mode() === 'view'" class="w-full" />
+    </div>
+
+    <div class="field col-12 md:col-6">
+      <label for="sexe">{{ 'GESTION_PERSONNELLE.GLOBAL.SEXE' | translate }} <span class="required">*</span></label>
+      <p-select id="sexe" [options]="sexeOptions" [(ngModel)]="d.sexe" [disabled]="state.mode() === 'view'"
+                optionLabel="label" optionValue="value" appendTo="body" styleClass="w-full"></p-select>
+    </div>
+
+    <div class="field col-12 md:col-6">
+      <label for="dateNaissance">{{ 'GESTION_PERSONNELLE.GLOBAL.DATE_NAISSANCE' | translate }} <span class="required">*</span></label>
+      <p-datepicker id="dateNaissance" [(ngModel)]="d.dateNaissance" [disabled]="state.mode() === 'view'"
+                    dateFormat="dd/mm/yy" appendTo="body" styleClass="w-full"></p-datepicker>
+    </div>
+
+    <div class="field col-12 md:col-6">
+      <label for="nomTuteurAr">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP2.LBL_NOM_AR' | translate }}</label>
+      <input pInputText id="nomTuteurAr" [(ngModel)]="d.nomTuteurAr" [disabled]="state.mode() === 'view'"
+             dir="rtl" class="w-full" />
+    </div>
+
+    <div class="field col-12 md:col-6">
+      <label for="prenomTuteurAr">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP2.LBL_PRENOM_AR' | translate }}</label>
+      <input pInputText id="prenomTuteurAr" [(ngModel)]="d.prenomTuteurAr" [disabled]="state.mode() === 'view'"
+             dir="rtl" class="w-full" />
+    </div>
+
+    <div class="field col-12 md:col-6">
+      <label for="pprTuteur">{{ 'GESTION_PERSONNELLE.GLOBAL.PPR' | translate }} {{ 'GESTION_PERSONNELLE.AGENT_DETAIL.SUPERIEUR' | translate }}</label>
+      <input pInputText id="pprTuteur" [(ngModel)]="d.pprTuteur" [disabled]="state.mode() === 'view'" class="w-full" />
+    </div>
+  </div>
+</div>

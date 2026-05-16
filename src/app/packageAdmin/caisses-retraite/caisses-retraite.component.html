@@ -1,0 +1,173 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">{{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.TITLE' | translate }}</h1>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">{{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.HEADER_LIST' | translate }}</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-building" style="font-size: 28px; margin-right: 6px;"></i>
+                {{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.HEADER_LIST' | translate }}
+              </h3>
+              <p-button
+                [label]="'PACKAGE_ADMIN.CAISSES_RETRAITE.ADD_BTN' | translate"
+                icon="pi pi-plus"
+                styleClass="p-button-success"
+                (onClick)="showAddDialog()"
+              ></p-button>
+            </div>
+
+            <p-table
+              #dt
+              [value]="caisses"
+              dataKey="id"
+              [rows]="5"
+              [paginator]="true"
+              [rowsPerPageOptions]="[5, 10, 20]"
+              [responsiveLayout]="'scroll'"
+              [globalFilterFields]="['matricule', 'dateAffiliation', 'caisseCotisation', 'numeroAssurance']"
+            >
+              <ng-template pTemplate="caption">
+                <div class="flex">
+                  <p-button [label]="'GLOBAL.EFFACER' | translate" icon="pi pi-filter-slash" [outlined]="true" (onClick)="clearTable(dt)" />
+                  <span class="p-input-icon-left ml-auto">
+                    <i class="pi pi-search"></i>
+                    <input
+                      pInputText
+                      type="text"
+                      [(ngModel)]="searchGlobal"
+                      (input)="dt.filterGlobal(searchGlobal, 'contains'); applySearch();"
+                      [placeholder]="'GLOBAL.RECHERCHER' | translate" />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter field="matricule" type="text" display="menu"></p-columnFilter>{{ 'GLOBAL.MATRICULE' | translate }}</th>
+                  <th><p-columnFilter field="dateAffiliation" type="date" display="menu"></p-columnFilter>{{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.DATE_AFFILIATION' | translate }}</th>
+                  <th><p-columnFilter field="caisseCotisation" type="text" display="menu"></p-columnFilter>{{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.CAISSE' | translate }}</th>
+                  <th><p-columnFilter field="numeroAssurance" type="text" display="menu"></p-columnFilter>{{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.NUMERO_ASSURANCE' | translate }}</th>
+                  <th>{{ 'GLOBAL.ACTIONS' | translate }}</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td><strong>{{ item.matricule }}</strong></td>
+                  <td>{{ item.dateAffiliation }}</td>
+                  <td>{{ item.caisseCotisation }}</td>
+                  <td>{{ item.numeroAssurance }}</td>
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" [pTooltip]="'GLOBAL.VISUALISER' | translate" (click)="onView(item)"></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" [pTooltip]="'GLOBAL.MODIFIER' | translate" (click)="onEdit(item)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" [pTooltip]="'GLOBAL.SUPPRIMER' | translate" (click)="onDelete(item)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="5" class="text-center">{{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.EMPTY_MESSAGE' | translate }}</td></tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" [header]="'PACKAGE_ADMIN.CAISSES_RETRAITE.DIALOG_VIEW_TITLE' | translate" [(visible)]="displayView" [modal]="true" [style]="{ width: '450px' }">
+  <ng-container *ngIf="selectedCaisse">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_mat" [ngModel]="selectedCaisse.matricule" [disabled]="true" />
+          <label for="v_mat">{{ 'GLOBAL.MATRICULE' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="v_da" [ngModel]="selectedCaisse.dateAffiliation" [disabled]="true" dateFormat="yy-mm-dd" appendTo="body"></p-datepicker>
+          <label for="v_da">{{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.DATE_AFFILIATION' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_cc" [ngModel]="selectedCaisse.caisseCotisation" [disabled]="true" />
+          <label for="v_cc">{{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.LBL_CAISSE' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_na" [ngModel]="selectedCaisse.numeroAssurance" [disabled]="true" />
+          <label for="v_na">{{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.LBL_NUMERO_ASSURANCE' | translate }}</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-template pTemplate="footer">
+    <p-button [label]="'GLOBAL.FERMER' | translate" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [header]="dialogMode === 'add' ? ('PACKAGE_ADMIN.CAISSES_RETRAITE.DIALOG_ADD_TITLE' | translate) : ('PACKAGE_ADMIN.CAISSES_RETRAITE.DIALOG_EDIT_TITLE' | translate)" [(visible)]="displayDialog" [modal]="true" [style]="{ width: '550px' }">
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="matricule" name="matricule" [(ngModel)]="form.matricule" #matricule="ngModel" required
+               [class.ng-dirty]="matricule.invalid && matricule.touched" />
+        <label for="matricule">{{ 'GLOBAL.MATRICULE' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="matricule.invalid && matricule.touched">{{ 'ACT_ADMINISTRATIFS.GLOBAL.ERR_MATRICULE' | translate }}</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateAffiliation" name="dateAffiliation" [(ngModel)]="form.dateAffiliation" #dateAffiliation="ngModel" required
+                      dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"
+                      [class.ng-dirty]="dateAffiliation.invalid && dateAffiliation.touched"></p-datepicker>
+        <label for="dateAffiliation">{{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.DATE_AFFILIATION' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateAffiliation.invalid && dateAffiliation.touched">{{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.ERR_DATE_AFFILIATION' | translate }}</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="caisseCotisation" name="caisseCotisation" [options]="caisseOptions" [(ngModel)]="form.caisseCotisation" #caisseCotisation="ngModel" required
+                    optionLabel="label" optionValue="value" appendTo="body"
+                    [styleClass]="form.caisseCotisation ? 'p-filled w-full' : 'w-full'"
+                    [class.ng-dirty]="caisseCotisation.invalid && caisseCotisation.touched"></p-dropdown>
+        <label for="caisseCotisation">{{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.LBL_CAISSE' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="caisseCotisation.invalid && caisseCotisation.touched">{{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.ERR_CAISSE' | translate }}</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="numeroAssurance" name="numeroAssurance" [(ngModel)]="form.numeroAssurance" #numeroAssurance="ngModel" required
+               [class.ng-dirty]="numeroAssurance.invalid && numeroAssurance.touched" />
+        <label for="numeroAssurance">{{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.LBL_NUMERO_ASSURANCE' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="numeroAssurance.invalid && numeroAssurance.touched">{{ 'PACKAGE_ADMIN.CAISSES_RETRAITE.ERR_NUMERO_ASSURANCE' | translate }}</small>
+    </div>
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogMode === 'add' ? ('GLOBAL.AJOUTER' | translate) : ('GLOBAL.MODIFIER' | translate)" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+    <p-button [label]="'GLOBAL.ANNULER' | translate" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+  </ng-template>
+</p-dialog>

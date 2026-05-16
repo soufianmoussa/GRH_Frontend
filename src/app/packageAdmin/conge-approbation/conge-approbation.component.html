@@ -1,0 +1,211 @@
+<div class="content">
+  <h1 class="titleh1">Approbation des demandes de congé</h1>
+  <br><br>
+
+  <p-confirmDialog></p-confirmDialog>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Demandes de congés</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+            <p-table
+              #dtConge
+              [value]="demandesConge"
+              [rows]="4"
+              [paginator]="true"
+              [rowsPerPageOptions]="[4, 6, 10]"
+              [responsiveLayout]="'scroll'"
+              [globalFilterFields]="['date','demandeur','categorie','du']"
+            >
+
+              <ng-template pTemplate="caption">
+                <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+                  <p-button
+                    label="Effacer"
+                    icon="pi pi-filter-slash"
+                    [outlined]="true"
+                    (onClick)="clear(dtConge)"
+                    styleClass="p-button-secondary"
+                  ></p-button>
+
+                  <span class="p-input-icon-left mr-4">
+                    <input
+                      #searchBox
+                      pInputText
+                      type="text"
+                      [(ngModel)]="searchConge"
+                      (input)="dtConge.filterGlobal(searchBox.value,'contains')"
+                      placeholder="Rechercher..."
+                    />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>
+                    <div class="flex align-items-center">
+                      <p-columnFilter type="text" field="date" display="menu"></p-columnFilter>
+                      Date
+                    </div>
+                  </th>
+
+                  <th>
+                    <div class="flex align-items-center">
+                      <p-columnFilter type="text" field="demandeur" display="menu"></p-columnFilter>
+                      Demandeur
+                    </div>
+                  </th>
+
+                  <th>
+                    <div class="flex align-items-center">
+                      <p-columnFilter type="text" field="categorie" display="menu"></p-columnFilter>
+                      Catégorie
+                    </div>
+                  </th>
+
+                  <th>
+                    <div class="flex align-items-center">
+                      <p-columnFilter type="text" field="du" display="menu"></p-columnFilter>
+                      Du
+                    </div>
+                  </th>
+
+                  <th>
+                    <div class="flex align-items-center">
+
+                      <p-columnFilter
+                        type="equals"
+                        field="statut"
+                        [showMatchModes]="false"
+                        [showOperator]="false"
+                        display="menu">
+
+                        <ng-template pTemplate="filter" let-value let-filter="filterCallback">
+                          <p-dropdown
+                            [options]="statuts"
+                            placeholder="Sélectionner"
+                            optionLabel="label"
+                            [ngModel]="value"
+                            (onChange)="filter($event.value.label)"
+                            styleClass="w-full"
+                          ></p-dropdown>
+                        </ng-template>
+
+                      </p-columnFilter>
+                      Statut
+                    </div>
+                  </th>
+
+                  <th class="text-center">Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td>{{ item.date }}</td>
+                  <td>{{ item.demandeur }}</td>
+                  <td>{{ item.categorie }}</td>
+                  <td>{{ item.du }}</td>
+
+                  <td>
+                    <p-tag
+                      [value]="item.statut"
+                      [severity]="item.statut === 'Approuvé' ? 'success' :
+                                 item.statut === 'Rejeté' ? 'danger' : 'warning'">
+                    </p-tag>
+                  </td>
+
+                  <td class="action-cell">
+
+                    <button
+                      pButton
+                      type="button"
+                      icon="pi pi-check"
+                      class="btn-action btn-approve"
+                      pTooltip="Approuver"
+                      tooltipPosition="top"
+                      (click)="approuverConge(item)"
+                    ></button>
+
+                    <button
+                      pButton
+                      type="button"
+                      icon="pi pi-ban"
+                      class="btn-action btn-reject"
+                      pTooltip="Rejeter"
+                      tooltipPosition="top"
+                      (click)="openRejetDialog(item)"
+                    ></button>
+
+                    <p-dialog
+                      header="🛑 Rejeter la demande"
+                      [(visible)]="displayRejetDialog"
+                      [modal]="true"
+                      [style]="{ width: '440px', borderRadius: '10px' }"
+                      [draggable]="false"
+                      [dismissableMask]="false"
+                    >
+                      <div class="p-fluid">
+                        <p class="dialog-text mb-4">
+                          Vous êtes sur le point de rejeter la demande de :
+                          <b>{{ selectedDemande?.demandeur }}</b>
+                        </p>
+
+                        <div class="field">
+                          <label for="raison">Motif du rejet <span style="color:red">*</span></label>
+                          <textarea
+                            id="raison"
+                            rows="3"
+                            pInputTextarea
+                            [(ngModel)]="raisonRejet"
+                            placeholder="Expliquez brièvement la raison du rejet…"
+                            class="p-inputtext-sm"
+                          ></textarea>
+                        </div>
+                      </div>
+
+                      <ng-template pTemplate="footer">
+                        <button
+                          pButton
+                          label="Annuler"
+                          icon="pi pi-times"
+                          class="btn-dialog btn-dialog-cancel"
+                          (click)="displayRejetDialog = false"
+                        ></button>
+
+                        <button
+                          pButton
+                          label="Rejeter"
+                          icon="pi pi-ban"
+                          class="btn-dialog btn-dialog-reject"
+                          (click)="confirmerRejet()"
+                          [disabled]="!raisonRejet"
+                        ></button>
+                      </ng-template>
+
+                    </p-dialog>
+
+                  </td>
+
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="6" class="text-center">Aucune demande trouvée.</td>
+                </tr>
+              </ng-template>
+
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>

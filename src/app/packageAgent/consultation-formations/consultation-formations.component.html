@@ -1,0 +1,217 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Consultation des Formations</h1>
+  <app-agentcard></app-agentcard>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Liste des Formations</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-briefcase" style="font-size: 30px; margin-right: 5px;"></i>
+                Liste des Formations
+              </h3>
+              <p-button label="Ajouter une formation" icon="pi pi-plus" styleClass="p-button-success"
+                (onClick)="showAddDialog()"></p-button>
+            </div>
+
+            <p-table #dtFormation [value]="formations" [rows]="5" [paginator]="true" [rowsPerPageOptions]="[3, 5, 10]"
+              [responsiveLayout]="'scroll'"
+              [globalFilterFields]="['intituleStage','dateDebut','dateFin','intituleFormation']">
+
+              <ng-template pTemplate="caption">
+                <div class="flex align-items-center justify-content-between">
+                  <p-button label="Effacer" [outlined]="true" icon="pi pi-filter-slash" (onClick)="clear(dtFormation)"></p-button>
+
+                  <span class="p-input-icon-left">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text" [(ngModel)]="searchTerm"
+                      (input)="dtFormation.filterGlobal(searchTerm, 'contains'); applySearch();" placeholder=" Rechercher..." />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter type="text" field="intituleStage" display="menu" /> Intitulé du stage</th>
+                  <th><p-columnFilter type="text" field="dateDebut" display="menu" /> Date début</th>
+                  <th><p-columnFilter type="text" field="dateFin" display="menu" /> Date fin</th>
+                  <th><p-columnFilter type="text" field="intituleFormation" display="menu" /> Intitulé de la formation</th>
+                  <th>Certificat</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-formation>
+                <tr>
+                  <td>{{ formation.intituleStage }}</td>
+                  <td>{{ formation.dateDebut | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ formation.dateFin | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ formation.intituleFormation }}</td>
+
+                  <td>
+                    <a *ngIf="formation.certificateUrl" [href]="formation.certificateUrl" target="_blank" pTooltip="Voir le certificat"
+                       class="p-button-rounded p-button-text p-button-success">
+                      <i class="pi pi-file-pdf" style="font-size: 1.2rem; color: var(--green-500);"></i>
+                    </a>
+                    <span *ngIf="!formation.certificateUrl" style="color: var(--text-color-secondary);">—</span>
+                  </td>
+
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2"
+                      pTooltip="Visualiser" (click)="onViewFormation(formation)"></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2"
+                      pTooltip="Modifier" (click)="onEditFormation(formation)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger"
+                      pTooltip="Supprimer" (click)="onDeleteFormation(formation)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="6" class="text-center">Aucune formation trouvée</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+
+<p-dialog styleClass="pdialogfon" header="Détails de la formation" [(visible)]="displayViewDialog" [modal]="true" [style]="{ width: '520px' }">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="selectedFormation">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_stage" [ngModel]="selectedFormation.intituleStage" [disabled]="true" />
+        <label for="v_stage">Intitulé du stage</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="v_debut" [ngModel]="selectedFormation.dateDebut" [disabled]="true" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+        <label for="v_debut">Date début</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="v_fin" [ngModel]="selectedFormation.dateFin" [disabled]="true" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+        <label for="v_fin">Date fin</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_formation" [ngModel]="selectedFormation.intituleFormation" [disabled]="true" />
+        <label for="v_formation">Intitulé de la formation</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full" *ngIf="selectedFormation.certificateFileName">
+      <label class="block mb-2 font-semibold">Certificat de formation</label>
+      <div class="flex align-items-center gap-2">
+        <i class="pi pi-file" style="font-size: 1.2rem;"></i>
+        <a [href]="selectedFormation.certificateUrl" target="_blank" class="text-primary">{{ selectedFormation.certificateFileName }}</a>
+      </div>
+    </div>
+  </div>
+  
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayViewDialog=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+
+<p-dialog styleClass="pdialogfon" [(visible)]="displayDialog" [modal]="true"
+  [style]="{ width: '550px' }"
+  [header]="dialogMode === 'add' ? 'Ajouter une formation' : 'Modifier une formation'">
+
+  <form #formationForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_stage" name="f_stage" [(ngModel)]="currentFormation.intituleStage" #f_stage="ngModel" required [class.ng-dirty]="f_stage.invalid && f_stage.touched">
+        <label for="f_stage">Intitulé du stage <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_stage.invalid && f_stage.touched">L'intitulé du stage est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="f_debut" name="f_debut" [(ngModel)]="currentFormation.dateDebut" #f_debut="ngModel" required dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" [class.ng-dirty]="f_debut.invalid && f_debut.touched"></p-datepicker>
+        <label for="f_debut">Date début <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_debut.invalid && f_debut.touched">La date de début est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="f_fin" name="f_fin" [(ngModel)]="currentFormation.dateFin" #f_fin="ngModel" required dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" [class.ng-dirty]="f_fin.invalid && f_fin.touched"></p-datepicker>
+        <label for="f_fin">Date fin <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_fin.invalid && f_fin.touched">La date de fin est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_formation" name="f_formation" [(ngModel)]="currentFormation.intituleFormation" #f_formation="ngModel" required [class.ng-dirty]="f_formation.invalid && f_formation.touched">
+        <label for="f_formation">Intitulé de la formation <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_formation.invalid && f_formation.touched">L'intitulé de la formation est obligatoire.</small>
+    </div>
+
+    <!-- File upload (optional) -->
+    <div class="w-full dialog-upload">
+      <input #fileInput type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="onFileSelect($event)" hidden />
+
+      <!-- Existing file (edit mode) -->
+      <div class="file-selected" *ngIf="dialogMode === 'edit' && currentFormation.certificateFileName && !selectedFile">
+        <i class="pi pi-file"></i>
+        <a [href]="currentFormation.certificateUrl" target="_blank" class="file-name">{{ currentFormation.certificateFileName }}</a>
+        <button type="button" class="file-remove-btn" pTooltip="Supprimer" (click)="onDeleteCertificateById(editFormationId)">
+          <i class="pi pi-trash"></i>
+        </button>
+      </div>
+
+      <!-- Upload card (empty state) -->
+      <div class="file-upload-zone" *ngIf="!selectedFile && !(dialogMode === 'edit' && currentFormation.certificateFileName)" (click)="fileInput.click()">
+        <label class="file-upload-label">
+          <div class="upload-icon-box"><i class="pi pi-cloud-upload"></i></div>
+          <div class="upload-text">
+            <span class="upload-title">Certificat de formation <span class="optional-tag">(optionnel)</span></span>
+            <span class="upload-hint">PDF, JPEG ou PNG — max 10 Mo</span>
+          </div>
+          <span class="upload-browse-btn">Parcourir</span>
+        </label>
+      </div>
+
+      <!-- File selected chip -->
+      <div class="file-selected" *ngIf="selectedFile">
+        <i class="pi pi-file"></i>
+        <span class="file-name">{{ selectedFile.name }}</span>
+        <button type="button" class="file-remove-btn" pTooltip="Retirer" (click)="clearFile(fileInput)">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogMode === 'add' ? 'Ajouter' : 'Modifier'" icon="pi pi-check" severity="success"
+      (onClick)="saveFormation()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+  </ng-template>
+</p-dialog>

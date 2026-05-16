@@ -1,0 +1,19 @@
+<!-- Layout principal (Topbar + Sidebar) -->
+<div *ngIf="!isLoginPage() && !isRegisterPage()" class="app-wrapper">
+
+  <app-topbar (toggleSidebar)="sidebarOpened = !sidebarOpened"></app-topbar>
+
+  <div class="main-layout">
+    <app-sidebar [opened]="sidebarOpened"></app-sidebar>
+
+    <div class="main-content" [class.sidebar-open]="sidebarOpened">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+
+</div>
+
+<!-- Pages Login / Register (sans layout) -->
+<div *ngIf="isLoginPage() || isRegisterPage()">
+  <router-outlet></router-outlet>
+</div>

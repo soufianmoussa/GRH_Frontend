@@ -1,0 +1,84 @@
+<p-toast position="top-center"></p-toast>
+
+<div class="content">
+  <h1 class="titleh1">{{ 'GESTION_PERSONNELLE.GESTION_UTILISATEURS.TITLE' | translate }}</h1>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">{{ 'GESTION_PERSONNELLE.GESTION_UTILISATEURS.TAB_LIST' | translate }}</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-users" style="font-size: 28px; margin-right: 6px;"></i>
+                {{ 'GESTION_PERSONNELLE.GESTION_UTILISATEURS.HEADER_TITLE' | translate }}
+              </h3>
+            </div>
+
+            <p-table #dtGestion [value]="gestionUtilisateursData" [paginator]="true" [rows]="5"
+              [rowsPerPageOptions]="[5,10,20]" [responsiveLayout]="'scroll'">
+
+              <ng-template pTemplate="caption">
+                <div class="flex justify-content-between align-items-center">
+                  <p-button [label]="'GLOBAL.EFFACER' | translate" icon="pi pi-filter-slash" [outlined]="true"
+                    (onClick)="clear(dtGestion)"></p-button>
+
+                  <span class="p-input-icon-left">
+                    <i class="pi pi-search"></i>
+                    <input pInputText [ngModel]="searchGestion"
+                      (ngModelChange)="onSearchChange($event)" [placeholder]="'GLOBAL.RECHERCHER' | translate">
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter field="matricule" display="menu"></p-columnFilter>Matricule</th>
+                  <th><p-columnFilter field="cin" display="menu"></p-columnFilter>CIN</th>
+                  <th><p-columnFilter field="pprTuteur" display="menu"></p-columnFilter>PPR</th>
+                  <th><p-columnFilter field="nom" display="menu"></p-columnFilter>Nom</th>
+                  <th><p-columnFilter field="prenom" display="menu"></p-columnFilter>Prénom</th>
+                  <th><p-columnFilter field="sexe" display="menu"></p-columnFilter>Sexe</th>
+                  <th><p-columnFilter field="dateNaissance" display="menu"></p-columnFilter>Date naissance</th>
+                  <th><p-columnFilter field="ville" display="menu"></p-columnFilter>Ville</th>
+                  <th class="actions-col">Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-user>
+                <tr class="clickable-row" (click)="viewAgent(user.id)"
+                    pTooltip="Cliquez pour voir le dossier de l'agent" tooltipPosition="left" [showDelay]="400">
+                  <td><strong>{{ user.matricule }}</strong></td>
+                  <td>{{ user.cin }}</td>
+                  <td>{{ user.pprTuteur }}</td>
+                  <td>{{ user.nom }}</td>
+                  <td>{{ user.prenom }}</td>
+                  <td>{{ user.sexe }}</td>
+                  <td>{{ user.dateNaissance }}</td>
+                  <td>{{ user.ville }}</td>
+                  <td class="actions-cell" (click)="$event.stopPropagation()">
+                    <p-button icon="pi pi-eye" severity="info" [rounded]="true" [text]="true"
+                              styleClass="view-btn"
+                              pTooltip="Voir le dossier" tooltipPosition="left"
+                              (onClick)="viewAgent(user.id)"></p-button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="9" class="text-center">Aucun agent trouvé</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>

@@ -1,0 +1,263 @@
+<p-toast position="top-center"></p-toast>
+
+<div class="content">
+  <h1 class="titleh1">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.TITLE' | translate }}</h1>
+
+  <div class="card stepper-card">
+
+    <p-stepper [(value)]="activeStep" [linear]="true">
+
+      <p-step-list>
+        <p-step [value]="1">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.STEP_BASE' | translate }}</p-step>
+        <p-stepper-separator />
+        <p-step [value]="2">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.STEP_UNITE' | translate }}</p-step>
+        <p-stepper-separator />
+        <p-step [value]="3">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.STEP_FONCTION' | translate }}</p-step>
+        <p-stepper-separator />
+        <p-step [value]="4">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.STEP_POSTE_TRAVAIL' | translate }}</p-step>
+        <p-stepper-separator />
+        <p-step [value]="5">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.STEP_RECAP' | translate }}</p-step>
+      </p-step-list>
+
+      <p-step-panels>
+
+        <p-step-panel [value]="1">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="step-content">
+              <h3 class="step-title">
+                <i class="pi pi-id-card"></i>
+                {{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.STEP_BASE' | translate }}
+              </h3>
+              <p class="step-subtitle">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.SUB_BASE' | translate }}</p>
+
+              <div class="form-grid">
+                <div class="form-field">
+                  <label>{{ 'GESTION_ORGANISATIONELLE.POSTES.COL_CODE_COURT' | translate }} <span class="required">*</span></label>
+                  <input pInputText [(ngModel)]="codeCourt" placeholder="Ex: ING-001" />
+                  <small class="hint">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.HINT_CODE_COURT' | translate }}</small>
+                </div>
+
+                <div class="form-field">
+                  <label>{{ 'GLOBAL.LIBELLE' | translate }} <span class="required">*</span></label>
+                  <input pInputText [(ngModel)]="libelleDuPoste" placeholder="Ex: Ingénieur Développement" />
+                </div>
+
+                <div class="form-field">
+                  <label>{{ 'GLOBAL.DATE_CREATION' | translate }}</label>
+                  <p-calendar
+                    [(ngModel)]="dateCreation"
+                    dateFormat="yy-mm-dd"
+                    appendTo="body"
+                    [showIcon]="true"
+                    [placeholder]="'GLOBAL.RECHERCHER' | translate">
+                  </p-calendar>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <span></span>
+                <p-button [label]="'GLOBAL.SUIVANT' | translate" icon="pi pi-arrow-right" iconPos="right"
+                  (onClick)="nextStep(activateCallback)"></p-button>
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <p-step-panel [value]="2">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="step-content">
+              <h3 class="step-title">
+                <i class="pi pi-building"></i>
+                {{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.STEP_UNITE' | translate }}
+              </h3>
+              <p class="step-subtitle">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.SUB_UNITE' | translate }}</p>
+
+              <div class="form-grid">
+                <div class="form-field">
+                  <label>{{ 'GESTION_ORGANISATIONELLE.POSTES.COL_UNITE' | translate }} <span class="required">*</span></label>
+                  <p-select
+                    [options]="unites"
+                    [(ngModel)]="selectedUniteId"
+                    optionLabel="libelle"
+                    optionValue="id"
+                    [placeholder]="'GLOBAL.RECHERCHER' | translate"
+                    [filter]="true"
+                    filterBy="libelle"
+                    [loading]="loadingDropdowns"
+                    [style]="{'width':'100%'}">
+                  </p-select>
+                  <small class="hint">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.HINT_UNITE' | translate }}</small>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <p-button [label]="'GLOBAL.PRECEDENT' | translate" icon="pi pi-arrow-left" [outlined]="true"
+                  (onClick)="prevStep(activateCallback)"></p-button>
+                <p-button [label]="'GLOBAL.SUIVANT' | translate" icon="pi pi-arrow-right" iconPos="right"
+                  (onClick)="nextStep(activateCallback)"></p-button>
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <p-step-panel [value]="3">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="step-content">
+              <h3 class="step-title">
+                <i class="pi pi-star"></i>
+                {{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.STEP_FONCTION' | translate }}
+              </h3>
+              <p class="step-subtitle">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.SUB_FONCTION' | translate }}</p>
+
+              <div class="form-grid">
+                <div class="form-field">
+                  <label>{{ 'GLOBAL.FONCTION' | translate }} <span class="required">*</span></label>
+                  <p-select
+                    [options]="fonctions"
+                    [(ngModel)]="selectedFonctionId"
+                    optionLabel="libelle"
+                    optionValue="id"
+                    [placeholder]="'GLOBAL.RECHERCHER' | translate"
+                    [filter]="true"
+                    filterBy="libelle"
+                    [loading]="loadingDropdowns"
+                    [style]="{'width':'100%'}">
+                  </p-select>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <p-button [label]="'GLOBAL.PRECEDENT' | translate" icon="pi pi-arrow-left" [outlined]="true"
+                  (onClick)="prevStep(activateCallback)"></p-button>
+                <p-button [label]="'GLOBAL.SUIVANT' | translate" icon="pi pi-arrow-right" iconPos="right"
+                  (onClick)="nextStep(activateCallback)"></p-button>
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <p-step-panel [value]="4">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="step-content">
+              <h3 class="step-title">
+                <i class="pi pi-cog"></i>
+                {{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.STEP_POSTE_TRAVAIL' | translate }}
+              </h3>
+              <p class="step-subtitle">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.SUB_POSTE_TRAVAIL' | translate }}</p>
+
+              <div class="form-grid">
+                <div class="form-field">
+                  <label>{{ 'GESTION_ORGANISATIONELLE.POSTES.COL_POSTE_TRAVAIL' | translate }} <span class="required">*</span></label>
+                  <p-select
+                    [options]="postesTravail"
+                    [(ngModel)]="selectedPosteTravailId"
+                    optionLabel="designationObjet"
+                    optionValue="id"
+                    [placeholder]="'GLOBAL.RECHERCHER' | translate"
+                    [filter]="true"
+                    filterBy="designationObjet"
+                    [loading]="loadingDropdowns"
+                    [style]="{'width':'100%'}"
+                    (onChange)="onPosteTravailChange()">
+                  </p-select>
+                </div>
+              </div>
+
+              <div class="family-info" *ngIf="selectedPosteTravail">
+                <h4><i class="pi pi-info-circle"></i> {{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.TITLE_HERITAGE' | translate }}</h4>
+                <div class="info-grid">
+                  <div class="info-item">
+                    <span class="info-label">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.LBL_FAMILLE_PRO' | translate }}</span>
+                    <span class="info-value">{{ selectedPosteTravail.familleProfessionnelleLibelle || '—' }}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.LBL_FAMILLE_EMPLOI' | translate }}</span>
+                    <span class="info-value">{{ selectedPosteTravail.familleEmploiLibelle || '—' }}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.LBL_EMPLOI' | translate }}</span>
+                    <span class="info-value">{{ selectedPosteTravail.emploiLibelle || '—' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <p-button [label]="'GLOBAL.PRECEDENT' | translate" icon="pi pi-arrow-left" [outlined]="true"
+                  (onClick)="prevStep(activateCallback)"></p-button>
+                <p-button [label]="'GLOBAL.SUIVANT' | translate" icon="pi pi-arrow-right" iconPos="right"
+                  (onClick)="nextStep(activateCallback)"></p-button>
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <p-step-panel [value]="5">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="step-content">
+              <h3 class="step-title">
+                <i class="pi pi-check-circle"></i>
+                {{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.STEP_RECAP' | translate }}
+              </h3>
+              <p class="step-subtitle">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.SUB_RECAP' | translate }}</p>
+
+              <div class="recap-grid">
+                <div class="recap-section">
+                  <h4>{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.STEP_BASE' | translate }}</h4>
+                  <div class="recap-row">
+                    <span class="recap-label">{{ 'GESTION_ORGANISATIONELLE.POSTES.COL_CODE_COURT' | translate }}</span>
+                    <span class="recap-value"><strong>{{ codeCourt }}</strong></span>
+                  </div>
+                  <div class="recap-row">
+                    <span class="recap-label">{{ 'GLOBAL.LIBELLE' | translate }}</span>
+                    <span class="recap-value">{{ libelleDuPoste }}</span>
+                  </div>
+                  <div class="recap-row">
+                    <span class="recap-label">{{ 'GLOBAL.DATE_CREATION' | translate }}</span>
+                    <span class="recap-value">{{ dateCreation ? (dateCreation | date:'yyyy-MM-dd') : '—' }}</span>
+                  </div>
+                </div>
+
+                <div class="recap-section">
+                  <h4>{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.LBL_ORGANISATION' | translate }}</h4>
+                  <div class="recap-row">
+                    <span class="recap-label">{{ 'GESTION_ORGANISATIONELLE.POSTES.COL_UNITE' | translate }}</span>
+                    <span class="recap-value">{{ getSelectedUniteLabel() }}</span>
+                  </div>
+                  <div class="recap-row">
+                    <span class="recap-label">{{ 'GLOBAL.FONCTION' | translate }}</span>
+                    <span class="recap-value">{{ getSelectedFonctionLabel() }}</span>
+                  </div>
+                </div>
+
+                <div class="recap-section">
+                  <h4>{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.LBL_METIER' | translate }}</h4>
+                  <div class="recap-row">
+                    <span class="recap-label">{{ 'GESTION_ORGANISATIONELLE.POSTES.COL_POSTE_TRAVAIL' | translate }}</span>
+                    <span class="recap-value">{{ getSelectedPosteTravailLabel() }}</span>
+                  </div>
+                  <div class="recap-row" *ngIf="selectedPosteTravail">
+                    <span class="recap-label">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.LBL_FAMILLE_PRO' | translate }}</span>
+                    <span class="recap-value">{{ selectedPosteTravail.familleProfessionnelleLibelle || '—' }}</span>
+                  </div>
+                  <div class="recap-row" *ngIf="selectedPosteTravail">
+                    <span class="recap-label">{{ 'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.LBL_FAMILLE_EMPLOI' | translate }}</span>
+                    <span class="recap-value">{{ selectedPosteTravail.familleEmploiLibelle || '—' }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="step-actions">
+                <p-button [label]="'GLOBAL.PRECEDENT' | translate" icon="pi pi-arrow-left" [outlined]="true"
+                  (onClick)="prevStep(activateCallback)"></p-button>
+                <p-button [label]="'GESTION_ORGANISATIONELLE.POSTES.ADD_POSTE.BTN_CREATE' | translate" icon="pi pi-check" styleClass="p-button-success"
+                  [loading]="saving" (onClick)="submit()"></p-button>
+              </div>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+      </p-step-panels>
+    </p-stepper>
+
+  </div>
+</div>

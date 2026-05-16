@@ -1,0 +1,372 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+<p-menu #accountMenu [model]="actionMenuItems" [popup]="true" appendTo="body"></p-menu>
+
+<div class="content">
+  <h1 class="titleh1">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.TITLE' | translate }}</h1>
+
+  <div class="account-summary-cards">
+    <div class="account-kpi default">
+      <span>{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.TOTAL_COMPTES' | translate }}</span>
+      <strong>{{ totalAccounts }}</strong>
+    </div>
+    <div class="account-kpi success">
+      <span>{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.COMPTES_ACTIFS' | translate }}</span>
+      <strong>{{ activeAccounts }}</strong>
+    </div>
+    <div class="account-kpi danger">
+      <span>{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.COMPTES_VERROUILLES' | translate }}</span>
+      <strong>{{ lockedAccounts }}</strong>
+    </div>
+    <div class="account-kpi warning">
+      <span>{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.COMPTES_NON_LIES' | translate }}</span>
+      <strong>{{ unlinkedAccounts }}</strong>
+    </div>
+  </div>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.TAB_LIST' | translate }}</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-users section-icon"></i>
+                {{ 'GESTION_PERSONNELLE.GESTION_COMPTES.HEADER_TITLE' | translate }}
+              </h3>
+              <p-button [label]="'GESTION_PERSONNELLE.GESTION_COMPTES.BTN_ADD' | translate" icon="pi pi-plus" styleClass="p-button-success"
+                (onClick)="showAddDialog()">
+              </p-button>
+            </div>
+
+            <p-table #dtComp [value]="accounts" [paginator]="true" [rows]="pageSize"
+              [first]="first" [totalRecords]="totalRecords" [lazy]="true" (onLazyLoad)="onLazyLoad($event)"
+              [loading]="loading" [responsiveLayout]="'scroll'" [rowsPerPageOptions]="[5, 10, 20]"
+              dataKey="id">
+
+              <ng-template pTemplate="caption">
+                <div class="account-filter-bar">
+                  <span class="account-search">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text" [(ngModel)]="searchText"
+                      (input)="applySearch()"
+                      [placeholder]="'GLOBAL.RECHERCHER' | translate" />
+                  </span>
+                  <p-dropdown [options]="roleFilterOptions" [(ngModel)]="roleFilter" optionLabel="label" optionValue="value"
+                    appendTo="body" styleClass="account-filter-select" (onChange)="applySearch()"></p-dropdown>
+                  <p-dropdown [options]="statusFilterOptions" [(ngModel)]="enabledFilter" optionLabel="label" optionValue="value"
+                    appendTo="body" styleClass="account-filter-select" (onChange)="applySearch()"></p-dropdown>
+                  <p-dropdown [options]="linkedFilterOptions" [(ngModel)]="linkedFilter" optionLabel="label" optionValue="value"
+                    appendTo="body" styleClass="account-filter-select" (onChange)="applySearch()"></p-dropdown>
+                  <p-button [label]="'GLOBAL.EFFACER' | translate" icon="pi pi-filter-slash" [outlined]="true"
+                    styleClass="account-clear-button" (onClick)="clearFilters()" />
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th class="col-user">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.COL_USERNAME' | translate }}</th>
+                  <th>{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.COL_AGENT_ASSOCIE' | translate }}</th>
+                  <th>{{ 'GLOBAL.MATRICULE' | translate }}</th>
+                  <th>{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.COL_ROLES' | translate }}</th>
+                  <th>{{ 'GLOBAL.STATUT' | translate }}</th>
+                  <th class="col-actions">{{ 'GLOBAL.ACTIONS' | translate }}</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-acc>
+                <tr>
+                  <td>
+                    <button type="button" class="account-link" (click)="showDetailsDrawer(acc)">
+                      {{ acc.username }}
+                    </button>
+                  </td>
+                  <td>{{ acc.agentName || '—' }}</td>
+                  <td>{{ acc.matricule || '—' }}</td>
+                  <td>
+                    <div class="tags-container" style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+                      <p-tag *ngFor="let role of acc.roles" [value]="role"
+                        [severity]="role === 'ADMIN' ? 'danger' : (role === 'RESPONSABLE_UNITE' ? 'warning' : 'info')"></p-tag>
+                    </div>
+                  </td>
+                  <td>
+                    <p-tag *ngIf="!acc.enabled" [value]="'GESTION_PERSONNELLE.GESTION_COMPTES.TAG_INACTIF' | translate" severity="danger"></p-tag>
+                    <p-tag *ngIf="acc.enabled && (acc.failedAttempts >= 5 || acc.lockUntil)" [value]="'GESTION_PERSONNELLE.GESTION_COMPTES.TAG_VERROUILLE' | translate"
+                      severity="warning" icon="pi pi-lock"></p-tag>
+                    <p-tag *ngIf="acc.enabled && acc.failedAttempts < 5 && !acc.lockUntil" [value]="'GESTION_PERSONNELLE.GESTION_COMPTES.TAG_ACTIF' | translate"
+                      severity="success"></p-tag>
+                  </td>
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-ellipsis-v" class="p-button-rounded p-button-text p-button-secondary"
+                      [pTooltip]="'GLOBAL.ACTIONS' | translate" tooltipPosition="top"
+                      (click)="openActionsMenu($event, acc, accountMenu)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="6" class="text-center p-4">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.EMPTY_MESSAGE' | translate }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-drawer [(visible)]="displayDetailsDrawer" position="right" styleClass="account-details-drawer"
+  [style]="{ width: '520px' }">
+  <ng-template pTemplate="header">
+    <div class="drawer-title" *ngIf="selectedAccount">
+      <span class="drawer-kicker">Compte utilisateur</span>
+      <strong>{{ selectedAccount.username }}</strong>
+    </div>
+  </ng-template>
+
+  <ng-container *ngIf="selectedAccount">
+    <div class="drawer-summary">
+      <div>
+        <span class="summary-label">Statut</span>
+        <p-tag [value]="selectedStatusLabel" [severity]="selectedStatusSeverity"></p-tag>
+      </div>
+      <div>
+        <span class="summary-label">Matricule</span>
+        <strong>{{ selectedAccount.matricule || '—' }}</strong>
+      </div>
+    </div>
+
+    <p-tabs [(value)]="drawerTab" class="drawer-tabs">
+      <p-tablist>
+        <p-tab value="general">Général</p-tab>
+        <p-tab value="security">Sécurité</p-tab>
+        <p-tab value="sessions">Sessions</p-tab>
+        <p-tab value="history">Historique</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="general">
+          <div class="detail-grid">
+            <div class="detail-row">
+              <span>Nom d'utilisateur</span>
+              <strong>{{ selectedAccount.username }}</strong>
+            </div>
+            <div class="detail-row">
+              <span>Agent associe</span>
+              <strong>{{ selectedAccount.agentName || '—' }}</strong>
+            </div>
+            <div class="detail-row">
+              <span>Matricule</span>
+              <strong>{{ selectedAccount.matricule || '—' }}</strong>
+            </div>
+            <div class="detail-row detail-row-stack">
+              <span>Roles</span>
+              <div class="tags-container">
+                <p-tag *ngFor="let role of selectedAccount.roles" [value]="role"
+                  [severity]="role === 'ADMIN' ? 'danger' : (role === 'RESPONSABLE_UNITE' ? 'warning' : 'info')"></p-tag>
+              </div>
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <p-tabpanel value="security">
+          <div class="detail-grid">
+            <div class="detail-row">
+              <span>Etat du compte</span>
+              <p-tag [value]="selectedStatusLabel" [severity]="selectedStatusSeverity"></p-tag>
+            </div>
+            <div class="detail-row">
+              <span>Tentatives echouees</span>
+              <strong>{{ selectedAccount.failedAttempts }}</strong>
+            </div>
+            <div class="detail-row">
+              <span>Verrouille jusqu'a</span>
+              <strong>{{ selectedAccount.lockUntil || '—' }}</strong>
+            </div>
+          </div>
+        </p-tabpanel>
+
+        <p-tabpanel value="sessions">
+          <div class="empty-panel">
+            <i class="pi pi-shield"></i>
+            <span>Les sessions actives ne sont pas encore exposees par le backend.</span>
+          </div>
+        </p-tabpanel>
+
+        <p-tabpanel value="history">
+          <div class="history-toolbar">
+            <span>Derniers evenements</span>
+            <p-button icon="pi pi-refresh" [text]="true" severity="secondary" (onClick)="loadAuditHistory()"></p-button>
+          </div>
+
+          <p-table [value]="auditLogs" [loading]="auditLoading" styleClass="audit-table" [rows]="10">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Action</th>
+                <th>Date</th>
+                <th>Adresse IP</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-log>
+              <tr>
+                <td>
+                  <strong>{{ log.action }}</strong>
+                  <small>{{ log.details }}</small>
+                </td>
+                <td>{{ log.timestamp | date:'short' }}</td>
+                <td>{{ log.ipAddress || '—' }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="3">
+                  <div class="empty-panel compact">
+                    <i class="pi pi-history"></i>
+                    <span>Aucun evenement trouve pour ce compte.</span>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </ng-container>
+</p-drawer>
+
+<p-dialog styleClass="pdialogfon" [header]="'GESTION_PERSONNELLE.GESTION_COMPTES.DIALOG_ADD_TITLE' | translate" [(visible)]="displayAddDialog" [modal]="true"
+  [style]="{width: '550px'}">
+
+  <form #addForm="ngForm">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      
+      <div class="w-full">
+        <p-floatLabel>
+          <p-dropdown inputId="a_unite" name="a_unite" [options]="unites" optionLabel="libelle" optionValue="id" [(ngModel)]="selectedUniteId" (onChange)="onUniteChange()" #a_unite="ngModel" required [filter]="true" appendTo="body" [styleClass]="selectedUniteId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="a_unite.invalid && a_unite.touched"></p-dropdown>
+          <label for="a_unite">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.LBL_UNITE' | translate }} <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="a_unite.invalid && a_unite.touched">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.ERR_UNITE' | translate }}</small>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <p-dropdown inputId="a_agent" name="a_agent" [options]="agents" optionLabel="libelle" optionValue="id" [(ngModel)]="newAccount.agentId" (onChange)="onAgentChange()" #a_agent="ngModel" required [disabled]="!selectedUniteId" [filter]="true" appendTo="body" [styleClass]="newAccount.agentId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="a_agent.invalid && a_agent.touched"></p-dropdown>
+          <label for="a_agent">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.LBL_AGENT_LIE' | translate }} <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-gray-500 block mt-1" style="font-size:0.8rem;" *ngIf="!selectedUniteId">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.HINT_UNITE_FILTER' | translate }}</small>
+        <small class="text-red-500 block mt-1" *ngIf="a_agent.invalid && a_agent.touched">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.ERR_AGENT' | translate }}</small>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="a_user" name="a_user" [(ngModel)]="newAccount.username" #a_user="ngModel" required [class.ng-dirty]="a_user.invalid && a_user.touched" />
+          <label for="a_user">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.COL_USERNAME' | translate }} <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="a_user.invalid && a_user.touched">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.ERR_USERNAME' | translate }}</small>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText type="password" id="a_pass" name="a_pass" [(ngModel)]="newAccount.password" #a_pass="ngModel" required minlength="12" [class.ng-dirty]="a_pass.invalid && a_pass.touched" />
+          <label for="a_pass">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.LBL_MDP_INITIAL' | translate }} <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small style="color:var(--text-color-secondary)" *ngIf="a_pass.valid || (!a_pass.dirty && !a_pass.touched)">Minimum 12 caracteres avec majuscule, minuscule, chiffre et caractere special.</small>
+        <small class="text-red-500 block mt-1" *ngIf="a_pass.invalid && a_pass.touched">Mot de passe obligatoire, 12 caracteres minimum.</small>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText type="password" id="a_pass_confirm" name="a_pass_confirm" [(ngModel)]="newAccountPasswordConfirm" #a_pass_confirm="ngModel" required [class.ng-dirty]="a_pass_confirm.invalid && a_pass_confirm.touched" />
+          <label for="a_pass_confirm">Confirmer le mot de passe <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="newAccountPasswordConfirm && newAccount.password !== newAccountPasswordConfirm">Les mots de passe ne correspondent pas.</small>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <p-multiSelect inputId="a_roles" name="a_roles" [options]="availableRoles" optionLabel="label" optionValue="value" [(ngModel)]="newAccount.roles" #a_roles="ngModel" required appendTo="body" display="chip" [styleClass]="(newAccount.roles && newAccount.roles.length > 0) ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="a_roles.invalid && a_roles.touched"></p-multiSelect>
+          <label for="a_roles">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.LBL_ROLES' | translate }} <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="newAccount.roles && newAccount.roles.includes('RESPONSABLE_UNITE') && !responsablesIds.has(newAccount.agentId)">
+          {{ 'GESTION_PERSONNELLE.GESTION_COMPTES.ERR_AGENT_NOT_RESP' | translate }}
+        </small>
+        <small class="text-red-500 block mt-1" *ngIf="a_roles.invalid && a_roles.touched">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.ERR_ROLES' | translate }}</small>
+      </div>
+    </div>
+
+    </form>
+  <ng-template pTemplate="footer">
+      <p-button [label]="'GLOBAL.SAUVEGARDER' | translate" icon="pi pi-check" severity="success" (onClick)="saveNewAccount()"></p-button>
+      <p-button [label]="'GLOBAL.ANNULER' | translate" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayAddDialog=false"></p-button>
+    </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [header]="'GESTION_PERSONNELLE.GESTION_COMPTES.DIALOG_EDIT_TITLE' | translate" [(visible)]="displayEditRolesDialog" [modal]="true"
+  [style]="{width: '550px'}">
+
+  <form #editRolesForm="ngForm">
+    <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="selectedAccount">
+      <div class="w-full">
+        <p-floatLabel>
+          <p-multiSelect inputId="e_roles" name="e_roles" [options]="availableRoles" optionLabel="label" optionValue="value" [(ngModel)]="selectedRoleValues" #e_roles="ngModel" required appendTo="body" display="chip" [styleClass]="(selectedRoleValues && selectedRoleValues.length > 0) ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="e_roles.invalid && e_roles.touched"></p-multiSelect>
+          <label for="e_roles">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.LBL_ROLES' | translate }} <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="e_roles.invalid && e_roles.touched">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.ERR_ROLES' | translate }}</small>
+      </div>
+
+      <div class="w-full" *ngIf="selectedRoleValues && (selectedRoleValues.includes('AGENT') || selectedRoleValues.includes('RESPONSABLE_UNITE'))">
+        <p-floatLabel>
+          <p-dropdown inputId="e_agent" name="e_agent" [options]="agents" optionLabel="libelle" optionValue="id" [(ngModel)]="selectedAccount.agentId" #e_agent="ngModel" required [filter]="true" appendTo="body" [styleClass]="selectedAccount.agentId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="e_agent.invalid && e_agent.touched"></p-dropdown>
+          <label for="e_agent">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.LBL_AGENT_LIE' | translate }} <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="selectedRoleValues.includes('RESPONSABLE_UNITE')">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.HINT_AGENT_RESP' | translate }}</small>
+        <small class="text-red-500 block mt-1" *ngIf="e_agent.invalid && e_agent.touched">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.ERR_AGENT' | translate }}</small>
+      </div>
+    </div>
+
+    </form>
+  <ng-template pTemplate="footer">
+      <p-button [label]="'GLOBAL.METTRE_A_JOUR' | translate" icon="pi pi-check" severity="success" (onClick)="updateRoles()"></p-button>
+      <p-button [label]="'GLOBAL.ANNULER' | translate" icon="pi pi-times" [text]="true" severity="secondary"
+        (onClick)="displayEditRolesDialog=false"></p-button>
+    </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [header]="'GESTION_PERSONNELLE.GESTION_COMPTES.DIALOG_RESET_TITLE' | translate" [(visible)]="displayResetPasswordDialog"
+  [modal]="true" [style]="{width: '450px'}">
+
+  <form #editForm="ngForm">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText type="password" id="r_pass" name="r_pass" [(ngModel)]="newPassword" #r_pass="ngModel" required minlength="12" [class.ng-dirty]="r_pass.invalid && r_pass.touched" />
+          <label for="r_pass">{{ 'GESTION_PERSONNELLE.GESTION_COMPTES.LBL_NEW_MDP' | translate }} <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small style="color:var(--text-color-secondary)"
+          *ngIf="r_pass.valid || (!r_pass.dirty && !r_pass.touched)">Minimum 12 caracteres avec majuscule, minuscule, chiffre et caractere special.</small>
+        <small class="text-red-500 block mt-1" *ngIf="r_pass.invalid && r_pass.touched">Mot de passe obligatoire, 12 caracteres minimum.</small>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText type="password" id="r_pass_confirm" name="r_pass_confirm" [(ngModel)]="resetPasswordConfirm" #r_pass_confirm="ngModel" required [class.ng-dirty]="r_pass_confirm.invalid && r_pass_confirm.touched" />
+          <label for="r_pass_confirm">Confirmer le mot de passe <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="resetPasswordConfirm && newPassword !== resetPasswordConfirm">Les mots de passe ne correspondent pas.</small>
+      </div>
+    </div>
+
+    </form>
+  <ng-template pTemplate="footer">
+      <p-button [label]="'GESTION_PERSONNELLE.GESTION_COMPTES.BTN_REINITIALISER' | translate" icon="pi pi-check" severity="success"
+        (onClick)="changePassword()"></p-button>
+      <p-button [label]="'GLOBAL.ANNULER' | translate" icon="pi pi-times" [text]="true" severity="secondary"
+        (onClick)="displayResetPasswordDialog=false"></p-button>
+    </ng-template>
+</p-dialog>

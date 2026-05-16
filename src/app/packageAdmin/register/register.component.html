@@ -1,0 +1,77 @@
+<div class="login-wrapper">
+  <div class="login-card">
+
+    <div class="login-left">
+      <img src="../../../assets/slider-metier-assistant-rh.jpeg" class="login-image" />
+      <div class="left-text">
+        <h2>Créez votre compte RH</h2>
+        <p>Accédez à votre espace sécurisé</p>
+      </div>
+    </div>
+
+    <div class="login-right">
+
+      <img src="../../../assets/MastechRh-Logo.png" class="login-logo" />
+
+      <div class="title">
+        <h2>Créer un compte</h2>
+        <p>Inscription rapide et sécurisée</p>
+      </div>
+
+      <p-message *ngIf="message" severity="warn" [text]="message"></p-message>
+
+      <form (ngSubmit)="onRegister()" novalidate>
+
+        <div class="field">
+          <label>Email</label>
+          <input
+            pInputText
+            type="email"
+            [(ngModel)]="email"
+            name="email"
+            placeholder="exemple@gmail.com"
+            required
+          />
+        </div>
+
+        <div class="field">
+          <label>Mot de passe</label>
+          <p-password
+            [(ngModel)]="password"
+            name="password"
+            toggleMask="true"
+            feedback="false"
+            placeholder="Mot de passe"
+          ></p-password>
+        </div>
+
+        <div class="field">
+          <label>Confirmer le mot de passe</label>
+          <p-password
+            [(ngModel)]="confirmPassword"
+            name="confirmPassword"
+            toggleMask="true"
+            feedback="false"
+            placeholder="Confirmer le mot de passe"
+          ></p-password>
+        </div>
+
+        <button
+          pButton
+          type="submit"
+          label="Créer un compte"
+          icon="pi pi-user-plus"
+          class="btn-login"
+        ></button>
+      </form>
+
+      <div class="extra-links">
+        <p>
+          Déjà un compte ?
+          <a routerLink="/login" class="bold">Se connecter</a>
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>

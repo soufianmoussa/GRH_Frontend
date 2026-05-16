@@ -1,0 +1,224 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Historique des actes visés</h1>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Historique des actes visés</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-file-check" style="font-size: 30px; margin-right: 5px;"></i>
+                Historique des actes
+              </h3>
+
+              <p-button
+                label="Ajouter un acte visé"
+                icon="pi pi-plus"
+                styleClass="p-button-success"
+                (onClick)="showAddActe()"
+              />
+            </div>
+
+            <p-table
+              #dt
+              [value]="actes"
+              dataKey="id"
+              [rows]="5"
+              [rowsPerPageOptions]="[5, 10, 20]"
+              [paginator]="true"
+              [loading]="loading"
+              [globalFilterFields]="[
+                'matricule','dateEffet','acte','typeActe','imputation',
+                'anneeVisa','numeroVisa','dateVisa','corpsActe'
+              ]"
+            >
+
+              <ng-template pTemplate="caption">
+                <div class="flex">
+                  <p-button label="Effacer" icon="pi pi-filter-slash" [outlined]="true" (onClick)="clearTable(dt)" />
+                  <span class="p-input-icon-left ml-auto">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text"
+                           [(ngModel)]="searchValue"
+                           (input)="dt.filterGlobal(searchValue, 'contains'); applySearch();"
+                           placeholder="Rechercher..." />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter field="matricule" type="text" display="menu" />Matricule</th>
+                  <th><p-columnFilter field="dateEffet" type="date" display="menu" />Date effet</th>
+                  <th><p-columnFilter field="acte" type="text" display="menu" />Acte</th>
+                  <th><p-columnFilter field="typeActe" type="text" display="menu" />Type acte</th>
+                  <th><p-columnFilter field="imputation" type="text" display="menu" />Imputation</th>
+                  <th><p-columnFilter field="dateVisa" type="date" display="menu" />Date visa</th>
+                  <th><p-columnFilter field="anneeVisa" type="text" display="menu" />Année visa</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-acte>
+                <tr>
+                  <td><strong>{{ acte.matricule }}</strong></td>
+                  <td>{{ acte.dateEffet }}</td>
+                  <td>{{ acte.acte }}</td>
+                  <td>{{ acte.typeActe }}</td>
+                  <td>{{ acte.imputation }}</td>
+                  <td>{{ acte.dateVisa }}</td>
+                  <td>{{ acte.anneeVisa }}</td>
+
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye"
+                            class="p-button-rounded p-button-text p-button-success mr-2"
+                            pTooltip="Visualiser"
+                            (click)="onView(acte)"></button>
+
+                    <button pButton icon="pi pi-pencil"
+                            class="p-button-rounded p-button-text p-button-info mr-2"
+                            pTooltip="Modifier"
+                            (click)="onEdit(acte)"></button>
+
+                    <button pButton icon="pi pi-trash"
+                            class="p-button-rounded p-button-text p-button-danger"
+                            pTooltip="Supprimer"
+                            (click)="onDelete(acte)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="8" class="text-center">Aucun acte trouvé.</td></tr>
+              </ng-template>
+
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" header="Détails de l'acte visé"
+          [(visible)]="displayView"
+          [modal]="true"
+          [style]="{ width: '450px' }">
+
+  <ng-container *ngIf="selectedActe">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_matricule" [ngModel]="selectedActe.matricule" [disabled]="true" />
+          <label for="view_matricule">Matricule</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="view_dateEffet" [ngModel]="selectedActe.dateEffet" [disabled]="true" dateFormat="yy-mm-dd" appendTo="body"></p-datepicker>
+          <label for="view_dateEffet">Date effet</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_acte" [ngModel]="selectedActe.acte" [disabled]="true" />
+          <label for="view_acte">Acte</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_typeActe" [ngModel]="selectedActe.typeActe" [disabled]="true" />
+          <label for="view_typeActe">Type acte</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full" *ngIf="selectedActe.corpsActe">
+        <p-floatLabel>
+          <textarea pInputTextarea id="view_corpsActe" [ngModel]="selectedActe.corpsActe" rows="3" [disabled]="true" class="w-full"></textarea>
+          <label for="view_corpsActe">Corps de l'acte</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [header]="dialogMode === 'add' ? 'Ajouter un acte visé' : 'Modifier un acte visé'"
+          [(visible)]="displayDialog"
+          [modal]="true"
+          [style]="{ width: '550px' }">
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="matricule" name="matricule" [(ngModel)]="form.matricule" #matricule="ngModel" required
+               [class.ng-dirty]="matricule.invalid && matricule.touched" />
+        <label for="matricule">Matricule <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="matricule.invalid && matricule.touched">Le matricule est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateEffet" name="dateEffet" [(ngModel)]="form.dateEffet" #dateEffet="ngModel" required
+                      dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"
+                      [class.ng-dirty]="dateEffet.invalid && dateEffet.touched"></p-datepicker>
+        <label for="dateEffet">Date effet <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateEffet.invalid && dateEffet.touched">La date d'effet est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="acte" name="acte" [(ngModel)]="form.acte" #acte="ngModel" required
+               [class.ng-dirty]="acte.invalid && acte.touched" />
+        <label for="acte">Acte <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="acte.invalid && acte.touched">L'acte est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="typeActe" name="typeActe" [options]="typeActeOptions" [(ngModel)]="form.typeActe" #typeActe="ngModel" required
+                    optionLabel="label" optionValue="value" appendTo="body"
+                    [styleClass]="form.typeActe ? 'p-filled w-full shared-field-dropdown' : 'w-full shared-field-dropdown'"
+                    [class.ng-dirty]="typeActe.invalid && typeActe.touched"></p-dropdown>
+        <label for="typeActe">Type acte <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="typeActe.invalid && typeActe.touched">Le type d'acte est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="imputation" name="imputation" [(ngModel)]="form.imputation" #imputation="ngModel" required
+               [class.ng-dirty]="imputation.invalid && imputation.touched" />
+        <label for="imputation">Imputation <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="imputation.invalid && imputation.touched">L'imputation est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="corpsActe" name="corpsActe" rows="3" [(ngModel)]="form.corpsActe" class="w-full"></textarea>
+        <label for="corpsActe">Corps de l'acte</label>
+      </p-floatLabel>
+    </div>
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogMode === 'add' ? 'Ajouter' : 'Modifier'" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+  </ng-template>
+</p-dialog>

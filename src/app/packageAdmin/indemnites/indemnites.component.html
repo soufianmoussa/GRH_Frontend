@@ -1,0 +1,460 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Mes indemnités</h1>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Indemnités Complémentaires</p-tab>
+        <p-tab value="1">Indemnités Permanentes</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-wallet" style="font-size: 30px; margin-right:5px;"></i>
+                Indemnités Complémentaires
+              </h3>
+              <p-button
+                label="Ajouter une indemnité complémentaire"
+                icon="pi pi-plus"
+                styleClass="p-button-success"
+                (onClick)="showAddComplDialog()"
+              />
+            </div>
+
+            <p-table
+              #dtCompl
+              [value]="indemnitesComplementairesData"
+              dataKey="id"
+              [rows]="5"
+              [rowsPerPageOptions]="[5,10,20]"
+              [paginator]="true"
+              [loading]="loading"
+              [globalFilterFields]="['matricule','rubrique','montantRubrique','nombre','uniteTempsMesure','dateOrigine']"
+            >
+              <ng-template pTemplate="caption">
+                <div class="flex align-items-center justify-content-between">
+                  <p-button label="Effacer" icon="pi pi-filter-slash" [outlined]="true" (onClick)="clear(dtCompl)"/>
+                  <span class="p-input-icon-left">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text"
+                           [(ngModel)]="searchValue"
+                           (input)="dtCompl.filterGlobal(searchValue, 'contains'); applySearch();"
+                           placeholder="Rechercher..."/>
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter type="text" field="agentMatricule" display="menu"/>Matricule</th>
+                  <th><p-columnFilter type="text" field="rubrique" display="menu"/>Rubrique</th>
+                  <th><p-columnFilter type="numeric" field="montantRubrique" display="menu"/>Montant</th>
+                  <th><p-columnFilter type="numeric" field="nombre" display="menu"/>Nombre</th>
+                  <th><p-columnFilter type="text" field="uniteTempsMesure" display="menu"/>Unité</th>
+                  <th><p-columnFilter type="date" field="dateOrigine" display="menu"/>Date d'origine</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td><strong>{{ item.agentMatricule }}</strong><br><small class="text-gray-500">{{ item.agentNom }} {{ item.agentPrenom }}</small></td>
+                  <td>{{ item.rubrique }}</td>
+                  <td>{{ item.montantRubrique | number:'1.2-2' }} MAD</td>
+                  <td>{{ item.nombre }}</td>
+                  <td>{{ item.uniteTempsMesure }}</td>
+                  <td>{{ item.dateOrigine | date:'dd/MM/yyyy' }}</td>
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2"
+                            (click)="viewCompl(item)" pTooltip="Visualiser"></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2"
+                            (click)="onEditCompl(item)" pTooltip="Modifier"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger"
+                            (click)="deleteCompl(item.id)" pTooltip="Supprimer"></button>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="7" class="text-center">Aucune indemnité trouvée.</td></tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+
+        <p-tabpanel value="1">
+          <div class="container primTable">
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-clock" style="font-size: 30px; margin-right:5px;"></i>
+                Indemnités Permanentes
+              </h3>
+              <p-button
+                label="Ajouter une indemnité permanente"
+                icon="pi pi-plus"
+                styleClass="p-button-success"
+                (onClick)="showAddPermDialog()"
+              />
+            </div>
+
+            <p-table
+              #dtPerm
+              [value]="IndemnitesPermanentesData"
+              dataKey="id"
+              [rows]="5"
+              [rowsPerPageOptions]="[5,10,20]"
+              [paginator]="true"
+              [loading]="loading"
+              [globalFilterFields]="['matricule','dateDebutAttribution','dateFinAttribution','rubrique','montantRubrique','nombreTaux']"
+            >
+              <ng-template pTemplate="caption">
+                <div class="flex align-items-center justify-content-between">
+                  <p-button label="Effacer" icon="pi pi-filter-slash" [outlined]="true" (onClick)="clear(dtPerm)"/>
+                  <span class="p-input-icon-left">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text"
+                           [(ngModel)]="searchValue"
+                           (input)="dtPerm.filterGlobal(searchValue, 'contains'); applySearch();"
+                           placeholder="Rechercher..."/>
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter type="text" field="agentMatricule" display="menu"/>Matricule</th>
+                  <th><p-columnFilter type="text" field="dateDebutAttribution" display="menu"/>Début</th>
+                  <th><p-columnFilter type="text" field="dateFinAttribution" display="menu"/>Fin</th>
+                  <th><p-columnFilter type="text" field="rubrique" display="menu"/>Rubrique</th>
+                  <th><p-columnFilter type="numeric" field="montantRubrique" display="menu"/>Montant</th>
+                  <th><p-columnFilter type="numeric" field="nombreTaux" display="menu"/>Taux</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td><strong>{{ item.agentMatricule }}</strong><br><small class="text-gray-500">{{ item.agentNom }} {{ item.agentPrenom }}</small></td>
+                  <td>{{ item.dateDebutAttribution | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ item.dateFinAttribution | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ item.rubrique }}</td>
+                  <td>{{ item.montantRubrique | number:'1.2-2' }} MAD</td>
+                  <td>{{ item.nombreTaux }}</td>
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2"
+                            (click)="viewPerm(item)" pTooltip="Visualiser" ></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2"
+                            (click)="onEditPerm(item)" pTooltip="Modifier"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger"
+                            (click)="deletePerm(item.id)" pTooltip="Supprimer"></button>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="7" class="text-center">Aucune indemnité permanente trouvée.</td></tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" header="Détails Indemnité Complémentaire" [(visible)]="displayCompl" [modal]="true" [style]="{ width:'450px' }">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="selectedCompl">
+    <div class="w-full"><p-floatLabel><input pInputText id="v_mat_c" [ngModel]="selectedCompl.agentMatricule" [disabled]="true"/><label for="v_mat_c">Matricule</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><input pInputText id="v_rub_c" [ngModel]="selectedCompl.rubrique" [disabled]="true"/><label for="v_rub_c">Rubrique</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><input pInputText id="v_mon_c" [ngModel]="(selectedCompl.montantRubrique | number:'1.2-2') + ' MAD'" [disabled]="true"/><label for="v_mon_c">Montant</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><input pInputText id="v_nom_c" [ngModel]="selectedCompl.nombre" [disabled]="true"/><label for="v_nom_c">Nombre</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><p-datepicker id="v_date_c" [ngModel]="selectedCompl.dateOrigine" [disabled]="true" dateFormat="dd/mm/yy" appendTo="body"></p-datepicker><label for="v_date_c">Date d'origine</label></p-floatLabel></div>
+  </div>
+  
+  <ng-template pTemplate="footer"><p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayCompl=false"></p-button></ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" header="Détails Indemnité Permanente" [(visible)]="displayPerm" [modal]="true" [style]="{ width:'450px' }">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="selectedPerm">
+    <div class="w-full"><p-floatLabel><input pInputText id="v_mat_p" [ngModel]="selectedPerm.agentMatricule" [disabled]="true"/><label for="v_mat_p">Matricule</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><input pInputText id="v_rub_p" [ngModel]="selectedPerm.rubrique" [disabled]="true"/><label for="v_rub_p">Rubrique</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><input pInputText id="v_mon_p" [ngModel]="(selectedPerm.montantRubrique | number:'1.2-2') + ' MAD'" [disabled]="true"/><label for="v_mon_p">Montant</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><p-datepicker id="v_dd_p" [ngModel]="selectedPerm.dateDebutAttribution" [disabled]="true" dateFormat="dd/mm/yy" appendTo="body"></p-datepicker><label for="v_dd_p">Date début</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><p-datepicker id="v_df_p" [ngModel]="selectedPerm.dateFinAttribution" [disabled]="true" dateFormat="dd/mm/yy" appendTo="body"></p-datepicker><label for="v_df_p">Date fin</label></p-floatLabel></div>
+  </div>
+  <ng-template pTemplate="footer"><p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayPerm=false"></p-button></ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" header="Ajouter une indemnité complémentaire" [(visible)]="displayAddCompl" [modal]="true" [style]="{ width:'550px' }">
+  <form #addComplForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select [options]="agents" id="agentId" name="agentId" [(ngModel)]="newCompl.agentId" optionValue="id" optionLabel="matricule" [filter]="true" filterBy="matricule,nom,prenom" styleClass="shared-field-dropdown w-full" required #agentId="ngModel" [ngClass]="{'ng-invalid ng-dirty': agentId.invalid && agentId.touched}">
+          <ng-template let-agent pTemplate="item">
+            <span>{{ agent.matricule }} - {{ agent.nom }} {{ agent.prenom }}</span>
+          </ng-template>
+        </p-select>
+        <label for="agentId">Agent <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="agentId.invalid && agentId.touched">L'agent est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="rubrique" name="rubrique" [(ngModel)]="newCompl.rubrique" #rubrique="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': rubrique.invalid && rubrique.touched}">
+        <label for="rubrique">Rubrique <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="rubrique.invalid && rubrique.touched">La rubrique est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText type="number" id="montantRubrique" name="montantRubrique" [(ngModel)]="newCompl.montantRubrique" #montantRubrique="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': montantRubrique.invalid && montantRubrique.touched}">
+        <label for="montantRubrique">Montant <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="montantRubrique.invalid && montantRubrique.touched">Le montant est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText type="number" id="nombre" name="nombre" [(ngModel)]="newCompl.nombre" #nombre="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': nombre.invalid && nombre.touched}">
+        <label for="nombre">Nombre <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="nombre.invalid && nombre.touched">Le nombre est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateOrigine" name="dateOrigine" [(ngModel)]="newCompl.dateOrigine" #dateOrigine="ngModel" required
+                      dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"
+                      [ngClass]="{'ng-invalid ng-dirty': dateOrigine.invalid && dateOrigine.touched}"></p-datepicker>
+        <label for="dateOrigine">Date d'origine <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateOrigine.invalid && dateOrigine.touched">La date d'origine est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="uniteTempsMesure" name="uniteTempsMesure" [(ngModel)]="newCompl.uniteTempsMesure" #uniteTempsMesure="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': uniteTempsMesure.invalid && uniteTempsMesure.touched}">
+        <label for="uniteTempsMesure">Unité <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="uniteTempsMesure.invalid && uniteTempsMesure.touched">L'unité est obligatoire.</small>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Ajouter" icon="pi pi-check" severity="success" (onClick)="addCompl()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayAddCompl=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" header="Ajouter une indemnité permanente" [(visible)]="displayAddPerm" [modal]="true" [style]="{ width:'550px' }">
+  <form #addPermForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select [options]="agents" id="agentId_p" name="agentId" [(ngModel)]="newPerm.agentId" optionValue="id" optionLabel="matricule" [filter]="true" filterBy="matricule,nom,prenom" styleClass="shared-field-dropdown w-full" required #agentId_p="ngModel" [ngClass]="{'ng-invalid ng-dirty': agentId_p.invalid && agentId_p.touched}">
+          <ng-template let-agent pTemplate="item">
+            <span>{{ agent.matricule }} - {{ agent.nom }} {{ agent.prenom }}</span>
+          </ng-template>
+        </p-select>
+        <label for="agentId_p">Agent <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="agentId_p.invalid && agentId_p.touched">L'agent est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateDebutAttribution" name="dateDebutAttribution" [(ngModel)]="newPerm.dateDebutAttribution" #dateDebutAttribution="ngModel" required
+                      dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"
+                      [ngClass]="{'ng-invalid ng-dirty': dateDebutAttribution.invalid && dateDebutAttribution.touched}"></p-datepicker>
+        <label for="dateDebutAttribution">Date début <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateDebutAttribution.invalid && dateDebutAttribution.touched">La date de début est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateFinAttribution" name="dateFinAttribution" [(ngModel)]="newPerm.dateFinAttribution" #dateFinAttribution="ngModel" required
+                      dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"
+                      [ngClass]="{'ng-invalid ng-dirty': dateFinAttribution.invalid && dateFinAttribution.touched}"></p-datepicker>
+        <label for="dateFinAttribution">Date fin <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateFinAttribution.invalid && dateFinAttribution.touched">La date de fin est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="rubrique_p" name="rubrique" [(ngModel)]="newPerm.rubrique" #rubrique_p="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': rubrique_p.invalid && rubrique_p.touched}">
+        <label for="rubrique_p">Rubrique <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="rubrique_p.invalid && rubrique_p.touched">La rubrique est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText type="number" id="montantRubrique_p" name="montantRubrique" [(ngModel)]="newPerm.montantRubrique" #montantRubrique_p="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': montantRubrique_p.invalid && montantRubrique_p.touched}">
+        <label for="montantRubrique_p">Montant <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="montantRubrique_p.invalid && montantRubrique_p.touched">Le montant est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText type="number" id="nombreTaux" name="nombreTaux" [(ngModel)]="newPerm.nombreTaux" #nombreTaux="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': nombreTaux.invalid && nombreTaux.touched}">
+        <label for="nombreTaux">Taux <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="nombreTaux.invalid && nombreTaux.touched">Le taux est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="uniteTempsMesure_p" name="uniteTempsMesure" [(ngModel)]="newPerm.uniteTempsMesure" #uniteTempsMesure_p="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': uniteTempsMesure_p.invalid && uniteTempsMesure_p.touched}">
+        <label for="uniteTempsMesure_p">Unité <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="uniteTempsMesure_p.invalid && uniteTempsMesure_p.touched">L'unité est obligatoire.</small>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Ajouter" icon="pi pi-check" severity="success" (onClick)="addPerm()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayAddPerm=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" header="Modifier une indemnité complémentaire" [(visible)]="displayEditCompl" [modal]="true" [style]="{ width:'550px' }">
+  <form #editComplForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="editCompl">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select [options]="agents" id="e_agentId" name="agentId" [(ngModel)]="editCompl.agentId" optionValue="id" optionLabel="matricule" [filter]="true" filterBy="matricule,nom,prenom" styleClass="shared-field-dropdown w-full" required #e_agentId="ngModel" [ngClass]="{'ng-invalid ng-dirty': e_agentId.invalid && e_agentId.touched}">
+          <ng-template let-agent pTemplate="item">
+            <span>{{ agent.matricule }} - {{ agent.nom }} {{ agent.prenom }}</span>
+          </ng-template>
+        </p-select>
+        <label for="e_agentId">Agent <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_agentId.invalid && e_agentId.touched">L'agent est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="e_rubrique" name="rubrique" [(ngModel)]="editCompl.rubrique" #e_rubrique="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': e_rubrique.invalid && e_rubrique.touched}">
+        <label for="e_rubrique">Rubrique <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_rubrique.invalid && e_rubrique.touched">La rubrique est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText type="number" id="e_montantRubrique" name="montantRubrique" [(ngModel)]="editCompl.montantRubrique" #e_montantRubrique="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': e_montantRubrique.invalid && e_montantRubrique.touched}">
+        <label for="e_montantRubrique">Montant <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_montantRubrique.invalid && e_montantRubrique.touched">Le montant est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText type="number" id="e_nombre" name="nombre" [(ngModel)]="editCompl.nombre" #e_nombre="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': e_nombre.invalid && e_nombre.touched}">
+        <label for="e_nombre">Nombre <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_nombre.invalid && e_nombre.touched">Le nombre est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="e_dateOrigine" name="dateOrigine" [(ngModel)]="editCompl.dateOrigine" #e_dateOrigine="ngModel" required
+                      dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"
+                      [ngClass]="{'ng-invalid ng-dirty': e_dateOrigine.invalid && e_dateOrigine.touched}"></p-datepicker>
+        <label for="e_dateOrigine">Date d'origine <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_dateOrigine.invalid && e_dateOrigine.touched">La date d'origine est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="e_uniteTempsMesure" name="uniteTempsMesure" [(ngModel)]="editCompl.uniteTempsMesure" #e_uniteTempsMesure="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': e_uniteTempsMesure.invalid && e_uniteTempsMesure.touched}">
+        <label for="e_uniteTempsMesure">Unité <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_uniteTempsMesure.invalid && e_uniteTempsMesure.touched">L'unité est obligatoire.</small>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Modifier" icon="pi pi-check" severity="success" (onClick)="updateCompl()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayEditCompl=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" header="Modifier une indemnité permanente" [(visible)]="displayEditPerm" [modal]="true" [style]="{ width:'550px' }">
+  <form #editPermForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="editPerm">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select [options]="agents" id="e_agentId_p" name="agentId" [(ngModel)]="editPerm.agentId" optionValue="id" optionLabel="matricule" [filter]="true" filterBy="matricule,nom,prenom" styleClass="shared-field-dropdown w-full" required #e_agentId_p="ngModel" [ngClass]="{'ng-invalid ng-dirty': e_agentId_p.invalid && e_agentId_p.touched}">
+          <ng-template let-agent pTemplate="item">
+            <span>{{ agent.matricule }} - {{ agent.nom }} {{ agent.prenom }}</span>
+          </ng-template>
+        </p-select>
+        <label for="e_agentId_p">Agent <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_agentId_p.invalid && e_agentId_p.touched">L'agent est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="e_dateDebutAttribution" name="dateDebutAttribution" [(ngModel)]="editPerm.dateDebutAttribution" #e_dateDebutAttribution="ngModel" required
+                      dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"
+                      [ngClass]="{'ng-invalid ng-dirty': e_dateDebutAttribution.invalid && e_dateDebutAttribution.touched}"></p-datepicker>
+        <label for="e_dateDebutAttribution">Date début <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_dateDebutAttribution.invalid && e_dateDebutAttribution.touched">La date de début est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="e_dateFinAttribution" name="dateFinAttribution" [(ngModel)]="editPerm.dateFinAttribution" #e_dateFinAttribution="ngModel" required
+                      dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"
+                      [ngClass]="{'ng-invalid ng-dirty': e_dateFinAttribution.invalid && e_dateFinAttribution.touched}"></p-datepicker>
+        <label for="e_dateFinAttribution">Date fin <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_dateFinAttribution.invalid && e_dateFinAttribution.touched">La date de fin est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="e_rubrique_p" name="rubrique" [(ngModel)]="editPerm.rubrique" #e_rubrique_p="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': e_rubrique_p.invalid && e_rubrique_p.touched}">
+        <label for="e_rubrique_p">Rubrique <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_rubrique_p.invalid && e_rubrique_p.touched">La rubrique est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText type="number" id="e_montantRubrique_p" name="montantRubrique" [(ngModel)]="editPerm.montantRubrique" #e_montantRubrique_p="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': e_montantRubrique_p.invalid && e_montantRubrique_p.touched}">
+        <label for="e_montantRubrique_p">Montant <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_montantRubrique_p.invalid && e_montantRubrique_p.touched">Le montant est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText type="number" id="e_nombreTaux" name="nombreTaux" [(ngModel)]="editPerm.nombreTaux" #e_nombreTaux="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': e_nombreTaux.invalid && e_nombreTaux.touched}">
+        <label for="e_nombreTaux">Taux <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_nombreTaux.invalid && e_nombreTaux.touched">Le taux est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="e_uniteTempsMesure_p" name="uniteTempsMesure" [(ngModel)]="editPerm.uniteTempsMesure" #e_uniteTempsMesure_p="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': e_uniteTempsMesure_p.invalid && e_uniteTempsMesure_p.touched}">
+        <label for="e_uniteTempsMesure_p">Unité <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_uniteTempsMesure_p.invalid && e_uniteTempsMesure_p.touched">L'unité est obligatoire.</small>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Modifier" icon="pi pi-check" severity="success" (onClick)="updatePerm()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayEditPerm=false"></p-button>
+  </ng-template>
+</p-dialog>

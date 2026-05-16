@@ -1,0 +1,347 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.TITLE' | translate }}</h1>
+
+  <div class="card" *ngIf="currentView === 'familles'">
+    <div class="container primTable">
+
+      <div class="flex justify-content-between align-items-center mb-3">
+        <h3>
+          <i class="pi pi-folder" style="font-size: 28px; margin-right: 6px;"></i>
+          {{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.FAMILLES_TITLE' | translate }}
+        </h3>
+        <p-button
+          [label]="'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.ADD_FAMILLE_BTN' | translate"
+          icon="pi pi-plus"
+          styleClass="p-button-success"
+          (onClick)="showAddFamilleDialog()">
+        </p-button>
+      </div>
+
+      <p-table
+        #dtFamilles
+        [value]="familles"
+        [rows]="famillesPageSize"
+        [paginator]="true"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        [responsiveLayout]="'scroll'"
+        [totalRecords]="famillesTotal"
+        [lazy]="true"
+        (onPage)="onFamillesPageChange($event)"
+        [loading]="loadingFamilles"
+        [globalFilterFields]="['famillesEmploi','description']">
+
+        <ng-template pTemplate="caption">
+          <div class="flex align-items-center justify-content-between">
+            <p-button
+              [label]="'GLOBAL.EFFACER' | translate"
+              [outlined]="true"
+              icon="pi pi-filter-slash"
+              (onClick)="clearFamillesTable(dtFamilles)">
+            </p-button>
+
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input
+                pInputText
+                type="text"
+                [(ngModel)]="famillesSearch"
+                (input)="dtFamilles.filterGlobal(famillesSearch, 'contains'); applyFamillesSearch();"
+                [placeholder]="'GLOBAL.RECHERCHER' | translate" />
+            </span>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th><p-columnFilter field="famillesEmploi" display="menu" />{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.COL_FAMILLE' | translate }}</th>
+            <th><p-columnFilter field="description" display="menu" />{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.COL_DESCRIPTION' | translate }}</th>
+            <th style="width: 150px">{{ 'GLOBAL.ACTIONS' | translate }}</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr class="row-clickable" (click)="drillDown(item)">
+            <td><strong>{{ item.famillesEmploi }}</strong></td>
+            <td>{{ item.description || '—' }}</td>
+            <td class="actions-cell" (click)="$event.stopPropagation()">
+              <button
+                pButton icon="pi pi-eye"
+                class="p-button-rounded p-button-text p-button-success mr-2"
+                [pTooltip]="'GLOBAL.VISUALISER' | translate"
+                (click)="onViewFamille(item)">
+              </button>
+              <button
+                pButton icon="pi pi-pencil"
+                class="p-button-rounded p-button-text p-button-info mr-2"
+                [pTooltip]="'GLOBAL.MODIFIER' | translate"
+                (click)="onEditFamille(item)">
+              </button>
+              <button
+                pButton icon="pi pi-trash"
+                class="p-button-rounded p-button-text p-button-danger"
+                [pTooltip]="'GLOBAL.SUPPRIMER' | translate"
+                (click)="deleteFamille(item)">
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="3" class="text-center">{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.EMPTY_FAMILLE' | translate }}</td></tr>
+        </ng-template>
+      </p-table>
+
+    </div>
+  </div>
+
+  <div class="card" *ngIf="currentView === 'emplois'">
+
+    <div class="breadcrumb-bar">
+      <button pButton class="p-button-text p-button-plain back-btn" (click)="goBackToFamilles()">
+        <i class="pi pi-arrow-left"></i>
+        <span>{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.FAMILLES_TITLE' | translate }}</span>
+      </button>
+      <i class="pi pi-chevron-right breadcrumb-separator"></i>
+      <span class="breadcrumb-current">{{ selectedFamilleForDrilldown?.famillesEmploi }}</span>
+    </div>
+
+    <div class="container primTable">
+
+      <div class="flex justify-content-between align-items-center mb-3">
+        <h3>
+          <i class="pi pi-briefcase" style="font-size: 28px; margin-right: 6px;"></i>
+          {{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.EMPLOIS_TITLE' | translate }} — {{ selectedFamilleForDrilldown?.famillesEmploi }}
+        </h3>
+        <p-button
+          [label]="'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.ADD_EMPLOI_BTN' | translate"
+          icon="pi pi-plus"
+          styleClass="p-button-success"
+          (onClick)="showAddEmploiDialog()">
+        </p-button>
+      </div>
+
+      <p-table
+        #dtEmplois
+        [value]="emplois"
+        [rows]="emploisPageSize"
+        [paginator]="true"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        [responsiveLayout]="'scroll'"
+        [totalRecords]="emploisTotal"
+        [lazy]="true"
+        (onPage)="onEmploisPageChange($event)"
+        [loading]="loadingEmplois"
+        [globalFilterFields]="['emploi','description']">
+
+        <ng-template pTemplate="caption">
+          <div class="flex align-items-center justify-content-between">
+            <p-button
+              [label]="'GLOBAL.EFFACER' | translate"
+              [outlined]="true"
+              icon="pi pi-filter-slash"
+              (onClick)="clearEmploisTable(dtEmplois)">
+            </p-button>
+
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input
+                pInputText
+                type="text"
+                [(ngModel)]="emploisSearch"
+                (input)="dtEmplois.filterGlobal(emploisSearch, 'contains'); applyEmploisSearch();"
+                [placeholder]="'GLOBAL.RECHERCHER' | translate" />
+            </span>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th><p-columnFilter field="emploi" display="menu" />{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.COL_EMPLOI' | translate }}</th>
+            <th><p-columnFilter field="description" display="menu" />{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.COL_DESCRIPTION' | translate }}</th>
+            <th style="width: 150px">{{ 'GLOBAL.ACTIONS' | translate }}</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td><strong>{{ item.emploi }}</strong></td>
+            <td>{{ item.description || '—' }}</td>
+            <td class="actions-cell">
+              <button
+                pButton icon="pi pi-eye"
+                class="p-button-rounded p-button-text p-button-success mr-2"
+                [pTooltip]="'GLOBAL.VISUALISER' | translate"
+                (click)="onViewEmploi(item)">
+              </button>
+              <button
+                pButton icon="pi pi-pencil"
+                class="p-button-rounded p-button-text p-button-info mr-2"
+                [pTooltip]="'GLOBAL.MODIFIER' | translate"
+                (click)="onEditEmploi(item)">
+              </button>
+              <button
+                pButton icon="pi pi-trash"
+                class="p-button-rounded p-button-text p-button-danger"
+                [pTooltip]="'GLOBAL.SUPPRIMER' | translate"
+                (click)="deleteEmploi(item)">
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="3" class="text-center">{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.EMPTY_EMPLOI' | translate }}</td></tr>
+        </ng-template>
+      </p-table>
+
+    </div>
+  </div>
+</div>
+
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.DIALOG_VIEW_FAMILLE' | translate"
+  [(visible)]="displayFamilleView"
+  [modal]="true"
+  [style]="{width: '550px'}">
+
+  <ng-container *ngIf="selectedFamille">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_famille" [ngModel]="selectedFamille.famillesEmploi" [disabled]="true" />
+          <label for="v_famille">{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.LBL_FAMILLE' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <textarea pInputTextarea id="v_description" [ngModel]="selectedFamille.description" rows="3" [disabled]="true" class="w-full"></textarea>
+          <label for="v_description">{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.LBL_DESCRIPTION' | translate }}</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-template pTemplate="footer">
+    <p-button [label]="'GLOBAL.FERMER' | translate" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayFamilleView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.DIALOG_VIEW_EMPLOI' | translate"
+  [(visible)]="displayEmploiView"
+  [modal]="true"
+  [style]="{width: '550px'}">
+
+  <ng-container *ngIf="selectedEmploi">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="ve_emploi" [ngModel]="selectedEmploi.emploi" [disabled]="true" />
+          <label for="ve_emploi">{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.LBL_EMPLOI' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="ve_famille" [ngModel]="selectedEmploi.famillesEmploi || selectedFamilleForDrilldown?.famillesEmploi" [disabled]="true" />
+          <label for="ve_famille">{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.LBL_FAMILLE_SIMPLE' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <textarea pInputTextarea id="ve_description" [ngModel]="selectedEmploi.description" rows="3" [disabled]="true" class="w-full"></textarea>
+          <label for="ve_description">{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.LBL_DESCRIPTION' | translate }}</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </ng-container>
+  <ng-template pTemplate="footer">
+    <p-button [label]="'GLOBAL.FERMER' | translate" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayEmploiView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="(familleDialogMode === 'add' ? 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.DIALOG_ADD_FAMILLE' : 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.DIALOG_EDIT_FAMILLE') | translate"
+  [(visible)]="displayFamilleDialog"
+  [modal]="true"
+  [style]="{width: '550px'}">
+  <form #addFamilleForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="famillesEmploi" name="famillesEmploi" [(ngModel)]="familleForm.famillesEmploi" #famillesEmploi="ngModel" required [class.ng-dirty]="famillesEmploi.invalid && famillesEmploi.touched" />
+        <label for="famillesEmploi">{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.LBL_FAMILLE' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="famillesEmploi.invalid && famillesEmploi.touched">{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.ERR_FAMILLE' | translate }}</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="description" name="description" rows="3" [(ngModel)]="familleForm.description" class="w-full"></textarea>
+        <label for="description">{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.LBL_DESCRIPTION' | translate }}</label>
+      </p-floatLabel>
+    </div>
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="(familleDialogMode === 'add' ? 'GLOBAL.AJOUTER' : 'GLOBAL.MODIFIER') | translate"
+      icon="pi pi-check"
+      severity="success"
+      (onClick)="saveFamille()">
+    </p-button>
+    <p-button
+      [label]="'GLOBAL.ANNULER' | translate"
+      icon="pi pi-times"
+      [text]="true" severity="secondary"
+      (onClick)="displayFamilleDialog=false">
+    </p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="(emploiDialogMode === 'add' ? 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.DIALOG_ADD_EMPLOI' : 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.DIALOG_EDIT_EMPLOI') | translate"
+  [(visible)]="displayEmploiDialog"
+  [modal]="true"
+  [style]="{width: '550px'}">
+  <form #addEmploiForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="emploi" name="emploi" [(ngModel)]="emploiForm.emploi" #emploi="ngModel" required [class.ng-dirty]="emploi.invalid && emploi.touched" />
+        <label for="emploi">{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.LBL_EMPLOI' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="emploi.invalid && emploi.touched">{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.ERR_EMPLOI' | translate }}</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="e_description" name="e_description" rows="3" [(ngModel)]="emploiForm.description" class="w-full"></textarea>
+        <label for="e_description">{{ 'POSTE_ET_EMPLOI.FAMILLE_ET_EMPLOI.LBL_DESCRIPTION' | translate }}</label>
+      </p-floatLabel>
+    </div>
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="(emploiDialogMode === 'add' ? 'GLOBAL.AJOUTER' : 'GLOBAL.MODIFIER') | translate"
+      icon="pi pi-check"
+      severity="success"
+      (onClick)="saveEmploi()">
+    </p-button>
+    <p-button
+      [label]="'GLOBAL.ANNULER' | translate"
+      icon="pi pi-times"
+      [text]="true" severity="secondary"
+      (onClick)="displayEmploiDialog=false">
+    </p-button>
+  </ng-template>
+</p-dialog>

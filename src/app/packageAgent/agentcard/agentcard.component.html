@@ -1,0 +1,52 @@
+<!-- Loading state -->
+<div class="agent-card-loading" *ngIf="loading">
+  <p-progressSpinner></p-progressSpinner>
+</div>
+
+<!-- Error state -->
+<div class="agent-card-error" *ngIf="errorMsg && !loading">
+  <p-message severity="error" [text]="errorMsg" styleClass="w-full"></p-message>
+</div>
+
+<!-- No Agent Linked state -->
+<div class="agent-card-error" *ngIf="noAgentLinked && !loading">
+  <p-message severity="info" text="Ce compte n'est lié à aucun matricule agent." styleClass="w-full"></p-message>
+</div>
+
+<!-- Agent Identity Card -->
+<div class="agent-card" *ngIf="agent && !loading && !errorMsg && !noAgentLinked">
+  <div class="agent-card__photo">
+    <img [src]="photoUrl" alt="Photo de l'agent" />
+  </div>
+
+  <div class="agent-card__info">
+    <h2 class="agent-card__name">{{ agent.nom }} {{ agent.prenom }}</h2>
+    <div class="agent-card__badges">
+      <p-tag [value]="agent.matricule" severity="info" icon="pi pi-id-card"></p-tag>
+      <p-tag *ngIf="agentFull?.situation" [value]="situationLabel" severity="secondary" icon="pi pi-heart"></p-tag>
+    </div>
+
+    <div class="agent-card__details">
+      <div class="agent-card__detail">
+        <i class="pi pi-calendar"></i>
+        <span>{{ agent.dateNaissance | date:'dd/MM/yyyy' }}</span>
+      </div>
+      <div class="agent-card__detail">
+        <i class="pi pi-hashtag"></i>
+        <span>Matricule : {{ agent.matricule }}</span>
+      </div>
+      <div class="agent-card__detail">
+        <i class="pi pi-id-card"></i>
+        <span>CIN : {{ agent.cin }}</span>
+      </div>
+      <div class="agent-card__detail">
+        <i class="pi pi-user"></i>
+        <span>{{ agent.sexe === 'M' ? 'Masculin' : agent.sexe === 'F' ? 'Féminin' : '—' }}</span>
+      </div>
+      <div class="agent-card__detail" *ngIf="agent.ville">
+        <i class="pi pi-map-marker"></i>
+        <span>{{ agent.ville }}</span>
+      </div>
+    </div>
+  </div>
+</div>

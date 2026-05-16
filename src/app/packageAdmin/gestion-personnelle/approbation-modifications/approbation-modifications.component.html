@@ -1,0 +1,275 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">{{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.TITLE' | translate }}</h1>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">
+          <i class="pi pi-clock"></i> {{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.TAB_PENDING' | translate }}
+          <span class="tab-badge" *ngIf="pendingRequests.length">{{ pendingRequests.length }}</span>
+        </p-tab>
+        <p-tab value="1"><i class="pi pi-history"></i> {{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.TAB_HISTORY' | translate }}</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- ═══════════════════ PENDING ═══════════════════ -->
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-inbox" style="font-size: 30px; margin-right: 5px;"></i>
+                {{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.HEADER_PENDING' | translate }} ({{ pendingRequests.length }})
+              </h3>
+            </div>
+
+            <p-table [value]="pendingRequests" [loading]="loading"
+              [paginator]="pendingRequests.length > 10" [rows]="10"
+              [rowsPerPageOptions]="[5, 10, 20]"
+              [responsiveLayout]="'scroll'"
+              [globalFilterFields]="['agentNom', 'agentPrenom', 'agentMatricule', 'type']"
+              styleClass="p-datatable-sm">
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th pSortableColumn="agentMatricule">{{ 'GLOBAL.MATRICULE' | translate }} <p-sortIcon field="agentMatricule"></p-sortIcon></th>
+                  <th pSortableColumn="agentNom">{{ 'GLOBAL.AGENT' | translate }} <p-sortIcon field="agentNom"></p-sortIcon></th>
+                  <th pSortableColumn="type">{{ 'GLOBAL.TYPE' | translate }} <p-sortIcon field="type"></p-sortIcon></th>
+                  <th pSortableColumn="dateCreation">{{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.COL_DATE' | translate }} <p-sortIcon field="dateCreation"></p-sortIcon></th>
+                  <th>{{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.COL_DOCUMENT' | translate }}</th>
+                  <th style="text-align: center;">{{ 'GLOBAL.ACTIONS' | translate }}</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-req>
+                <tr>
+                  <td><span class="matricule-badge">{{ req.agentMatricule }}</span></td>
+                  <td>{{ req.agentPrenom }} {{ req.agentNom }}</td>
+                  <td>
+                    <div class="type-cell">
+                      <i [class]="typeIcon(req.type)"></i>
+                      {{ typeLabel(req.type) }}
+                    </div>
+                  </td>
+                  <td>{{ req.dateCreation | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td>
+                    <a *ngIf="req.documents?.length" [href]="req.documents[0].url" target="_blank"
+                       class="doc-link">
+                      <i class="pi pi-file"></i> {{ req.documents[0].originalFileName }}
+                    </a>
+                    <span *ngIf="!req.documents?.length">—</span>
+                  </td>
+                  <td class="actions-cell">
+                    <p-button icon="pi pi-eye" severity="info" [rounded]="true" [text]="true"
+                              [pTooltip]="'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.TOOLTIP_DETAIL' | translate"
+                              (onClick)="openDetail(req)"></p-button>
+                    <p-button icon="pi pi-check" severity="success" [rounded]="true" [text]="true"
+                              [pTooltip]="'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.TOOLTIP_APPROVE' | translate"
+                              (onClick)="openAction(req, 'approve')"></p-button>
+                    <p-button icon="pi pi-times" severity="danger" [rounded]="true" [text]="true"
+                              [pTooltip]="'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.TOOLTIP_REJECT' | translate"
+                              (onClick)="openAction(req, 'reject')"></p-button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="6" class="text-center">{{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.EMPTY_PENDING' | translate }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+
+        <!-- ═══════════════════ HISTORY ═══════════════════ -->
+        <p-tabpanel value="1">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-history" style="font-size: 30px; margin-right: 5px;"></i>
+                {{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.HEADER_HISTORY' | translate }} ({{ treatedRequests.length }})
+              </h3>
+            </div>
+
+            <p-table [value]="treatedRequests" [loading]="loading"
+              [paginator]="treatedRequests.length > 10" [rows]="10"
+              [rowsPerPageOptions]="[5, 10, 20]"
+              [responsiveLayout]="'scroll'"
+              styleClass="p-datatable-sm">
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th pSortableColumn="agentMatricule">{{ 'GLOBAL.MATRICULE' | translate }} <p-sortIcon field="agentMatricule"></p-sortIcon></th>
+                  <th pSortableColumn="agentNom">{{ 'GLOBAL.AGENT' | translate }} <p-sortIcon field="agentNom"></p-sortIcon></th>
+                  <th pSortableColumn="type">{{ 'GLOBAL.TYPE' | translate }} <p-sortIcon field="type"></p-sortIcon></th>
+                  <th pSortableColumn="dateCreation">{{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.COL_SOUMISE_LE' | translate }} <p-sortIcon field="dateCreation"></p-sortIcon></th>
+                  <th pSortableColumn="statut">{{ 'GLOBAL.STATUT' | translate }} <p-sortIcon field="statut"></p-sortIcon></th>
+                  <th pSortableColumn="dateTraitement">{{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.COL_TRAITEE_LE' | translate }} <p-sortIcon field="dateTraitement"></p-sortIcon></th>
+                  <th>{{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.COL_TRAITE_PAR' | translate }}</th>
+                  <th style="text-align: center;">{{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.COL_DETAIL' | translate }}</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-req>
+                <tr>
+                  <td><span class="matricule-badge">{{ req.agentMatricule }}</span></td>
+                  <td>{{ req.agentPrenom }} {{ req.agentNom }}</td>
+                  <td>
+                    <div class="type-cell">
+                      <i [class]="typeIcon(req.type)"></i>
+                      {{ typeLabel(req.type) }}
+                    </div>
+                  </td>
+                  <td>{{ req.dateCreation | date:'dd/MM/yyyy' }}</td>
+                  <td><p-tag [value]="statutLabel(req.statut)" [severity]="statutSeverity(req.statut)"></p-tag></td>
+                  <td>{{ (req.dateTraitement | date:'dd/MM/yyyy HH:mm') || '—' }}</td>
+                  <td>{{ req.traitePar || '—' }}</td>
+                  <td class="actions-cell">
+                    <p-button icon="pi pi-eye" severity="info" [rounded]="true" [text]="true"
+                              [pTooltip]="'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.TOOLTIP_DETAIL' | translate"
+                              (onClick)="openDetail(req)"></p-button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="8" class="text-center">{{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.EMPTY_HISTORY' | translate }}</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<!-- ═══════════════════ DETAIL DIALOG ═══════════════════ -->
+<p-dialog [header]="selectedRequest ? typeLabel(selectedRequest.type) : ('GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.DIALOG_DETAIL_TITLE' | translate)"
+          [(visible)]="showDetailDialog"
+          [modal]="true" [draggable]="false" [resizable]="false"
+          [style]="{ width: '650px' }" styleClass="pdialogfon">
+
+  <ng-container *ngIf="selectedRequest">
+    <!-- Agent info -->
+    <div class="detail-agent-info">
+      <div class="agent-badge">
+        <i class="pi pi-user"></i>
+        <span>{{ selectedRequest.agentPrenom }} {{ selectedRequest.agentNom }}</span>
+        <p-tag [value]="selectedRequest.agentMatricule" severity="info"></p-tag>
+      </div>
+      <div class="detail-meta">
+        <span><i class="pi pi-calendar"></i> {{ selectedRequest.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
+        <p-tag [value]="statutLabel(selectedRequest.statut)" [severity]="statutSeverity(selectedRequest.statut)"></p-tag>
+      </div>
+    </div>
+
+    <!-- Payload: Bancaire -->
+    <div class="detail-payload" *ngIf="isBancaire(selectedRequest) && getBancairePayload() as b">
+      <h4><i class="pi pi-wallet"></i> {{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.SECTION_BANCAIRE' | translate }}</h4>
+      <div class="detail-grid">
+        <div class="detail-item"><span class="detail-label">{{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.LBL_BANQUE' | translate }}</span><span class="detail-value">{{ b.banque || '—' }}</span></div>
+        <div class="detail-item"><span class="detail-label">{{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.LBL_COMPTE' | translate }}</span><span class="detail-value">{{ b.compte || '—' }}</span></div>
+        <div class="detail-item detail-item-full"><span class="detail-label">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP5.LBL_IBAN' | translate }}</span><span class="detail-value iban-wrap">{{ b.iban || '—' }}</span></div>
+        <div class="detail-item"><span class="detail-label">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP5.LBL_RIB' | translate }}</span><span class="detail-value">{{ b.rib || '—' }}</span></div>
+        <div class="detail-item"><span class="detail-label">{{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.LBL_DATE_OUVERTURE' | translate }}</span><span class="detail-value">{{ b.dateOuverture || '—' }}</span></div>
+        <div class="detail-item"><span class="detail-label">{{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.LBL_DATE_VALIDITE' | translate }}</span><span class="detail-value">{{ b.dateValidite || '—' }}</span></div>
+      </div>
+    </div>
+
+    <!-- Payload: Enfant -->
+    <div class="detail-payload" *ngIf="!isBancaire(selectedRequest) && getEnfantPayload() as e">
+      <h4><i class="pi pi-child"></i> {{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.SECTION_ENFANT' | translate }}</h4>
+      <div class="detail-grid">
+        <div class="detail-item"><span class="detail-label">{{ 'GLOBAL.NOM' | translate }}</span><span class="detail-value">{{ e.nom || '—' }}</span></div>
+        <div class="detail-item"><span class="detail-label">{{ 'GLOBAL.PRENOM' | translate }}</span><span class="detail-value">{{ e.prenom || '—' }}</span></div>
+        <div class="detail-item"><span class="detail-label">{{ 'GLOBAL.DATE_NAISSANCE' | translate }}</span><span class="detail-value">{{ e.dateNaissance || '—' }}</span></div>
+        <div class="detail-item"><span class="detail-label">{{ 'GLOBAL.SEXE' | translate }}</span><span class="detail-value">{{ sexeLabel(e.sexe) }}</span></div>
+        <div class="detail-item"><span class="detail-label">{{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.LBL_NIVEAU_SCOLAIRE' | translate }}</span><span class="detail-value">{{ e.niveauScolaire || '—' }}</span></div>
+      </div>
+    </div>
+
+    <!-- Documents -->
+    <div class="detail-documents" *ngIf="selectedRequest.documents.length">
+      <h4><i class="pi pi-paperclip"></i> {{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.SECTION_DOCUMENTS' | translate }}</h4>
+      <div class="doc-card" *ngFor="let doc of selectedRequest.documents">
+        <i class="pi pi-file-pdf" *ngIf="doc.contentType === 'application/pdf'"></i>
+        <i class="pi pi-image" *ngIf="doc.contentType !== 'application/pdf'"></i>
+        <div class="doc-info">
+          <span class="doc-name">{{ doc.originalFileName }}</span>
+          <small class="doc-size">{{ (doc.size / 1024).toFixed(0) }} Ko</small>
+        </div>
+        <a [href]="doc.url" target="_blank" class="doc-view-btn">
+          <i class="pi pi-external-link"></i> {{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.BTN_VOIR' | translate }}
+        </a>
+      </div>
+    </div>
+
+    <!-- Admin comment (if treated) -->
+    <div class="detail-comment" *ngIf="selectedRequest.commentaireAdmin">
+      <h4><i class="pi pi-comment"></i> {{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.SECTION_COMMENT_ADMIN' | translate }}</h4>
+      <p>{{ selectedRequest.commentaireAdmin }}</p>
+    </div>
+  </ng-container>
+
+  <ng-template pTemplate="footer">
+    <ng-container *ngIf="selectedRequest?.statut === 'EN_ATTENTE'">
+      <p-button icon="pi pi-times"
+                [label]="'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.BTN_REJECT' | translate"
+                severity="danger" [outlined]="true"
+                (onClick)="openAction(selectedRequest!, 'reject')"></p-button>
+      <p-button icon="pi pi-check"
+                [label]="'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.BTN_APPROVE' | translate"
+                severity="success"
+                (onClick)="openAction(selectedRequest!, 'approve')"></p-button>
+    </ng-container>
+    <p-button *ngIf="selectedRequest?.statut !== 'EN_ATTENTE'"
+              icon="pi pi-times"
+              [label]="'GLOBAL.FERMER' | translate"
+              severity="secondary" [text]="true"
+              (onClick)="showDetailDialog = false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- ═══════════════════ ACTION DIALOG (Approve/Reject) ═══════════════════ -->
+<p-dialog [header]="(actionType === 'approve'
+            ? 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.DIALOG_APPROVE_TITLE'
+            : 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.DIALOG_REJECT_TITLE') | translate"
+          [(visible)]="showActionDialog" [modal]="true" [draggable]="false"
+          [style]="{ width: '480px' }" styleClass="pdialogfon">
+
+  <div class="action-dialog-content">
+    <div [class]="actionType === 'approve' ? 'action-icon approve-icon' : 'action-icon reject-icon'">
+      <i [class]="actionType === 'approve' ? 'pi pi-check-circle' : 'pi pi-times-circle'"></i>
+    </div>
+    <p class="action-msg">
+      {{ (actionType === 'approve'
+         ? 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.MSG_APPROVE_INFO'
+         : 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.MSG_REJECT_INFO') | translate }}
+    </p>
+    <div class="action-comment-field">
+      <label>{{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.LBL_COMMENT' | translate }}</label>
+      <textarea pTextarea [(ngModel)]="actionComment" rows="3"
+                [placeholder]="'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.PH_COMMENT' | translate"></textarea>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button icon="pi pi-times"
+              [label]="'GLOBAL.ANNULER' | translate"
+              severity="secondary" [text]="true"
+              (onClick)="showActionDialog = false"></p-button>
+    <p-button [icon]="actionType === 'approve' ? 'pi pi-check' : 'pi pi-times'"
+              [label]="(actionType === 'approve'
+                ? 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.BTN_CONFIRM_APPROVE'
+                : 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.BTN_CONFIRM_REJECT') | translate"
+              [severity]="actionType === 'approve' ? 'success' : 'danger'"
+              [loading]="actionLoading" (onClick)="confirmAction()"></p-button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,476 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Congés des agents</h1>
+
+  <!-- Filtres globaux -->
+  <div class="container primTable filters-bar">
+    <div class="flex align-items-center gap-3 flex-wrap">
+      <p-dropdown
+        [options]="anneesDropdown"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="selectedAnnee"
+        (onChange)="loadSummary()"
+        placeholder="Année"
+        styleClass="w-10rem"
+        appendTo="body">
+      </p-dropdown>
+
+      <span class="p-input-icon-left ml-auto">
+        <i class="pi pi-search"></i>
+        <input pInputText type="text" [(ngModel)]="search" (input)="applySearch()" placeholder="Rechercher matricule / nom..." />
+      </span>
+    </div>
+  </div>
+
+  <!-- Master-detail layout -->
+  <div class="master-detail" [class.has-detail]="selectedAgent">
+
+    <!-- MASTER : liste des agents -->
+    <div class="container primTable master-panel">
+      <p-table
+        #dt
+        [value]="rows"
+        [rows]="pageSize"
+        [paginator]="true"
+        [rowsPerPageOptions]="[5, 10, 20, 50]"
+        [responsiveLayout]="'scroll'"
+        [loading]="loading"
+        [globalFilterFields]="['matricule','nom','prenom','uniteStructurelle','fonction']">
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Matricule</th>
+            <th>Nom complet</th>
+            <th>Unité structurelle</th>
+            <th>Fonction</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr class="agent-row"
+              [class.agent-row--selected]="selectedAgent?.agentId === item.agentId"
+              (click)="selectAgent(item)">
+            <td>{{ item.matricule }}</td>
+            <td>{{ item.nom }} {{ item.prenom }}</td>
+            <td>{{ item.uniteStructurelle || '-' }}</td>
+            <td>{{ item.fonction || '-' }}</td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="4" class="text-center">Aucun agent trouvé.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <!-- DETAIL : fiche de l'agent sélectionné -->
+    <div class="container primTable detail-panel" *ngIf="selectedAgent">
+      <div class="detail-header">
+        <div class="detail-identity">
+          <div class="detail-name">{{ selectedAgent.nom }} {{ selectedAgent.prenom }}</div>
+          <div class="detail-meta">
+            <span><i class="pi pi-id-card"></i> {{ selectedAgent.matricule }}</span>
+            <span *ngIf="selectedAgent.uniteStructurelle"><i class="pi pi-building"></i> {{ selectedAgent.uniteStructurelle }}</span>
+            <span *ngIf="selectedAgent.fonction"><i class="pi pi-briefcase"></i> {{ selectedAgent.fonction }}</span>
+            <span><i class="pi pi-calendar"></i> {{ selectedAnnee }}</span>
+          </div>
+        </div>
+        <button pButton icon="pi pi-times"
+                class="p-button-rounded p-button-text"
+                pTooltip="Fermer la fiche"
+                (click)="closeDetail()"></button>
+      </div>
+
+      <p-tabs [value]="activeTab" (valueChange)="onTabChange($event)">
+        <p-tablist>
+          <p-tab value="0"><i class="pi pi-wallet mr-2"></i>Soldes</p-tab>
+          <p-tab value="1"><i class="pi pi-inbox mr-2"></i>Demandes</p-tab>
+          <p-tab value="2"><i class="pi pi-history mr-2"></i>Historique</p-tab>
+        </p-tablist>
+
+        <p-tabpanels>
+          <!-- ─────────── Onglet SOLDES ─────────── -->
+          <p-tabpanel value="0">
+            <div class="tab-actions">
+              <p-button label="Initialiser" icon="pi pi-refresh" [outlined]="true"
+                        [loading]="initializing"
+                        (onClick)="initializeCurrentAgent()"></p-button>
+              <p-button label="Ajuster" icon="pi pi-sliders-h" [outlined]="true"
+                        (onClick)="showAdjustDialog()"></p-button>
+            </div>
+
+            <p-table [value]="getDetailList(selectedAgent)" [responsiveLayout]="'scroll'">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Type de congé</th>
+                  <th class="text-center">Jours de base</th>
+                  <th class="text-center">Jours reportés</th>
+                  <th class="text-center">Ajustement</th>
+                  <th class="text-center">Total</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td>{{ item.label }}</td>
+                  <td class="text-center">{{ item.solde?.joursBase ?? '-' }}</td>
+                  <td class="text-center">{{ item.solde?.joursReportes ?? '-' }}</td>
+                  <td class="text-center">{{ item.solde?.joursAjustement ?? '-' }}</td>
+                  <td class="text-center"><strong>{{ item.total }}</strong></td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </p-tabpanel>
+
+          <!-- ─────────── Onglet DEMANDES ─────────── -->
+          <p-tabpanel value="1">
+            <p-table [value]="demandes" [loading]="loadingDemandes" [responsiveLayout]="'scroll'"
+                     [rows]="8" [paginator]="demandes.length > 8">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>#</th>
+                  <th>Type</th>
+                  <th>Période</th>
+                  <th class="text-center">Durée</th>
+                  <th>Statut</th>
+                  <th>Créée le</th>
+                  <th class="text-center">Actions</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-d>
+                <tr class="demande-row" (click)="openDemandeDetail(d)">
+                  <td>{{ d.id }}</td>
+                  <td>{{ getLeaveTypeLabel(d.type) }}</td>
+                  <td>{{ d.dateDebut | date:'dd/MM/yyyy' }} → {{ d.dateFin | date:'dd/MM/yyyy' }}</td>
+                  <td class="text-center">{{ d.duree }}</td>
+                  <td>
+                    <p-tag [value]="getStatusLabel(d.statut)" [severity]="getStatusSeverity(d.statut)"></p-tag>
+                  </td>
+                  <td>{{ d.dateCreation | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td class="text-center actions-cell">
+                    <button *ngIf="d.statut === 'EN_ATTENTE'" pButton icon="pi pi-check"
+                            class="p-button-rounded p-button-text p-button-success"
+                            pTooltip="Approuver" (click)="askApprove(d, $event)"></button>
+                    <button *ngIf="d.statut === 'EN_ATTENTE'" pButton icon="pi pi-times"
+                            class="p-button-rounded p-button-text p-button-danger"
+                            pTooltip="Refuser" (click)="askReject(d, $event)"></button>
+                    <button *ngIf="d.statut === 'EN_ATTENTE' || d.statut === 'APPROUVEE'" pButton icon="pi pi-ban"
+                            class="p-button-rounded p-button-text p-button-secondary"
+                            pTooltip="Annuler" (click)="askCancel(d, $event)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="7" class="text-center">Aucune demande trouvée.</td></tr>
+              </ng-template>
+            </p-table>
+          </p-tabpanel>
+
+          <!-- ─────────── Onglet HISTORIQUE ─────────── -->
+          <p-tabpanel value="2">
+            <p-table [value]="historyRows" [loading]="loadingHistory" [responsiveLayout]="'scroll'"
+                     [rows]="8" [paginator]="historyRows.length > 8">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Date</th>
+                  <th>Type congé</th>
+                  <th>Opération</th>
+                  <th class="text-center">Avant</th>
+                  <th class="text-center">Variation</th>
+                  <th class="text-center">Après</th>
+                  <th>Commentaire</th>
+                  <th>Par</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-h>
+                <tr>
+                  <td>{{ h.dateOperation | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td>{{ getLeaveTypeLabel(h.typeConge) }}</td>
+                  <td>
+                    <p-tag [value]="getOperationLabel(h.typeOperation)" [severity]="getOperationSeverity(h.typeOperation)"></p-tag>
+                  </td>
+                  <td class="text-center">{{ h.ancienneValeur }}</td>
+                  <td class="text-center">{{ h.variation > 0 ? '+' + h.variation : h.variation }}</td>
+                  <td class="text-center"><strong>{{ h.nouvelleValeur }}</strong></td>
+                  <td>{{ h.commentaire || '-' }}</td>
+                  <td>{{ h.updatedBy || '-' }}</td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="8" class="text-center">Aucune opération trouvée.</td></tr>
+              </ng-template>
+            </p-table>
+          </p-tabpanel>
+        </p-tabpanels>
+      </p-tabs>
+    </div>
+
+    <!-- Placeholder si aucun agent sélectionné -->
+    <div class="container primTable detail-placeholder" *ngIf="!selectedAgent">
+      <div class="placeholder-content">
+        <i class="pi pi-user-plus placeholder-icon"></i>
+        <p>Sélectionnez un agent dans la liste pour afficher sa fiche de congés.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============== DEMANDE DETAIL DIALOG ============== -->
+<p-dialog styleClass="pdialogfon" header="Détail de la demande" [(visible)]="displayDemandeDetail" [modal]="true" [style]="{width: '620px'}" (onHide)="closeDemandeDetail()">
+  <div class="demande-detail" *ngIf="selectedDemande">
+    <div class="detail-row">
+      <span class="detail-label"><i class="pi pi-hashtag"></i> Référence</span>
+      <span class="detail-value">#{{ selectedDemande.id }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label"><i class="pi pi-user"></i> Agent</span>
+      <span class="detail-value">{{ selectedDemande.agentNom }} {{ selectedDemande.agentPrenom }} ({{ selectedDemande.agentMatricule }})</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label"><i class="pi pi-tag"></i> Type</span>
+      <span class="detail-value">{{ getLeaveTypeLabel(selectedDemande.type) }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label"><i class="pi pi-calendar"></i> Date début</span>
+      <span class="detail-value">{{ selectedDemande.dateDebut | date:'dd MMMM yyyy' }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label"><i class="pi pi-calendar"></i> Date fin</span>
+      <span class="detail-value">{{ selectedDemande.dateFin | date:'dd MMMM yyyy' }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label"><i class="pi pi-clock"></i> Durée</span>
+      <span class="detail-value"><strong>{{ selectedDemande.duree }}</strong> jour(s)</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label"><i class="pi pi-calendar-plus"></i> Créée le</span>
+      <span class="detail-value">{{ selectedDemande.dateCreation | date:'dd/MM/yyyy HH:mm' }}</span>
+    </div>
+    <div class="detail-row">
+      <span class="detail-label"><i class="pi pi-info-circle"></i> Statut</span>
+      <span class="detail-value">
+        <p-tag [value]="getStatusLabel(selectedDemande.statut)" [severity]="getStatusSeverity(selectedDemande.statut)"></p-tag>
+      </span>
+    </div>
+    <div class="detail-row" *ngIf="selectedDemande.commentaire">
+      <span class="detail-label"><i class="pi pi-pencil"></i> Commentaire</span>
+      <span class="detail-value">{{ selectedDemande.commentaire }}</span>
+    </div>
+
+    <div class="documents-section">
+      <h4 class="documents-title"><i class="pi pi-paperclip"></i> Documents joints</h4>
+
+      <div class="documents-list" *ngIf="!loadingDocuments">
+        <div class="document-item" *ngFor="let doc of demandeDocuments">
+          <div class="document-info">
+            <span class="document-name" [pTooltip]="doc.originalFileName" tooltipPosition="top">
+              <i class="pi pi-file"></i> {{ doc.originalFileName }}
+            </span>
+            <div class="document-meta">
+              <p-tag [value]="getCategoryLabel(doc.fileCategory)" [severity]="getCategorySeverity(doc.fileCategory)" [style]="{'font-size': '0.7rem'}"></p-tag>
+              <span class="document-size">{{ formatFileSize(doc.size) }}</span>
+              <span class="document-date">{{ doc.uploadedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+            </div>
+          </div>
+          <div class="document-actions">
+            <button pButton type="button" icon="pi pi-eye"
+                    class="p-button-rounded p-button-text p-button-success p-button-sm"
+                    pTooltip="Voir" tooltipPosition="top"
+                    (click)="onViewDocument(doc)"></button>
+          </div>
+        </div>
+
+        <div class="documents-empty" *ngIf="demandeDocuments.length === 0">
+          <i class="pi pi-inbox"></i>
+          <span>Aucun document joint</span>
+        </div>
+      </div>
+
+      <div class="documents-loading" *ngIf="loadingDocuments">
+        <i class="pi pi-spin pi-spinner"></i> Chargement...
+      </div>
+    </div>
+
+    <!-- Actions rapides dans le détail -->
+    <div class="detail-actions" *ngIf="selectedDemande.statut === 'EN_ATTENTE' || selectedDemande.statut === 'APPROUVEE'">
+      <p-button *ngIf="selectedDemande.statut === 'EN_ATTENTE'" label="Approuver" icon="pi pi-check" severity="success" (onClick)="askApprove(selectedDemande)"></p-button>
+      <p-button *ngIf="selectedDemande.statut === 'EN_ATTENTE'" label="Refuser" icon="pi pi-times" severity="danger" [outlined]="true" (onClick)="askReject(selectedDemande)"></p-button>
+      <p-button label="Annuler la demande" icon="pi pi-ban" severity="secondary" [outlined]="true" (onClick)="askCancel(selectedDemande)"></p-button>
+    </div>
+  </div>
+  
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="closeDemandeDetail()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- ============== APPROVE DIALOG ============== -->
+<p-dialog styleClass="pdialogfon" header="Approuver la demande" [(visible)]="displayApprove" [modal]="true" [style]="{width: '480px'}" [closable]="!actionInProgress">
+  <div class="action-dialog action-dialog--success" *ngIf="pendingDemande">
+    <div class="action-icon action-icon--success"><i class="pi pi-check-circle"></i></div>
+    <h3 class="action-title">Confirmer l'approbation</h3>
+    <p class="action-message">
+      Vous allez approuver la demande <strong>#{{ pendingDemande.id }}</strong>
+      de <strong>{{ pendingDemande.agentNom }} {{ pendingDemande.agentPrenom }}</strong>.
+    </p>
+    <div class="action-summary">
+      <div><span>Type :</span> <strong>{{ getLeaveTypeLabel(pendingDemande.type) }}</strong></div>
+      <div><span>Période :</span> <strong>{{ pendingDemande.dateDebut | date:'dd/MM/yyyy' }} → {{ pendingDemande.dateFin | date:'dd/MM/yyyy' }}</strong></div>
+      <div><span>Durée :</span> <strong>{{ pendingDemande.duree }} jour(s)</strong></div>
+    </div>
+    <p class="action-hint">
+      <i class="pi pi-info-circle"></i>
+      Le solde correspondant sera automatiquement décompté (types décomptables uniquement).
+    </p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Approuver" icon="pi pi-check" severity="success" [loading]="actionInProgress" (onClick)="confirmApprove()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" [disabled]="actionInProgress" (onClick)="displayApprove=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- ============== REJECT DIALOG ============== -->
+<p-dialog styleClass="pdialogfon" header="Refuser la demande" [(visible)]="displayReject" [modal]="true" [style]="{width: '480px'}" [closable]="!actionInProgress">
+  <div class="action-dialog action-dialog--danger" *ngIf="pendingDemande">
+    <div class="action-icon action-icon--danger"><i class="pi pi-times-circle"></i></div>
+    <h3 class="action-title">Confirmer le refus</h3>
+    <p class="action-message">
+      Vous allez refuser la demande <strong>#{{ pendingDemande.id }}</strong>
+      de <strong>{{ pendingDemande.agentNom }} {{ pendingDemande.agentPrenom }}</strong>.
+    </p>
+    <div class="action-summary">
+      <div><span>Type :</span> <strong>{{ getLeaveTypeLabel(pendingDemande.type) }}</strong></div>
+      <div><span>Période :</span> <strong>{{ pendingDemande.dateDebut | date:'dd/MM/yyyy' }} → {{ pendingDemande.dateFin | date:'dd/MM/yyyy' }}</strong></div>
+      <div><span>Durée :</span> <strong>{{ pendingDemande.duree }} jour(s)</strong></div>
+    </div>
+    <p class="action-hint action-hint--danger">
+      <i class="pi pi-exclamation-triangle"></i>
+      L'agent sera notifié du refus. Cette action ne modifie pas le solde.
+    </p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Refuser" icon="pi pi-times" severity="danger" [loading]="actionInProgress" (onClick)="confirmReject()"></p-button>
+    <p-button label="Annuler" icon="pi pi-ban" [text]="true" severity="secondary" [disabled]="actionInProgress" (onClick)="displayReject=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- ============== CANCEL DIALOG ============== -->
+<p-dialog styleClass="pdialogfon" header="Annuler la demande" [(visible)]="displayCancel" [modal]="true" [style]="{width: '480px'}" [closable]="!actionInProgress">
+  <div class="action-dialog action-dialog--warn" *ngIf="pendingDemande">
+    <div class="action-icon action-icon--warn"><i class="pi pi-ban"></i></div>
+    <h3 class="action-title">Confirmer l'annulation</h3>
+    <p class="action-message">
+      Vous allez annuler la demande <strong>#{{ pendingDemande.id }}</strong>
+      de <strong>{{ pendingDemande.agentNom }} {{ pendingDemande.agentPrenom }}</strong>.
+    </p>
+    <div class="action-summary">
+      <div><span>Type :</span> <strong>{{ getLeaveTypeLabel(pendingDemande.type) }}</strong></div>
+      <div><span>Période :</span> <strong>{{ pendingDemande.dateDebut | date:'dd/MM/yyyy' }} → {{ pendingDemande.dateFin | date:'dd/MM/yyyy' }}</strong></div>
+      <div><span>Durée :</span> <strong>{{ pendingDemande.duree }} jour(s)</strong></div>
+      <div><span>Statut actuel :</span>
+        <p-tag [value]="getStatusLabel(pendingDemande.statut)" [severity]="getStatusSeverity(pendingDemande.statut)"></p-tag>
+      </div>
+    </div>
+    <p class="action-hint action-hint--warn" *ngIf="pendingDemande.statut === 'APPROUVEE'">
+      <i class="pi pi-refresh"></i>
+      La demande étant déjà approuvée, le solde sera automatiquement restitué.
+    </p>
+    <p class="action-hint" *ngIf="pendingDemande.statut === 'EN_ATTENTE'">
+      <i class="pi pi-info-circle"></i>
+      La demande sera marquée comme annulée sans impact sur le solde.
+    </p>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Confirmer l'annulation" icon="pi pi-ban" severity="warn" [loading]="actionInProgress" (onClick)="confirmCancel()"></p-button>
+    <p-button label="Retour" icon="pi pi-arrow-left" [text]="true" severity="secondary" [disabled]="actionInProgress" (onClick)="displayCancel=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- ============== ADJUST DIALOG ============== -->
+<p-dialog
+  styleClass="pdialogfon"
+  header="Ajuster le solde"
+  [(visible)]="displayAdjust"
+  [modal]="true"
+  [draggable]="false"
+  [style]="{width: '520px'}">
+
+  <form #adjustFormRef="ngForm">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div *ngIf="selectedAgent" class="mb-2">
+        <strong>{{ selectedAgent.matricule }}</strong> - {{ selectedAgent.nom }} {{ selectedAgent.prenom }}
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <p-dropdown
+            id="adj_annee"
+            name="adj_annee"
+            [options]="anneesDropdown"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="adjustForm.annee"
+            appendTo="body"
+            [styleClass]="'w-full p-filled'">
+          </p-dropdown>
+          <label for="adj_annee">Année <span style="color: red;">*</span></label>
+        </p-floatLabel>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <p-dropdown
+            id="adj_typeConge"
+            name="adj_typeConge"
+            [options]="leaveTypes"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="adjustForm.typeConge"
+            appendTo="body"
+            [styleClass]="'w-full p-filled'">
+          </p-dropdown>
+          <label for="adj_typeConge">Type de congé <span style="color: red;">*</span></label>
+        </p-floatLabel>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <input
+            pInputText
+            id="adj_jours"
+            name="adj_jours"
+            type="number"
+            step="1"
+            [(ngModel)]="adjustForm.jours"
+            #adjJours="ngModel"
+            required />
+          <label for="adj_jours">Jours (ex. 2 ou -1) <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="adjJours.touched && (adjustForm.jours == null || adjustForm.jours === 0)">
+          Saisissez une valeur non nulle (positive ou négative).
+        </small>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <textarea
+            pInputTextarea
+            id="adj_motif"
+            name="adj_motif"
+            rows="3"
+            [(ngModel)]="adjustForm.motif"
+            class="w-full">
+          </textarea>
+          <label for="adj_motif">Motif</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayAdjust=false"></p-button>
+    <p-button label="Confirmer" icon="pi pi-check" severity="success" (onClick)="saveAdjust()"></p-button>
+  </ng-template>
+</p-dialog>

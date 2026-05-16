@@ -1,0 +1,260 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Prêts Financiers</h1>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Liste des prêts</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-wallet" style="font-size:28px; margin-right:5px;"></i>
+                Liste des prêts
+              </h3>
+
+              <p-button
+                label="Ajouter un prêt"
+                icon="pi pi-plus"
+                styleClass="p-button-success"
+                (onClick)="showAddPretDialog()">
+              </p-button>
+            </div>
+
+            <p-table
+              #dtPret
+              [value]="prets"
+              dataKey="id"
+              [paginator]="true"
+              [rows]="5"
+              [rowsPerPageOptions]="[5,10,20]"
+              [loading]="loading"
+              [globalFilterFields]="['agentMatricule','agentNom','agentPrenom','typePret','conditions','numeroDossier']">
+
+              <ng-template pTemplate="caption">
+                <div class="flex align-items-center justify-content-between">
+                  <p-button label="Effacer" outlined icon="pi pi-filter-slash" (onClick)="clearPret(dtPret)" />
+                  <span class="p-input-icon-left ml-auto">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text" [(ngModel)]="searchPret"
+                           (input)="dtPret.filterGlobal(searchPret, 'contains'); applySearch();"
+                           placeholder="Rechercher...">
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter type="text" field="agentMatricule" display="menu" />Matricule</th>
+                  <th><p-columnFilter type="text" field="typePret" display="menu" />Type de prêt</th>
+                  <th><p-columnFilter type="text" field="conditions" display="menu" />Conditions</th>
+                  <th><p-columnFilter type="text" field="numeroDossier" display="menu" />N° dossier</th>
+                  <th>Montant</th>
+                  <th>Date octroi</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td><strong>{{ item.agentMatricule }}</strong><br><small class="text-gray-500">{{ item.agentNom }} {{ item.agentPrenom }}</small></td>
+                  <td>{{ item.typePret }}</td>
+                  <td>{{ item.conditions }}</td>
+                  <td>{{ item.numeroDossier }}</td>
+                  <td>{{ item.montant | currency:'MAD' }}</td>
+                  <td>{{ item.dateOctroi | date:'dd/MM/yyyy' }}</td>
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" pTooltip="Visualiser" (click)="onViewPret(item)"></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Modifier" (click)="onEditPret(item)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" pTooltip="Supprimer" (click)="deletePret(item)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="7" class="text-center">Aucun prêt trouvé.</td></tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" header="Détails du prêt" [(visible)]="displayDialogPret" [modal]="true" [style]="{width:'450px'}">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="selectedPret">
+    <div class="w-full"><p-floatLabel><input pInputText id="v_mat" [ngModel]="selectedPret.agentMatricule" [disabled]="true" /><label for="v_mat">Matricule</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><input pInputText id="v_type" [ngModel]="selectedPret.typePret" [disabled]="true" /><label for="v_type">Type de prêt</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><input pInputText id="v_cond" [ngModel]="selectedPret.conditions" [disabled]="true" /><label for="v_cond">Conditions</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><input pInputText id="v_dos" [ngModel]="selectedPret.numeroDossier" [disabled]="true" /><label for="v_dos">N° dossier</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><p-datepicker id="v_do" [ngModel]="selectedPret.dateOctroi" [disabled]="true" dateFormat="dd/mm/yy" appendTo="body"></p-datepicker><label for="v_do">Date octroi</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><input pInputText id="v_mon" [ngModel]="selectedPret.montant | currency:'MAD'" [disabled]="true" /><label for="v_mon">Montant</label></p-floatLabel></div>
+  </div>
+  
+  <ng-template pTemplate="footer"><p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialogPret=false"></p-button></ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" header="Ajouter un prêt" [(visible)]="displayAddPret" [modal]="true" [style]="{width:'550px'}">
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select [options]="agents" id="agentId" name="agentId" [(ngModel)]="newPret.agentId" optionValue="id" optionLabel="matricule" [filter]="true" filterBy="matricule,nom,prenom" styleClass="shared-field-dropdown w-full" required #agentId="ngModel" [ngClass]="{'ng-invalid ng-dirty': agentId.invalid && agentId.touched}">
+          <ng-template let-agent pTemplate="item">
+            <span>{{ agent.matricule }} - {{ agent.nom }} {{ agent.prenom }}</span>
+          </ng-template>
+        </p-select>
+        <label for="agentId">Agent <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="agentId.invalid && agentId.touched">L'agent est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="typePret" name="typePret" [options]="typePretOptions" [(ngModel)]="newPret.typePret" #typePret="ngModel" required
+                    optionLabel="label" optionValue="value" appendTo="body"
+                    [styleClass]="newPret.typePret ? 'p-filled w-full' : 'w-full'"
+                    [class.ng-dirty]="typePret.invalid && typePret.touched"></p-dropdown>
+        <label for="typePret">Type de prêt <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="typePret.invalid && typePret.touched">Le type de prêt est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="conditions" name="conditions" [options]="conditionsOptions" [(ngModel)]="newPret.conditions" #conditions="ngModel" required
+                    optionLabel="label" optionValue="value" appendTo="body"
+                    [styleClass]="newPret.conditions ? 'p-filled w-full' : 'w-full'"
+                    [class.ng-dirty]="conditions.invalid && conditions.touched"></p-dropdown>
+        <label for="conditions">Conditions <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="conditions.invalid && conditions.touched">Les conditions sont obligatoires.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="numeroDossier" name="numeroDossier" [(ngModel)]="newPret.numeroDossier" #numeroDossier="ngModel" required
+               [class.ng-dirty]="numeroDossier.invalid && numeroDossier.touched">
+        <label for="numeroDossier">N° dossier <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="numeroDossier.invalid && numeroDossier.touched">Le n° de dossier est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateOctroi" name="dateOctroi" [(ngModel)]="newPret.dateOctroi" #dateOctroi="ngModel" required
+                      dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"
+                      [class.ng-dirty]="dateOctroi.invalid && dateOctroi.touched"></p-datepicker>
+        <label for="dateOctroi">Date octroi <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateOctroi.invalid && dateOctroi.touched">La date d'octroi est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateFin" name="dateFin" [(ngModel)]="newPret.dateFin" #dateFin="ngModel" required
+                      dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"
+                      [class.ng-dirty]="dateFin.invalid && dateFin.touched"></p-datepicker>
+        <label for="dateFin">Date fin <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateFin.invalid && dateFin.touched">La date de fin est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input type="number" pInputText id="montant" name="montant" [(ngModel)]="newPret.montant" #montant="ngModel" required
+               [class.ng-dirty]="montant.invalid && montant.touched">
+        <label for="montant">Montant <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="montant.invalid && montant.touched">Le montant est obligatoire.</small>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Ajouter" icon="pi pi-check" severity="success" (onClick)="addPret()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayAddPret=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" header="Modifier un prêt" [(visible)]="displayEditPret" [modal]="true" [style]="{width:'550px'}">
+  <form #editForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="editPret">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select [options]="agents" id="e_agentId" name="agentId" [(ngModel)]="editPret.agentId" optionValue="id" optionLabel="matricule" [filter]="true" filterBy="matricule,nom,prenom" styleClass="shared-field-dropdown w-full" required #e_agentId="ngModel" [ngClass]="{'ng-invalid ng-dirty': e_agentId.invalid && e_agentId.touched}">
+          <ng-template let-agent pTemplate="item">
+            <span>{{ agent.matricule }} - {{ agent.nom }} {{ agent.prenom }}</span>
+          </ng-template>
+        </p-select>
+        <label for="e_agentId">Agent <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_agentId.invalid && e_agentId.touched">L'agent est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="e_typePret" name="typePret" [options]="typePretOptions" [(ngModel)]="editPret.typePret" #e_typePret="ngModel" required
+                    optionLabel="label" optionValue="value" appendTo="body"
+                    [styleClass]="editPret.typePret ? 'p-filled w-full' : 'w-full'"
+                    [class.ng-dirty]="e_typePret.invalid && (e_typePret.dirty || e_typePret.touched)"></p-dropdown>
+        <label for="e_typePret">Type de prêt <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_typePret.invalid && (e_typePret.dirty || e_typePret.touched)">Le type de prêt est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="e_conditions" name="conditions" [options]="conditionsOptions" [(ngModel)]="editPret.conditions" #e_conditions="ngModel" required
+                    optionLabel="label" optionValue="value" appendTo="body"
+                    [styleClass]="editPret.conditions ? 'p-filled w-full' : 'w-full'"
+                    [class.ng-dirty]="e_conditions.invalid && (e_conditions.dirty || e_conditions.touched)"></p-dropdown>
+        <label for="e_conditions">Conditions <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_conditions.invalid && (e_conditions.dirty || e_conditions.touched)">Les conditions sont obligatoires.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="e_numeroDossier" name="numeroDossier" [(ngModel)]="editPret.numeroDossier" #e_numeroDossier="ngModel" required
+               [class.ng-dirty]="e_numeroDossier.invalid && e_numeroDossier.touched">
+        <label for="e_numeroDossier">N° dossier <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_numeroDossier.invalid && e_numeroDossier.touched">Le n° de dossier est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="e_dateOctroi" name="dateOctroi" [(ngModel)]="editPret.dateOctroi" #e_dateOctroi="ngModel" required
+                      dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"
+                      [class.ng-dirty]="e_dateOctroi.invalid && e_dateOctroi.touched"></p-datepicker>
+        <label for="e_dateOctroi">Date octroi <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_dateOctroi.invalid && e_dateOctroi.touched">La date d'octroi est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="e_dateFin" name="dateFin" [(ngModel)]="editPret.dateFin" #e_dateFin="ngModel" required
+                      dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"
+                      [class.ng-dirty]="e_dateFin.invalid && e_dateFin.touched"></p-datepicker>
+        <label for="e_dateFin">Date fin <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_dateFin.invalid && e_dateFin.touched">La date de fin est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input type="number" pInputText id="e_montant" name="montant" [(ngModel)]="editPret.montant" #e_montant="ngModel" required
+               [class.ng-dirty]="e_montant.invalid && e_montant.touched">
+        <label for="e_montant">Montant <span style="color:red">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_montant.invalid && e_montant.touched">Le montant est obligatoire.</small>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Modifier" icon="pi pi-check" severity="success" (onClick)="updatePret()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayEditPret=false"></p-button>
+  </ng-template>
+</p-dialog>

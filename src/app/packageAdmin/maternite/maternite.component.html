@@ -1,0 +1,237 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Situation de Maternité</h1>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Liste des maternités</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-heart" style="font-size:30px;margin-right:5px"></i>
+                Liste des maternités
+              </h3>
+
+              <p-button
+                label="Ajouter une maternité"
+                icon="pi pi-plus"
+                styleClass="p-button-success"
+                (onClick)="showAddDialog()">
+              </p-button>
+            </div>
+
+            <p-table
+              #dt
+              [value]="maternites"
+              [rows]="5"
+              [paginator]="true"
+              [rowsPerPageOptions]="[5,10,20]"
+              [loading]="loading"
+              [globalFilterFields]="['agentMatricule','agentNom','agentPrenom','categorieNaissance','dateDebut','dateFin']"
+            >
+
+              <ng-template pTemplate="caption">
+                <div class="flex align-items-center justify-content-between">
+                  <p-button
+                    label="Effacer"
+                    icon="pi pi-filter-slash"
+                    [outlined]="true"
+                    (onClick)="clearTable(dt)">
+                  </p-button>
+
+                  <span class="p-input-icon-left ml-auto">
+                    <i class="pi pi-search"></i>
+                    <input
+                      pInputText
+                      [(ngModel)]="searchValue"
+                      (input)="dt.filterGlobal(searchValue, 'contains'); applySearch();"
+                      placeholder="Rechercher..." />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter field="agentMatricule" display="menu" />Agent</th>
+                  <th><p-columnFilter field="dateDebut" display="menu" />Date début</th>
+                  <th><p-columnFilter field="dateFin" display="menu" />Date fin</th>
+                  <th><p-columnFilter field="dateDeclarationEmployeur" display="menu" />Décl. Employeur</th>
+                  <th><p-columnFilter field="dateAccouchementPrevue" display="menu" />Acc. Prévue</th>
+                  <th><p-columnFilter field="dateAccouchementEffective" display="menu" />Acc. Effective</th>
+                  <th><p-columnFilter field="categorieNaissance" display="menu" />Catégorie</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td>
+                    <div class="flex flex-column">
+                      <strong>{{ item.agentMatricule }}</strong>
+                      <span class="text-sm text-gray-600">{{ item.agentNom }} {{ item.agentPrenom }}</span>
+                    </div>
+                  </td>
+                  <td>{{ item.dateDebut | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ item.dateFin | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ item.dateDeclarationEmployeur | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ item.dateAccouchementPrevue | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ item.dateAccouchementEffective | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ item.categorieNaissance }}</td>
+
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" pTooltip="Visualiser" (click)="onView(item)"></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Modifier" (click)="onEdit(item)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" pTooltip="Supprimer" (click)="onDelete(item)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="8" class="text-center">Aucune maternité trouvée.</td></tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" header="Détails de la maternité" [(visible)]="displayView" [modal]="true" [style]="{width:'450px'}">
+  <ng-container *ngIf="selected">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_mat" [ngModel]="selected.agentMatricule + ' - ' + selected.agentNom + ' ' + selected.agentPrenom" [disabled]="true" />
+          <label for="v_mat">Agent</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="v_dd" [ngModel]="selected.dateDebut" [disabled]="true" dateFormat="dd/mm/yy" appendTo="body"></p-datepicker>
+          <label for="v_dd">Date début</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="v_df" [ngModel]="selected.dateFin" [disabled]="true" dateFormat="dd/mm/yy" appendTo="body"></p-datepicker>
+          <label for="v_df">Date fin</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="v_de" [ngModel]="selected.dateDeclarationEmployeur" [disabled]="true" dateFormat="dd/mm/yy" appendTo="body"></p-datepicker>
+          <label for="v_de">Déclaration employeur</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_cat" [ngModel]="selected.categorieNaissance" [disabled]="true" />
+          <label for="v_cat">Catégorie</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [(visible)]="displayDialog" [modal]="true" [header]="dialogMode==='add' ? 'Ajouter une maternité' : 'Modifier la maternité'" [style]="{width:'550px'}">
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select inputId="agentId" name="agentId" [options]="agents" optionLabel="matricule" optionValue="id" [(ngModel)]="form.agentId" #agentIdCtrl="ngModel" required appendTo="body"
+                    [filter]="true" filterBy="matricule,nom,prenom"
+                    [styleClass]="form.agentId ? 'w-full p-filled' : 'w-full'"
+                    [class.ng-dirty]="agentIdCtrl.invalid && agentIdCtrl.touched">
+          <ng-template pTemplate="item" let-agent>
+            <div>
+              <strong>{{ agent.matricule }}</strong> - {{ agent.nom }} {{ agent.prenom }}
+            </div>
+          </ng-template>
+        </p-select>
+        <label for="agentId">Agent <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="agentIdCtrl.invalid && agentIdCtrl.touched">L'agent est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateDebut" name="dateDebut" [(ngModel)]="form.dateDebut" #dateDebut="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="dateDebut.invalid && dateDebut.touched"></p-datepicker>
+        <label for="dateDebut">Date début <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateDebut.invalid && dateDebut.touched">La date de début est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateFin" name="dateFin" [(ngModel)]="form.dateFin" #dateFin="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="dateFin.invalid && dateFin.touched"></p-datepicker>
+        <label for="dateFin">Date fin <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateFin.invalid && dateFin.touched">La date de fin est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateDeclarationEmployeur" name="dateDeclarationEmployeur" [(ngModel)]="form.dateDeclarationEmployeur" #dateDeclarationEmployeur="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="dateDeclarationEmployeur.invalid && dateDeclarationEmployeur.touched"></p-datepicker>
+        <label for="dateDeclarationEmployeur">Déclaration employeur <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateDeclarationEmployeur.invalid && dateDeclarationEmployeur.touched">La déclaration employeur est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateAccouchementPrevue" name="dateAccouchementPrevue" [(ngModel)]="form.dateAccouchementPrevue" #dateAccouchementPrevue="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="dateAccouchementPrevue.invalid && dateAccouchementPrevue.touched"></p-datepicker>
+        <label for="dateAccouchementPrevue">Accouchement prévue <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateAccouchementPrevue.invalid && dateAccouchementPrevue.touched">La date d'accouchement prévue est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateAccouchementEffective" name="dateAccouchementEffective" [(ngModel)]="form.dateAccouchementEffective" #dateAccouchementEffective="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="dateAccouchementEffective.invalid && dateAccouchementEffective.touched"></p-datepicker>
+        <label for="dateAccouchementEffective">Accouchement effective <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateAccouchementEffective.invalid && dateAccouchementEffective.touched">La date d'accouchement effective est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateDeclarationAutorite" name="dateDeclarationAutorite" [(ngModel)]="form.dateDeclarationAutorite" #dateDeclarationAutorite="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="dateDeclarationAutorite.invalid && dateDeclarationAutorite.touched"></p-datepicker>
+        <label for="dateDeclarationAutorite">Déclaration autorité <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateDeclarationAutorite.invalid && dateDeclarationAutorite.touched">La déclaration autorité est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select inputId="categorieNaissance" name="categorieNaissance" [options]="categories" optionLabel="label" optionValue="value" [(ngModel)]="form.categorieNaissance" #categorieNaissance="ngModel" required appendTo="body"
+                    [styleClass]="form.categorieNaissance ? 'w-full p-filled' : 'w-full'"
+                    [class.ng-dirty]="categorieNaissance.invalid && categorieNaissance.touched"></p-select>
+        <label for="categorieNaissance">Catégorie naissance <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="categorieNaissance.invalid && categorieNaissance.touched">La catégorie de naissance est obligatoire.</small>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogMode==='add'?'Ajouter':'Modifier'" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,151 @@
+
+<div class="dashboard-wrapper">
+  <main class="dashboard-container">
+    <header class="dashboard-header">
+      <h1 class="titleh1">Tableau de Bord RH</h1>
+      <p class="subtitle">Indicateurs et suivi des mouvements administratifs</p>
+    </header>
+
+    <section class="kpi-grid">
+      <div class="card kpi-card">
+        <div class="kpi-icon bg-blue-100 text-blue-600">
+          <i class="pi pi-users" style="font-size: 1.5rem"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-title">Total Agents</span>
+          <span class="kpi-value">{{ totalAgents }}</span>
+        </div>
+      </div>
+
+      <div class="card kpi-card">
+        <div class="kpi-icon bg-purple-100 text-purple-600">
+          <i class="pi pi-briefcase" style="font-size: 1.5rem"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-title">Postes Occupés</span>
+          <span class="kpi-value">{{ postesOccupes }}</span>
+        </div>
+      </div>
+
+      <div class="card kpi-card">
+        <div class="kpi-icon bg-green-100 text-green-600">
+          <i class="pi pi-calendar" style="font-size: 1.5rem"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-title">Congés & Maternités</span>
+          <span class="kpi-value">{{ congesMaternites }}</span>
+        </div>
+      </div>
+
+      <div class="card kpi-card">
+        <div class="kpi-icon bg-orange-100 text-orange-600">
+          <i class="pi pi-heart-fill" style="font-size: 1.5rem"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-title">Accidents & Maladies</span>
+          <span class="kpi-value">{{ accidentsMaladies }}</span>
+        </div>
+      </div>
+
+      <div class="card kpi-card">
+        <div class="kpi-icon bg-indigo-100 text-indigo-600">
+          <i class="pi pi-arrow-up-right" style="font-size: 1.5rem"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-title">Avancements</span>
+          <span class="kpi-value">{{ avancementsPromotions }}</span>
+        </div>
+      </div>
+
+      <div class="card kpi-card">
+        <div class="kpi-icon bg-yellow-100 text-yellow-600">
+          <i class="pi pi-file-edit" style="font-size: 1.5rem"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-title">Actes Visés en Attente</span>
+          <span class="kpi-value">{{ actesVisesEnAttente }}</span>
+        </div>
+      </div>
+
+      <div class="card kpi-card">
+        <div class="kpi-icon bg-cyan-100 text-cyan-600">
+          <i class="pi pi-wallet" style="font-size: 1.5rem"></i>
+        </div>
+        <div class="kpi-details">
+          <span class="kpi-title">Prêts Actifs</span>
+          <span class="kpi-value">{{ dossiersPretsActifs }}</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="charts-grid">
+      <div class="card chart-card">
+        <h3>Répartition des Congés par Catégorie</h3>
+        <div class="chart-container">
+          <p-chart type="doughnut" [data]="congesData" [options]="congesOptions" height="300px"></p-chart>
+        </div>
+      </div>
+
+      <div class="card chart-card">
+        <h3>Diplômes par Spécialité</h3>
+        <div class="chart-container">
+          <p-chart type="bar" [data]="echellesData" [options]="echellesOptions" height="300px"></p-chart>
+        </div>
+      </div>
+
+      <div class="card chart-card">
+        <h3>Pyramide des Âges et Diversité</h3>
+        <div class="chart-container">
+          <p-chart type="bar" [data]="pyramideAgeData" [options]="pyramideAgeOptions" height="300px"></p-chart>
+        </div>
+      </div>
+
+      <div class="card chart-card">
+        <h3>Effectifs par Unité Structurelle</h3>
+        <div class="chart-container">
+          <p-chart type="bar" [data]="effectifsUniteData" [options]="effectifsUniteOptions" height="300px"></p-chart>
+        </div>
+      </div>
+
+      <div class="card chart-card">
+        <h3>Distribution par Famille Professionnelle</h3>
+        <div class="chart-container">
+          <p-chart type="bar" [data]="familleProData" [options]="familleProOptions" height="300px"></p-chart>
+        </div>
+      </div>
+
+      <div class="card chart-card">
+        <h3>Répartition des Indemnités et Primes</h3>
+        <div class="chart-container">
+          <p-chart type="bar" [data]="primesData" [options]="primesOptions" height="300px"></p-chart>
+        </div>
+      </div>
+    </section>
+
+    <section class="card table-section">
+      <h3>Derniers Actes Administratifs</h3>
+      <p-table [value]="derniersActes" [paginator]="true" [rows]="5" responsiveLayout="scroll" styleClass="p-datatable-sm">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Matricule</th>
+            <th>Type de demande</th>
+            <th>Date d'affectation</th>
+            <th style="width: 100px; text-align: center;">Action</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-acte>
+          <tr>
+            <td><strong>{{ acte.matricule }}</strong></td>
+            <td>
+              <span class="badge-type">{{ acte.typeDemande }}</span>
+            </td>
+            <td>{{ acte.dateAffectation }}</td>
+            <td style="text-align: center;">
+              <p-button icon="pi pi-eye" styleClass="p-button-rounded p-button-text p-button-sm p-button-info" (onClick)="voirActe(acte)" pTooltip="Voir l'acte"></p-button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+  </main>
+</div>

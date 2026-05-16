@@ -1,0 +1,209 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Evaluation et compétences</h1>
+  <div class="card">
+    <div class="container primTable">
+      <p-table
+        #dtUser
+        [value]="usersList"
+        [rows]="5"
+        [paginator]="true"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        [responsiveLayout]="'scroll'"
+        [globalFilterFields]="['nom', 'prenom', 'matricule']"
+        [loading]="loading"
+      >
+
+        <ng-template pTemplate="caption">
+          <div class="flex align-items-center justify-content-between">
+            <p-button
+              label="Effacer"
+              [outlined]="true"
+              icon="pi pi-filter-slash"
+              (onClick)="clearUsers(dtUser)"
+            ></p-button>
+
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input
+                #searchBoxUser
+                pInputText
+                type="text"
+                [(ngModel)]="searchUser"
+                (input)="dtUser.filterGlobal(searchBoxUser.value, 'contains'); applySearch();"
+                placeholder="Rechercher..."
+              />
+            </span>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th><p-columnFilter type="text" field="matricule" display="menu" /> Matricule</th>
+            <th><p-columnFilter type="text" field="nom" display="menu" /> Nom</th>
+            <th><p-columnFilter type="text" field="prenom" display="menu" /> Prénom</th>
+            <th>Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-user>
+          <tr>
+            <td><strong>{{ user.matricule }}</strong></td>
+            <td>{{ user.nom }}</td>
+            <td>{{ user.prenom }}</td>
+
+            <td class="actions-cell">
+              <button
+                pButton
+                icon="pi pi-eye"
+                class="p-button-rounded p-button-text p-button-success mr-2"
+                pTooltip="Visualiser"
+                (click)="onViewUser(user)"
+              ></button>
+              <button
+                pButton
+                icon="pi pi-pencil"
+                class="p-button-rounded p-button-text p-button-info mr-2"
+                pTooltip="Modifier notation"
+                (click)="onEditUser(user)"
+              ></button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="4" class="text-center">Aucun utilisateur trouvé.</td>
+          </tr>
+        </ng-template>
+
+      </p-table>
+    </div>
+  </div>
+</div>
+
+<p-dialog
+  styleClass="pdialogfon"
+  header="Détails des compétences"
+  [(visible)]="displayDialogUser"
+  [modal]="true"
+  [style]="{ width: '900px' }"
+>
+  <ng-container *ngIf="selectedUser">
+    <div class="mb-4">
+      <h3 style="color: #1f3c88; margin-bottom: 15px;">
+        <i class="pi pi-user" style="margin-right: 8px;"></i>
+        Agent : {{ selectedUser.nom }} {{ selectedUser.prenom }} ({{ selectedUser.matricule }})
+      </h3>
+    </div>
+
+    <div class="container primTable">
+      <p-table
+        #dtCompetenceView
+        [value]="competencesFiltres"
+        [rows]="5"
+        [paginator]="true"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        [responsiveLayout]="'scroll'"
+        [globalFilterFields]="['competence', 'description']"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Compétence</th>
+            <th>Description</th>
+            <th>Notation</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td><strong>{{ item.competence }}</strong></td>
+            <td>{{ item.description }}</td>
+            <td>
+              <div class="flex justify-content-center gap-3">
+                <p-radioButton [name]="'view_' + item.id" value="INUTILISABLE" [ngModel]="notationsMap[item.id]" [disabled]="true" pTooltip="Inutilisable"></p-radioButton>
+                <p-radioButton [name]="'view_' + item.id" value="ELEMENTAIRE" [ngModel]="notationsMap[item.id]" [disabled]="true" pTooltip="Elémentaire"></p-radioButton>
+                <p-radioButton [name]="'view_' + item.id" value="UTILE" [ngModel]="notationsMap[item.id]" [disabled]="true" pTooltip="Utile"></p-radioButton>
+                <p-radioButton [name]="'view_' + item.id" value="TRES_UTILE" [ngModel]="notationsMap[item.id]" [disabled]="true" pTooltip="Très utile"></p-radioButton>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </ng-container>
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialogUser=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  styleClass="pdialogfon"
+  header="Modifier les notations"
+  [(visible)]="displayEditDialogUser"
+  [modal]="true"
+  [style]="{ width: '950px' }"
+>
+  <ng-container *ngIf="selectedUser">
+    <div class="mb-4">
+      <h3 style="color: #1f3c88; margin-bottom: 15px;">
+        <i class="pi pi-user-edit" style="margin-right: 8px;"></i>
+        Evaluation pour : {{ selectedUser.nom }} {{ selectedUser.prenom }}
+      </h3>
+    </div>
+
+    <div class="container primTable">
+      <p-table
+        #dtCompetenceEdit
+        [value]="competencesFiltres"
+        [rows]="5"
+        [paginator]="true"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        [responsiveLayout]="'scroll'"
+        [globalFilterFields]="['competence', 'description']"
+      >
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Compétence</th>
+            <th>Description</th>
+            <th style="width: 300px">Notation</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td><strong>{{ item.competence }}</strong></td>
+            <td>{{ item.description }}</td>
+            <td>
+              <div class="flex justify-content-between align-items-center gap-2">
+                <div class="flex align-items-center">
+                  <p-radioButton [name]="'edit_' + item.id" value="INUTILISABLE" [(ngModel)]="notationsMap[item.id]" id="not_in_{{item.id}}"></p-radioButton>
+                  <label for="not_in_{{item.id}}" class="ml-1" style="font-size: 0.8rem">Inutil.</label>
+                </div>
+                <div class="flex align-items-center">
+                  <p-radioButton [name]="'edit_' + item.id" value="ELEMENTAIRE" [(ngModel)]="notationsMap[item.id]" id="not_el_{{item.id}}"></p-radioButton>
+                  <label for="not_el_{{item.id}}" class="ml-1" style="font-size: 0.8rem">Elem.</label>
+                </div>
+                <div class="flex align-items-center">
+                  <p-radioButton [name]="'edit_' + item.id" value="UTILE" [(ngModel)]="notationsMap[item.id]" id="not_ut_{{item.id}}"></p-radioButton>
+                  <label for="not_ut_{{item.id}}" class="ml-1" style="font-size: 0.8rem">Utile</label>
+                </div>
+                <div class="flex align-items-center">
+                  <p-radioButton [name]="'edit_' + item.id" value="TRES_UTILE" [(ngModel)]="notationsMap[item.id]" id="not_tr_{{item.id}}"></p-radioButton>
+                  <label for="not_tr_{{item.id}}" class="ml-1" style="font-size: 0.8rem">Très U.</label>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </ng-container>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler"  icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayEditDialogUser=false"></p-button>
+    <p-button label="Modifier" icon="pi pi-check" severity="success" (onClick)="saveNotations()" [loading]="loading"></p-button>
+  </ng-template>
+</p-dialog>

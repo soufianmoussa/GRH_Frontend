@@ -1,0 +1,300 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Gestion des Agents</h1>
+
+  <div class="card">
+    <div class="container primTable">
+
+      <div class="flex justify-content-between align-items-center mb-3">
+        <h3>
+          <i class="pi pi-users" style="font-size: 28px; margin-right: 6px;"></i>
+          Liste des Agents
+        </h3>
+        <p-button
+          label="Ajouter un agent"
+          icon="pi pi-plus"
+          styleClass="p-button-success"
+          (onClick)="showAddDialog()">
+        </p-button>
+      </div>
+
+      <p-table
+        #dtAgent
+        [value]="agents"
+        [paginator]="true"
+        [rows]="5"
+        [loading]="loading"
+        [rowsPerPageOptions]="[5,10,20]"
+        [responsiveLayout]="'scroll'"
+        [globalFilterFields]="['matricule','nom','prenom','sexe','cin']">
+
+        <ng-template pTemplate="caption">
+          <div class="flex justify-content-between align-items-center">
+            <p-button label="Effacer" icon="pi pi-filter-slash" [outlined]="true"
+              (onClick)="clearTable(dtAgent)"></p-button>
+
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input pInputText [(ngModel)]="search"
+                (input)="dtAgent.filterGlobal(search,'contains'); applySearch();" placeholder="Rechercher...">
+            </span>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th><p-columnFilter type="text" field="matricule" display="menu"></p-columnFilter>Matricule</th>
+            <th><p-columnFilter type="text" field="nom" display="menu"></p-columnFilter>Nom</th>
+            <th><p-columnFilter type="text" field="prenom" display="menu"></p-columnFilter>Prénom</th>
+            <th><p-columnFilter type="text" field="sexe" display="menu"></p-columnFilter>Sexe</th>
+            <th><p-columnFilter type="text" field="cin" display="menu"></p-columnFilter>CIN</th>
+            <th>Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td><strong>{{ item.matricule }}</strong></td>
+            <td>{{ item.nom }}</td>
+            <td>{{ item.prenom }}</td>
+            <td>{{ item.sexe }}</td>
+            <td>{{ item.cin }}</td>
+            <td class="actions-cell">
+              <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2"
+                pTooltip="Visualiser" (click)="onView(item)"></button>
+              <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2"
+                pTooltip="Modifier" (click)="onEdit(item)"></button>
+              <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger"
+                pTooltip="Supprimer" (click)="onDelete(item)"></button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="text-center">Aucun agent trouvé</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" header="Détails de l'agent" [(visible)]="displayView" [modal]="true" [style]="{width: '550px'}">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="selected">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_matricule" [ngModel]="selected.matricule" [disabled]="true" />
+        <label for="v_matricule">Matricule</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="v_dateTutorat" [ngModel]="selected.dateTutorat" [disabled]="true" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+        <label for="v_dateTutorat">Date du tutorat</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_numEnfant" [ngModel]="selected.numEnfant" [disabled]="true" />
+        <label for="v_numEnfant">Nombre d'enfants</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_nom" [ngModel]="selected.nom" [disabled]="true" />
+        <label for="v_nom">Nom</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_prenom" [ngModel]="selected.prenom" [disabled]="true" />
+        <label for="v_prenom">Prénom</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_sexe" [ngModel]="selected.sexe" [disabled]="true" />
+        <label for="v_sexe">Sexe</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="v_dateNaissance" [ngModel]="selected.dateNaissance" [disabled]="true" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+        <label for="v_dateNaissance">Date de naissance</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_nomAr" [ngModel]="selected.nomAr" [disabled]="true" dir="rtl" />
+        <label for="v_nomAr">Nom tuteur (ar)</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_prenomAr" [ngModel]="selected.prenomAr" [disabled]="true" dir="rtl" />
+        <label for="v_prenomAr">Prénom tuteur (ar)</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_cin" [ngModel]="selected.cin" [disabled]="true" />
+        <label for="v_cin">CIN</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_ppr" [ngModel]="selected.pprTuteur" [disabled]="true" />
+        <label for="v_ppr">PPR Tuteur</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_adresse" [ngModel]="selected.adresse" [disabled]="true" />
+        <label for="v_adresse">Adresse</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_codePostal" [ngModel]="selected.codePostal" [disabled]="true" />
+        <label for="v_codePostal">Code postal</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_ville" [ngModel]="selected.ville" [disabled]="true" />
+        <label for="v_ville">Ville</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_pays" [ngModel]="selected.pays" [disabled]="true" />
+        <label for="v_pays">Pays</label>
+      </p-floatLabel>
+    </div>
+  </div>
+  
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [header]="dialogMode === 'add' ? 'Ajouter un agent' : 'Modifier un agent'" [(visible)]="displayDialog" [modal]="true" [style]="{width:'550px'}">
+  <form #agentForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_matricule" name="f_matricule" [(ngModel)]="currentAgent.matricule" #f_matricule="ngModel" required [class.ng-dirty]="f_matricule.invalid && f_matricule.touched">
+        <label for="f_matricule">Matricule <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_matricule.invalid && f_matricule.touched">Le matricule est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="f_dateTutorat" name="f_dateTutorat" [(ngModel)]="currentAgent.dateTutorat" #f_dateTutorat="ngModel" required dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" [class.ng-dirty]="f_dateTutorat.invalid && f_dateTutorat.touched"></p-datepicker>
+        <label for="f_dateTutorat">Date du tutorat <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_dateTutorat.invalid && f_dateTutorat.touched">La date du tutorat est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input type="number" pInputText id="f_numEnfant" name="f_numEnfant" [(ngModel)]="currentAgent.numEnfant" #f_numEnfant="ngModel" required [class.ng-dirty]="f_numEnfant.invalid && f_numEnfant.touched">
+        <label for="f_numEnfant">Nombre d'enfants <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_numEnfant.invalid && f_numEnfant.touched">Le nombre d'enfants est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_nom" name="f_nom" [(ngModel)]="currentAgent.nom" #f_nom="ngModel" required [class.ng-dirty]="f_nom.invalid && f_nom.touched">
+        <label for="f_nom">Nom <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_nom.invalid && f_nom.touched">Le nom est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_prenom" name="f_prenom" [(ngModel)]="currentAgent.prenom" #f_prenom="ngModel" required [class.ng-dirty]="f_prenom.invalid && f_prenom.touched">
+        <label for="f_prenom">Prénom <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_prenom.invalid && f_prenom.touched">Le prénom est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="f_sexe" name="f_sexe" [options]="sexes" optionLabel="label" optionValue="value" [(ngModel)]="currentAgent.sexe" #f_sexe="ngModel" required appendTo="body" [styleClass]="currentAgent.sexe ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="f_sexe.invalid && f_sexe.touched"></p-dropdown>
+        <label for="f_sexe">Sexe <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_sexe.invalid && f_sexe.touched">Le sexe est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="f_dateNaissance" name="f_dateNaissance" [(ngModel)]="currentAgent.dateNaissance" #f_dateNaissance="ngModel" required dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" [class.ng-dirty]="f_dateNaissance.invalid && f_dateNaissance.touched"></p-datepicker>
+        <label for="f_dateNaissance">Date de naissance <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_dateNaissance.invalid && f_dateNaissance.touched">La date de naissance est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_nomAr" name="f_nomAr" [(ngModel)]="currentAgent.nomAr" #f_nomAr="ngModel" required [class.ng-dirty]="f_nomAr.invalid && f_nomAr.touched" dir="rtl">
+        <label for="f_nomAr">Nom tuteur (ar) <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_nomAr.invalid && f_nomAr.touched">Le nom (ar) est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_prenomAr" name="f_prenomAr" [(ngModel)]="currentAgent.prenomAr" #f_prenomAr="ngModel" required [class.ng-dirty]="f_prenomAr.invalid && f_prenomAr.touched" dir="rtl">
+        <label for="f_prenomAr">Prénom tuteur (ar) <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_prenomAr.invalid && f_prenomAr.touched">Le prénom (ar) est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_cin" name="f_cin" [(ngModel)]="currentAgent.cin" #f_cin="ngModel" required [class.ng-dirty]="f_cin.invalid && f_cin.touched">
+        <label for="f_cin">CIN <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_cin.invalid && f_cin.touched">Le CIN est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_ppr" name="f_ppr" [(ngModel)]="currentAgent.pprTuteur" #f_ppr="ngModel" required [class.ng-dirty]="f_ppr.invalid && f_ppr.touched">
+        <label for="f_ppr">PPR Tuteur <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_ppr.invalid && f_ppr.touched">Le PPR est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_adresse" name="f_adresse" [(ngModel)]="currentAgent.adresse" #f_adresse="ngModel" required [class.ng-dirty]="f_adresse.invalid && f_adresse.touched">
+        <label for="f_adresse">Adresse <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_adresse.invalid && f_adresse.touched">L'adresse est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_codePostal" name="f_codePostal" [(ngModel)]="currentAgent.codePostal" #f_codePostal="ngModel" required [class.ng-dirty]="f_codePostal.invalid && f_codePostal.touched">
+        <label for="f_codePostal">Code postal <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_codePostal.invalid && f_codePostal.touched">Le code postal est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_ville" name="f_ville" [(ngModel)]="currentAgent.ville" #f_ville="ngModel" required [class.ng-dirty]="f_ville.invalid && f_ville.touched">
+        <label for="f_ville">Ville <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_ville.invalid && f_ville.touched">La ville est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_pays" name="f_pays" [(ngModel)]="currentAgent.pays" #f_pays="ngModel" required [class.ng-dirty]="f_pays.invalid && f_pays.touched">
+        <label for="f_pays">Pays <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_pays.invalid && f_pays.touched">Le pays est obligatoire.</small>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogMode === 'add' ? 'Ajouter' : 'Modifier'" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+  </ng-template>
+</p-dialog>

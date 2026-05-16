@@ -1,0 +1,221 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Dates d'ancienneté</h1>
+
+  <div class="card">
+    <div class="container primTable">
+
+      <div class="flex justify-content-between align-items-center mb-3">
+        <h3>
+          <i class="pi pi-calendar" style="font-size: 28px; margin-right: 6px;"></i>
+          Liste des dates d'ancienneté
+        </h3>
+        <p-button
+          label="Ajouter une date d'ancienneté"
+          icon="pi pi-plus"
+          styleClass="p-button-success"
+          (onClick)="showAddAncienneteDialog()">
+        </p-button>
+      </div>
+
+      <p-table
+        #dtAnc
+        [value]="anciennetes"
+        dataKey="id"
+        [rows]="10"
+        [paginator]="true"
+        [loading]="loading"
+        [rowsPerPageOptions]="[10,20,50]"
+        [responsiveLayout]="'scroll'"
+        [globalFilterFields]="['agentMatricule','agentNom','agentPrenom','admin','cadre','grade','echelon']"
+      >
+
+        <ng-template pTemplate="caption">
+          <div class="flex align-items-center justify-content-between">
+            <p-button
+              label="Effacer"
+              [outlined]="true"
+              icon="pi pi-filter-slash"
+              (onClick)="clearAnciennete(dtAnc)">
+            </p-button>
+
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input
+                pInputText
+                type="text"
+                [(ngModel)]="searchAnciennete"
+                (input)="dtAnc.filterGlobal($any($event.target).value, 'contains')"
+                placeholder="Rechercher...">
+            </span>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th><p-columnFilter field="agentMatricule" type="text" display="menu" />Matricule</th>
+            <th><p-columnFilter field="admin" type="date" display="menu" />Administrative</th>
+            <th><p-columnFilter field="cadre" type="date" display="menu" />Cadre</th>
+            <th><p-columnFilter field="grade" type="date" display="menu" />Grade</th>
+            <th><p-columnFilter field="echelon" type="date" display="menu" />Échelon</th>
+            <th>Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td><strong>{{ item.agentMatricule }}</strong></td>
+            <td>{{ item.admin }}</td>
+            <td>{{ item.cadre }}</td>
+            <td>{{ item.grade }}</td>
+            <td>{{ item.echelon }}</td>
+            <td class="actions-cell">
+              <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" pTooltip="Visualiser" (click)="onViewAnciennete(item)"></button>
+              <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Modifier" (click)="onEditAnciennete(item)"></button>
+              <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" pTooltip="Supprimer" (click)="onDeleteAnciennete(item)"></button>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="6" class="text-center">Aucune donnée trouvée.</td></tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" header="Détails ancienneté" [(visible)]="displayDialogAnciennete" [modal]="true" [style]="{ width: '450px' }">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="selectedAnciennete">
+    <div class="w-full"><p-floatLabel><input pInputText id="v_mat" [ngModel]="selectedAnciennete.agentMatricule + ' - ' + selectedAnciennete.agentNom + ' ' + selectedAnciennete.agentPrenom" [disabled]="true" /><label for="v_mat">Agent</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><input pInputText id="v_adm" [ngModel]="selectedAnciennete.admin" [disabled]="true" /><label for="v_adm">Administrative</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><input pInputText id="v_cad" [ngModel]="selectedAnciennete.cadre" [disabled]="true" /><label for="v_cad">Cadre</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><input pInputText id="v_gra" [ngModel]="selectedAnciennete.grade" [disabled]="true" /><label for="v_gra">Grade</label></p-floatLabel></div>
+    <div class="w-full"><p-floatLabel><input pInputText id="v_ech" [ngModel]="selectedAnciennete.echelon" [disabled]="true" /><label for="v_ech">Échelon</label></p-floatLabel></div>
+  </div>
+  
+  <ng-template pTemplate="footer"><p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialogAnciennete=false"></p-button></ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" header="Ajouter une ancienneté" [(visible)]="displayAddAnciennete" [modal]="true" [style]="{ width: '550px' }">
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select [options]="agents" [(ngModel)]="newAnciennete.agentId" optionLabel="matricule" optionValue="id" [filter]="true" filterBy="matricule,nom,prenom"
+                  id="matricule" name="matricule" #matricule="ngModel" required
+                  appendTo="body" styleClass="shared-field-dropdown w-full"
+                  [class.ng-dirty]="matricule.invalid && matricule.touched">
+          <ng-template let-agent pTemplate="item">
+            <span>{{ agent.matricule }} - {{ agent.nom }} {{ agent.prenom }}</span>
+          </ng-template>
+        </p-select>
+        <label for="matricule">Agent <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="matricule.invalid && matricule.touched">L'agent est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="admin" name="admin" [(ngModel)]="newAnciennete.admin" #admin="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="admin.invalid && admin.touched"></p-datepicker>
+        <label for="admin">Administrative <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="admin.invalid && admin.touched">La date administrative est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="cadre" name="cadre" [(ngModel)]="newAnciennete.cadre" #cadre="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="cadre.invalid && cadre.touched"></p-datepicker>
+        <label for="cadre">Cadre <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="cadre.invalid && cadre.touched">La date de cadre est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="grade" name="grade" [(ngModel)]="newAnciennete.grade" #grade="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="grade.invalid && grade.touched"></p-datepicker>
+        <label for="grade">Grade <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="grade.invalid && grade.touched">La date de grade est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="echelon" name="echelon" [(ngModel)]="newAnciennete.echelon" #echelon="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="echelon.invalid && echelon.touched"></p-datepicker>
+        <label for="echelon">Échelon <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="echelon.invalid && echelon.touched">La date d'échelon est obligatoire.</small>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Ajouter" icon="pi pi-check" severity="success" (onClick)="addAnciennete()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayAddAnciennete=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" header="Modifier une ancienneté" [(visible)]="displayEditAnciennete" [modal]="true" [style]="{ width: '550px' }">
+  <form #editForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="editAnciennete">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select [options]="agents" [(ngModel)]="editAnciennete.agentId" optionLabel="matricule" optionValue="id" [filter]="true" filterBy="matricule,nom,prenom"
+                  id="e_matricule" name="matricule" #e_matricule="ngModel" required
+                  appendTo="body" styleClass="shared-field-dropdown w-full"
+                  [class.ng-dirty]="e_matricule.invalid && e_matricule.touched">
+          <ng-template let-agent pTemplate="item">
+            <span>{{ agent.matricule }} - {{ agent.nom }} {{ agent.prenom }}</span>
+          </ng-template>
+        </p-select>
+        <label for="e_matricule">Agent <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_matricule.invalid && e_matricule.touched">L'agent est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="e_admin" name="admin" [(ngModel)]="editAnciennete.admin" #e_admin="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="e_admin.invalid && e_admin.touched"></p-datepicker>
+        <label for="e_admin">Administrative <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_admin.invalid && e_admin.touched">La date administrative est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="e_cadre" name="cadre" [(ngModel)]="editAnciennete.cadre" #e_cadre="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="e_cadre.invalid && e_cadre.touched"></p-datepicker>
+        <label for="e_cadre">Cadre <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_cadre.invalid && e_cadre.touched">La date de cadre est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="e_grade" name="grade" [(ngModel)]="editAnciennete.grade" #e_grade="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="e_grade.invalid && e_grade.touched"></p-datepicker>
+        <label for="e_grade">Grade <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_grade.invalid && e_grade.touched">La date de grade est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="e_echelon" name="echelon" [(ngModel)]="editAnciennete.echelon" #e_echelon="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="e_echelon.invalid && e_echelon.touched"></p-datepicker>
+        <label for="e_echelon">Échelon <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="e_echelon.invalid && e_echelon.touched">La date d'échelon est obligatoire.</small>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Modifier" icon="pi pi-check" severity="success" (onClick)="updateAnciennete()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayEditAnciennete=false"></p-button>
+  </ng-template>
+</p-dialog>

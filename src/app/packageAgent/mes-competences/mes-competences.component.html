@@ -1,0 +1,207 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Mes Compétences</h1>
+  <app-agentcard></app-agentcard>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Liste des compétences</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-briefcase" style="font-size: 28px; margin-right: 6px;"></i>
+                Liste des compétences
+              </h3>
+
+              <p-button
+                label="Ajouter une compétence"
+                icon="pi pi-plus"
+                styleClass="p-button-success"
+                (onClick)="showAddDialog()"
+              ></p-button>
+            </div>
+
+            <p-table
+              #dtCompetences
+              [value]="mesCompetences"
+              [rows]="pageSize"
+              [paginator]="true"
+              [rowsPerPageOptions]="[5, 10, 20]"
+              [responsiveLayout]="'scroll'"
+              [totalRecords]="totalRecords"
+              [loading]="loading"
+              (onPage)="onPageChange($event)"
+              [globalFilterFields]="['competence','type','niveau','dateAcquisition','dateDerniereMiseAJour']"
+            >
+
+              <ng-template pTemplate="caption">
+                <div class="flex align-items-center justify-content-between">
+                  <p-button
+                    label="Effacer"
+                    [outlined]="true"
+                    icon="pi pi-filter-slash"
+                    (onClick)="clearTable(dtCompetences)"
+                  ></p-button>
+
+                  <span class="p-input-icon-left">
+                    <i class="pi pi-search"></i>
+                    <input
+                      pInputText
+                      type="text"
+                      [(ngModel)]="search"
+                      (input)="dtCompetences.filterGlobal(search, 'contains'); applySearch();"
+                      placeholder="Rechercher..."
+                    />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter field="competence" type="text" display="menu"></p-columnFilter>Compétence</th>
+                  <th><p-columnFilter field="type" type="text" display="menu"></p-columnFilter>Type</th>
+                  <th><p-columnFilter field="niveau" type="text" display="menu"></p-columnFilter>Niveau</th>
+                  <th><p-columnFilter field="dateAcquisition" type="date" display="menu"></p-columnFilter>Date acquisition</th>
+                  <th><p-columnFilter field="dateDerniereMiseAJour" type="date" display="menu"></p-columnFilter>Dernière màj</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td>{{ item.competence }}</td>
+                  <td>{{ item.type }}</td>
+                  <td>{{ item.niveau }}</td>
+                  <td>{{ item.dateAcquisition | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ item.dateDerniereMiseAJour | date:'dd/MM/yyyy' }}</td>
+                  <td class="actions-cell">
+                    <button
+                      pButton
+                      icon="pi pi-eye"
+                      class="p-button-rounded p-button-text p-button-success mr-2"
+                      pTooltip="Visualiser"
+                      (click)="onView(item)"
+                    ></button>
+
+                    <button
+                      pButton
+                      icon="pi pi-pencil"
+                      class="p-button-rounded p-button-text p-button-info mr-2"
+                      pTooltip="Modifier"
+                      (click)="onEdit(item)"
+                    ></button>
+
+                    <button
+                      pButton
+                      icon="pi pi-trash"
+                      class="p-button-rounded p-button-text p-button-danger"
+                      pTooltip="Supprimer"
+                      (click)="onDelete(item)"
+                    ></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="6" class="text-center p-4">Aucune compétence trouvée</td></tr>
+              </ng-template>
+
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" header="Détails de la compétence" [(visible)]="displayView" [modal]="true" [style]="{width: '500px'}">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="selected">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_competence" [ngModel]="selected.competence" [disabled]="true" />
+        <label for="v_competence">Compétence</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_type" [ngModel]="selected.type" [disabled]="true" />
+        <label for="v_type">Type</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_niveau" [ngModel]="selected.niveau" [disabled]="true" />
+        <label for="v_niveau">Niveau</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="v_dateAcq" [ngModel]="selected.dateAcquisition" [disabled]="true" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+        <label for="v_dateAcq">Date d'acquisition</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="v_dateMaj" [ngModel]="selected.dateDerniereMiseAJour" [disabled]="true" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+        <label for="v_dateMaj">Dernière mise à jour</label>
+      </p-floatLabel>
+    </div>
+  </div>
+  
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [header]="dialogMode === 'add' ? 'Ajouter une compétence' : 'Modifier la compétence'" [(visible)]="displayDialog" [modal]="true" [style]="{width:'520px'}">
+  <form #competenceForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_competence" name="f_competence" [(ngModel)]="currentCompetence.competence" #f_competence="ngModel" required [class.ng-dirty]="f_competence.invalid && f_competence.touched">
+        <label for="f_competence">Compétence <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_competence.invalid && f_competence.touched">La compétence est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_type" name="f_type" [(ngModel)]="currentCompetence.type" #f_type="ngModel" required [class.ng-dirty]="f_type.invalid && f_type.touched">
+        <label for="f_type">Type <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_type.invalid && f_type.touched">Le type est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_niveau" name="f_niveau" [(ngModel)]="currentCompetence.niveau" #f_niveau="ngModel" required [class.ng-dirty]="f_niveau.invalid && f_niveau.touched">
+        <label for="f_niveau">Niveau <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_niveau.invalid && f_niveau.touched">Le niveau est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="f_dateAcq" name="f_dateAcq" [(ngModel)]="currentCompetence.dateAcquisition" #f_dateAcq="ngModel" required dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" [class.ng-dirty]="f_dateAcq.invalid && f_dateAcq.touched"></p-datepicker>
+        <label for="f_dateAcq">Date d'acquisition <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_dateAcq.invalid && f_dateAcq.touched">La date d'acquisition est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="f_dateMaj" name="f_dateMaj" [(ngModel)]="currentCompetence.dateDerniereMiseAJour" #f_dateMaj="ngModel" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+        <label for="f_dateMaj">Dernière mise à jour</label>
+      </p-floatLabel>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogMode === 'add' ? 'Ajouter' : 'Modifier'" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+  </ng-template>
+</p-dialog>

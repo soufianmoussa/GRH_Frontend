@@ -1,0 +1,263 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Primes Extra-budgétaires</h1>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Liste des primes</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-money-bill" style="font-size: 30px; margin-right: 5px;"></i>
+                Liste des primes
+              </h3>
+
+              <p-button
+                label="Ajouter une prime"
+                icon="pi pi-plus"
+                styleClass="p-button-success"
+                (onClick)="showAddPrime()">
+              </p-button>
+            </div>
+
+            <p-table
+              #dtPrime
+              [value]="primes"
+              dataKey="id"
+              [rows]="5"
+              [rowsPerPageOptions]="[5, 10, 20]"
+              [paginator]="true"
+              [loading]="loading"
+              [responsiveLayout]="'scroll'"
+              [globalFilterFields]="[
+                'agentMatricule','dateDebut','dateFin','codeCentre','temoinGeneral',
+                'primeBase','primeResponsabilite','primeComplementaire','primeForfaitaire','primeFinCarriere'
+              ]">
+
+              <ng-template pTemplate="caption">
+                <div class="flex">
+                  <p-button label="Effacer" icon="pi pi-filter-slash" [outlined]="true" (onClick)="clearTable(dtPrime)" />
+                  <span class="p-input-icon-left ml-auto">
+                    <i class="pi pi-search"></i>
+                    <input
+                      pInputText
+                      type="text"
+                      [(ngModel)]="searchValue"
+                      (input)="dtPrime.filterGlobal(searchValue, 'contains'); applySearch();"
+                      placeholder="Rechercher..." />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter type="text" field="agentMatricule" display="menu" />Matricule</th>
+                  <th><p-columnFilter type="text" field="dateDebut" display="menu" />Date début</th>
+                  <th><p-columnFilter type="text" field="dateFin" display="menu" />Date fin</th>
+                  <th><p-columnFilter type="text" field="codeCentre" display="menu" />Code centre</th>
+                  <th><p-columnFilter type="numeric" field="primeBase" display="menu" />Prime base</th>
+                  <th><p-columnFilter type="numeric" field="primeResponsabilite" display="menu" />Prime resp.</th>
+                  <th><p-columnFilter type="numeric" field="primeComplementaire" display="menu" />Prime comp.</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-prime>
+                <tr>
+                  <td><strong>{{ prime.agentMatricule }}</strong></td>
+                  <td>{{ prime.dateDebut }}</td>
+                  <td>{{ prime.dateFin || '—' }}</td>
+                  <td>{{ prime.codeCentre }}</td>
+                  <td>{{ prime.primeBase | currency:'MAD':'symbol':'1.2-2' }}</td>
+                  <td>{{ prime.primeResponsabilite | currency:'MAD':'symbol':'1.2-2' }}</td>
+                  <td>{{ prime.primeComplementaire | currency:'MAD':'symbol':'1.2-2' }}</td>
+
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye"
+                            class="p-button-rounded p-button-text p-button-success mr-2"
+                            pTooltip="Visualiser"
+                            (click)="onView(prime)"></button>
+
+                    <button pButton icon="pi pi-pencil"
+                            class="p-button-rounded p-button-text p-button-info mr-2"
+                            pTooltip="Modifier"
+                            (click)="onEdit(prime)"></button>
+
+                    <button pButton icon="pi pi-trash"
+                            class="p-button-rounded p-button-text p-button-danger"
+                            pTooltip="Supprimer"
+                            (click)="onDelete(prime)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="8" class="text-center">Aucune prime trouvée.</td></tr>
+              </ng-template>
+
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog
+  styleClass="pdialogfon"
+  header="Détails de la prime"
+  [(visible)]="displayView"
+  [modal]="true"
+  [style]="{ width: '450px' }">
+
+  <ng-container *ngIf="selectedPrime">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_matricule" [ngModel]="selectedPrime.agentMatricule" [disabled]="true" />
+          <label for="view_matricule">Matricule</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_dateDebut" [ngModel]="selectedPrime.dateDebut" [disabled]="true" />
+          <label for="view_dateDebut">Date début</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_dateFin" [ngModel]="selectedPrime.dateFin" [disabled]="true" />
+          <label for="view_dateFin">Date fin</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_codeCentre" [ngModel]="selectedPrime.codeCentre" [disabled]="true" />
+          <label for="view_codeCentre">Code centre</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_primeBase" [ngModel]="selectedPrime.primeBase | currency:'MAD'" [disabled]="true" />
+          <label for="view_primeBase">Prime base</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_primeResponsabilite" [ngModel]="selectedPrime.primeResponsabilite | currency:'MAD'" [disabled]="true" />
+          <label for="view_primeResponsabilite">Prime responsabilité</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_primeComplementaire" [ngModel]="selectedPrime.primeComplementaire | currency:'MAD'" [disabled]="true" />
+          <label for="view_primeComplementaire">Prime complémentaire</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="dialogMode === 'add' ? 'Ajouter une prime' : 'Modifier une prime'"
+  [(visible)]="displayDialog"
+  [modal]="true"
+  [style]="{ width: '550px' }">
+
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="agentId" name="agentId" [options]="agents" optionLabel="matricule" optionValue="id" [(ngModel)]="formPrime.agentId" #agentId="ngModel" required [filter]="true" appendTo="body" [styleClass]="formPrime.agentId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="agentId.invalid && agentId.touched">
+            <ng-template pTemplate="selectedItem" let-selectedOption>
+                <div class="flex align-items-center gap-2">
+                    <div>{{selectedOption.matricule}} - {{selectedOption.nom}} {{selectedOption.prenom}}</div>
+                </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-agent>
+                <div class="flex align-items-center gap-2">
+                    <div>{{agent.matricule}} - {{agent.nom}} {{agent.prenom}}</div>
+                </div>
+            </ng-template>
+        </p-dropdown>
+        <label for="agentId">Agent <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="agentId.invalid && agentId.touched">L'agent est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateDebut" name="dateDebut" [(ngModel)]="formPrime.dateDebut" #dateDebut="ngModel" required
+                      dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"
+                      [class.ng-dirty]="dateDebut.invalid && dateDebut.touched"></p-datepicker>
+        <label for="dateDebut">Date début <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateDebut.invalid && dateDebut.touched">La date de début est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateFin" name="dateFin" [(ngModel)]="formPrime.dateFin" #dateFin="ngModel" required
+                      dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"
+                      [class.ng-dirty]="dateFin.invalid && dateFin.touched"></p-datepicker>
+        <label for="dateFin">Date fin <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateFin.invalid && dateFin.touched">La date de fin est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="codeCentre" name="codeCentre" [(ngModel)]="formPrime.codeCentre" #codeCentre="ngModel" required
+               [class.ng-dirty]="codeCentre.invalid && codeCentre.touched" />
+        <label for="codeCentre">Code centre <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="codeCentre.invalid && codeCentre.touched">Le code centre est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input type="number" pInputText id="primeBase" name="primeBase" [(ngModel)]="formPrime.primeBase" #primeBase="ngModel" required
+               [class.ng-dirty]="primeBase.invalid && primeBase.touched" />
+        <label for="primeBase">Prime base <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="primeBase.invalid && primeBase.touched">La prime de base est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input type="number" pInputText id="primeResponsabilite" name="primeResponsabilite" [(ngModel)]="formPrime.primeResponsabilite" #primeResponsabilite="ngModel" required
+               [class.ng-dirty]="primeResponsabilite.invalid && primeResponsabilite.touched" />
+        <label for="primeResponsabilite">Prime responsabilité <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="primeResponsabilite.invalid && primeResponsabilite.touched">La prime de responsabilité est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input type="number" pInputText id="primeComplementaire" name="primeComplementaire" [(ngModel)]="formPrime.primeComplementaire" #primeComplementaire="ngModel" required
+               [class.ng-dirty]="primeComplementaire.invalid && primeComplementaire.touched" />
+        <label for="primeComplementaire">Prime complémentaire <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="primeComplementaire.invalid && primeComplementaire.touched">La prime complémentaire est obligatoire.</small>
+    </div>
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogMode === 'add' ? 'Ajouter' : 'Modifier'" icon="pi pi-check" severity="success" (onClick)="savePrime()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+  </ng-template>
+</p-dialog>

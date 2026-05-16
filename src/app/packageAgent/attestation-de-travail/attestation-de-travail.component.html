@@ -1,0 +1,71 @@
+<div class="content">
+  <h1 class="titleh1">Demande d'Attestation de Travail</h1>
+
+
+  <app-agentcard></app-agentcard>
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Attestation de Travail</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+
+          <div  class="flex justify-content-end mb-3">
+            <p-button
+
+              styleClass="p-button-info"
+              label="Imprimer l'attestation"
+              icon="pi pi-print"
+              (onClick)="printAttestation()"
+            ></p-button>
+          </div>
+
+
+          <div id="attestation-section" class="attestation-container">
+            <div class="header text-center mb-4">
+              <h3><strong>{{ attestation.entreprise }}</strong></h3>
+              <p>{{ attestation.domaine }}</p>
+              <hr />
+            </div>
+            <br>
+
+            <h2>ATTESTATION DE TRAVAIL walid</h2>
+
+            <p>
+              Nous soussignons,
+              <strong>{{ attestation.gerant }}</strong>, Président Directeur Général de
+              {{ attestation.entreprise }}, attestons par la présente que
+              <strong>M. {{ attestation.nomEmploye }}</strong>,
+              est employé au sein de notre établissement en qualité de
+              <strong>{{ attestation.fonction }}</strong> et ce depuis le
+              <strong>{{ attestation.dateDebut }}</strong> à ce jour.
+            </p>
+
+            <p>
+              Cette attestation est délivrée à l'intéressé sur sa demande pour servir et
+              valoir ce que de droit.
+            </p>
+
+            <div class="signature">
+              <p>{{ attestation.lieu }}, le {{ attestation.dateGeneration }}</p>
+              <br /> <p><strong>Le Gérant</strong></p>
+
+              <p>{{ attestation.gerant }}</p>
+            </div>
+
+            <div class="footer">
+              <hr />
+              <p>
+                {{ attestation.lieu }} –“ {{ attestation.entreprise }}<br />
+                Tel : +224 662 21 73 23 / +224 622 69 81 95<br />
+                E-mail : mahounatcheder&#64;gmail.com
+              </p>
+            </div>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>

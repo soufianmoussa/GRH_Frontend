@@ -1,0 +1,545 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --p-primary-50: var(--p-blue-50) !important;
+  --p-primary-100: var(--p-blue-100) !important;
+  --p-primary-200: var(--p-blue-200) !important;
+  --p-primary-300: var(--p-blue-300) !important;
+  --p-primary-400: var(--p-blue-400) !important;
+  --p-primary-500: var(--p-blue-500) !important;
+  --p-primary-600: var(--p-blue-600) !important;
+  --p-primary-700: var(--p-blue-700) !important;
+  --p-primary-800: var(--p-blue-800) !important;
+  --p-primary-900: var(--p-blue-900) !important;
+  --p-primary-950: var(--p-blue-950) !important;
+
+  /* ================================
+     RH design tokens (single source)
+     ================================ */
+  --rh-primary:        #237ad2;
+  --rh-primary-dark:   #1e6bb8;
+  --rh-primary-light:  #4a9ae8;
+  --rh-header-grad:    linear-gradient(135deg, #1f3c88, #2a52be);
+  --rh-text:           #1e293b;
+  --rh-text-muted:     #64748b;
+  --rh-border:         #cbd5e1;
+  --rh-border-hover:   #94a3b8;
+  --rh-surface:        #ffffff;
+  --rh-surface-alt:    #f9fafb;
+  --rh-dialog-radius:  16px;
+  --rh-dialog-shadow:  0 10px 35px rgba(15, 23, 42, 0.22);
+  --rh-field-height:   52px;
+  --rh-field-radius:   12px;
+}
+* {
+  margin: 0;
+  padding: 0;
+}
+html {
+  background-color: #f4f8fc;
+  font-family: Lato, sans-serif;
+}
+
+.titleh1 {
+  color: #198897;
+  margin-bottom: 20px;
+  font-size: 2.25rem;
+  font-weight: 600; 
+}
+
+.p-card {
+  background-color: #fff !important;
+  .p-card-title {
+    color: #218d9a;
+    font-size: 22px;
+    font-weight: 700;
+  }
+}
+
+.card {
+  .p-tablist-active-bar {
+    background-color: #0a3d62;
+  }
+  .p-tablist-tab-list {
+    border-color: #e6ebf2;
+    background-color: #fff;
+  }
+  .p-select-option.p-select-option-selected.p-focus,.p-select-option.p-select-option-selected {
+    background-color: #e6e6e6;
+    color: #000;
+  }
+
+}
+
+
+.pdialogfon2 {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(245px, 1fr)) !important;
+  gap: 15px !important;
+  position: relative;
+  z-index: 100;
+  .field {
+    align-items: center;
+  }
+  .field:focus {
+    z-index: 101 !important;
+  }
+
+}
+
+.p-datatable-filter-overlay-popover {
+  background-color: #fff !important;
+  border: 1px solid #f1f1f1!important;
+  .p-inputtext,.p-select {
+    color: #000000;
+    background: #ffffff;
+    .p-select-overlay {
+      background-color: #fff !important;
+    }
+    .p-select-option {
+      color: #000;
+    }
+    .p-select-option:not(.p-select-option-selected):not(.p-disabled).p-focus {
+      color: #000000;
+      background-color: #b3b4b5 !important;
+    }
+    .p-select-label {
+      color: #000;
+    }
+  }
+  .p-select:not(.p-disabled).p-focus {
+    border-color: #000;
+  }
+  .p-inputtext:enabled:focus {
+    border-color: #237ad2;
+  }
+}
+.primTable {
+
+  .checkboxes {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+  }
+  .GrpAdd {
+    display: flex;
+    justify-content: space-between;
+    padding: 20px;
+  }
+
+  h3 {
+    color: #218d9a;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+  .p-table {
+    background: #ffffff;
+    border-radius: 1rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+  }
+  .p-select {
+    background: #fff;
+    border-color: #cbd5e1;
+    .p-select-label {
+      color: #000;
+    }
+    .p-select-dropdown {
+      color: #94a3b8;
+    }
+  }
+
+  .p-button-text.p-button-secondary:not(:disabled):hover {
+    background-color: #c4c4c4;
+    outline: none;
+    border: none;
+  }
+
+
+  .p-datatable-table-container {
+
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+
+    .p-datatable-table {
+      overflow: hidden;
+      border-radius: 10px;
+    }
+  }
+
+  .p-datatable-header {
+    background: #fff;
+    border-color: transparent;
+    padding-left: 0;
+    padding-right: 0;
+    .flex {
+      display: flex;
+      justify-content: space-between;
+    }
+
+  }
+
+
+  .p-datatable-thead > tr > th {
+    background-color: transparent;
+  }
+  .p-datatable-thead > tr {
+    background: linear-gradient(135deg, #1f3c88, #2a52be);
+  }
+  /* 🧾 Table Header */
+  .p-datatable-thead > tr > th {
+    //background: #f9fafb;
+    //color: #333;
+    color: #fff;
+    font-weight: 600;
+    border: none;
+    padding: 1rem;
+    text-align: center;
+    .p-iconwrapper {
+      color: #fff;
+    }
+    .flex {
+      display: flex;
+      align-items: center;
+      justify-content: center !important;
+    }
+  }
+
+  /* 🧍 Table Body */
+  .p-datatable-tbody > tr {
+    transition: background-color 0.2s ease;
+    background-color: #fff;
+  }
+
+  .p-datatable-tbody > tr:hover {
+    background: #f5f7fa;
+  }
+
+  .p-datatable-tbody > tr > td {
+    border: none;
+    padding: 0.9rem 1rem;
+    color: #444;
+    font-size: 0.95rem;
+    text-align: center;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  /* 🎯 Global Filter Bar */
+  .p-datatable-caption {
+    background: #f9fafb;
+    padding: 1rem;
+    border-bottom: 1px solid #e0e0e0;
+  }
+
+  .p-input-icon-left {
+    i {
+      position: relative;
+      left: 32px;
+      top: 2px;
+    }
+    input {
+      border-radius: 2rem;
+      border: 1px solid #d1d5db;
+      padding: 8px 16px 8px 40px;
+      width: 250px;
+      transition: 0.2s ease;
+      background-color: white;
+      color: black;
+    }
+
+    input:focus {
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+    }
+  }
+
+  .p-button {
+    background-color: transparent;
+    color: #2649a9;
+    padding: 14px;
+    border-radius: 5px;
+    font-weight: 500;
+    border: 1px solid #2649a9;
+    transition: 0.2s ease;
+  }
+
+  .p-button:hover {
+    background-color: #2649a9 !important;
+    border: 1px solid transparent !important;
+    color: white !important;
+  }
+
+  .p-button-outlined {
+    color: #4f46e5;
+    background-color: transparent;
+    border: 1px solid #4f46e5;
+  }
+
+  /* 🏷️ Status Tags */
+  .p-tag {
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: capitalize;
+    padding: 0.4rem 0.6rem;
+  }
+
+  .p-tag-success {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .p-tag-danger {
+    background: #fee2e2;
+    color: #991b1b;
+  }
+
+  .p-tag-warning {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  /* 🧭 Pagination */
+  .p-paginator {
+    border: none;
+    padding: 1rem;
+    background-color: #fff;
+    .p-iconwrapper {
+      color: #64748b;
+    }
+    .p-paginator-page.p-paginator-page-selected {
+      background-color: #2f88e7;
+      color: #fff;
+    }
+  }
+
+  .p-paginator .p-paginator-pages .p-paginator-page.p-highlight {
+    background: #4f46e5;
+    color: white;
+    border-radius: 50%;
+  }
+
+  /* 🖊️ Action Buttons */
+  .p-button-rounded {
+
+    margin-right: 10px;
+    height: 2rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+  }
+
+  .p-button-text.p-button-info {
+    color: #2563eb;
+  }
+  .p-button-text.p-button-success,.p-button-text.p-button-success:hover {
+    border: none;
+    outline: none;
+    color: #2649a9;
+  }
+
+
+  .p-button-text.p-button-info:hover {
+    background-color: rgba(37, 99, 235, 0.1);
+    border: none;
+  }
+
+  .p-button-text.p-button-danger {
+    color: #dc2626;
+  }
+
+  .p-button-text.p-button-danger:hover {
+    background-color: rgba(220, 38, 38, 0.1);
+    border: none;
+  }
+
+
+
+}
+
+
+//// walid /////
+
+.actions-cell {
+  display: flex;
+  justify-content: center; /* centre horizontalement */
+  align-items: center;     /* centre verticalement */
+  gap: 6px;
+  height: 100%;            /* occupe toute la hauteur du <td> */
+}
+
+.actions-cell .p-button {
+  padding: 0.25rem;        /* réduit l’espace interne si nécessaire */
+  width: 36px;             /* largeur fixe */
+  height: 36px;            /* hauteur fixe */
+}
+
+/* ================================================================
+   Dialog — single source of truth (.pdialogfon)
+   - No !important on width/height: components control size via [style]
+   - Auto 2-col layout when .p-fluid has 5+ fields (:has query)
+   - Primary footer action styled with table-header dark-blue gradient
+   - Textareas are not resizable (matches input field look)
+   - No ::ng-deep: styles.scss is global, it already pierces PrimeNG
+   ================================================================ */
+.p-dialog.pdialogfon {
+  border-radius: var(--rh-dialog-radius);
+  overflow: hidden;
+  box-shadow: var(--rh-dialog-shadow);
+  border: none;
+  animation: rhDialogFadeIn 0.25s ease;
+
+  /* Sensible default width for dialogs that don't set [style]="{width:'…'}".
+     Per-component inline width (higher specificity) still wins when provided. */
+  width: min(560px, 95vw);
+
+  /* Wider dialog when the form lays out in 2 columns (auto or opt-in).
+     Uses min-width so it only grows dialogs, never shrinks them. */
+  &:has(.p-dialog-content .p-fluid > :nth-child(5)),
+  &.pdialogfon--two-col {
+    width: min(860px, 95vw);
+    min-width: min(860px, 95vw);
+  }
+
+  .p-dialog-header {
+    background: var(--rh-header-grad);
+    color: #fff;
+    font-weight: 600;
+    font-size: 1.15rem;
+    padding: 1rem 1.5rem;
+    border-bottom: none;
+
+    .p-dialog-title { color: #fff; }
+
+    .p-dialog-header-icon {
+      color: #fff;
+      transition: transform 0.2s ease;
+      &:hover { transform: rotate(90deg); color: #f1f5f9; }
+    }
+  }
+
+  .p-dialog-content {
+    background: var(--rh-surface);
+    padding: 1.75rem 2rem;
+    color: var(--rh-text);
+    font-family: "Inter", "Roboto", sans-serif;
+    line-height: 1.5;
+
+    /* Default: stacked single column */
+    .p-fluid {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    /* Auto 2-column when form has 5 or more fields (direct children of .p-fluid) */
+    .p-fluid:has(> :nth-child(5)) {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1.5rem 1.25rem;
+
+      /* File upload card is taller than a standard field; give it a full-width
+         row so it can't misalign with the input next to it on the last row. */
+      > .dialog-upload {
+        grid-column: 1 / -1;
+      }
+    }
+
+    /* Textareas: fixed size, not resizable, styled like the other fields */
+    textarea,
+    textarea.p-inputtext {
+      resize: none;
+      width: 100%;
+      min-height: calc(var(--rh-field-height) * 2);
+      max-height: calc(var(--rh-field-height) * 2);
+      box-sizing: border-box;
+      padding: 14px 18px;
+      border-radius: var(--rh-field-radius);
+      border: 1px solid var(--rh-border);
+      background: #fff;
+      color: var(--rh-text);
+      font-family: inherit;
+      font-size: 1.05rem;
+      line-height: 1.45;
+      transition: border-color 0.15s, box-shadow 0.15s;
+
+      &:hover  { border-color: var(--rh-border-hover); }
+      &:focus,
+      &:focus-visible {
+        outline: none;
+        border-color: var(--rh-primary);
+        box-shadow: 0 0 0 1px var(--rh-primary);
+      }
+    }
+  }
+
+  .p-dialog-footer {
+    background: var(--rh-surface-alt);
+    border-top: 1px solid #e5e7eb;
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+
+    /* Always render text/cancel buttons to the left of primary actions,
+       so Ajouter/Modifier stays pinned to the right regardless of DOM order.
+       NOTE: flex children here are <p-button> wrappers, not the inner <button>,
+       so we must match the wrapper via :has(). */
+    p-button:has(.p-button-text),
+    p-button:has(.p-button-outlined),
+    button.p-button-text,
+    button.p-button-outlined {
+      order: -1;
+    }
+
+    /* Primary action (Ajouter / Modifier / Enregistrer) — dark blue like the table header.
+       The "text" variant (Annuler / Fermer) is excluded and keeps its transparent look. */
+    .p-button:not(.p-button-text):not(.p-button-outlined) {
+      background: var(--rh-header-grad);
+      border: none;
+      color: #fff;
+      font-weight: 600;
+      transition: filter 0.2s ease, transform 0.1s ease;
+
+      &:hover:not(:disabled) {
+        background: var(--rh-header-grad);
+        filter: brightness(1.08);
+      }
+
+      &:active:not(:disabled) {
+        transform: translateY(1px);
+      }
+
+      &:focus-visible {
+        box-shadow: 0 0 0 3px rgba(42, 82, 190, 0.35);
+      }
+    }
+  }
+
+  /* Opt-in override: force 2 columns even for short forms */
+  &.pdialogfon--two-col .p-dialog-content .p-fluid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem 1.25rem;
+
+    > .dialog-upload {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+@keyframes rhDialogFadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+
+
+
+
+

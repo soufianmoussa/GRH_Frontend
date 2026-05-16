@@ -1,0 +1,243 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Référentiel des compétences</h1>
+
+  <div class="card">
+    <p-tabs [(value)]="activeTab" (valueChange)="onTabChange($event)">
+      <p-tablist>
+        <p-tab value="0">Groupes de compétences</p-tab>
+        <p-tab value="1">Compétences</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-folder" style="font-size: 28px; margin-right: 6px;"></i>
+                Liste des groupes
+              </h3>
+              <p-button
+                label="Ajouter un groupe"
+                icon="pi pi-plus"
+                styleClass="p-button-success"
+                (onClick)="showAddGroupeDialog()"
+              ></p-button>
+            </div>
+
+            <p-table
+              #dtGroupes
+              [value]="groupes"
+              dataKey="id"
+              [rows]="groupesPageSize"
+              [paginator]="true"
+              [lazy]="true"
+              [totalRecords]="groupesTotal"
+              (onPage)="onGroupesPageChange($event)"
+              [loading]="loadingGroupes"
+              [rowsPerPageOptions]="[5,10,20]"
+              [responsiveLayout]="'scroll'"
+              [globalFilterFields]="['name','description']"
+            >
+              <ng-template pTemplate="caption">
+                <div class="flex">
+                  <p-button label="Effacer" icon="pi pi-filter-slash" [outlined]="true" (onClick)="clearTable(dtGroupes)" />
+                  <span class="p-input-icon-left ml-auto">
+                    <i class="pi pi-search"></i>
+                    <input
+                      pInputText
+                      type="text"
+                      [(ngModel)]="searchGlobal"
+                      (input)="dtGroupes.filterGlobal(searchGlobal, 'contains'); applySearch();"
+                      placeholder="Rechercher..." />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter type="text" field="name" display="menu"></p-columnFilter>Groupe</th>
+                  <th><p-columnFilter type="text" field="description" display="menu"></p-columnFilter>Description</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td><strong>{{ item.name }}</strong></td>
+                  <td>{{ item.description }}</td>
+
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" pTooltip="Visualiser" (click)="onView(item)"></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Modifier" (click)="showEditGroupeDialog(item)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" pTooltip="Supprimer" (click)="deleteGroupe(item)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="3" class="text-center">Aucun groupe trouvé.</td></tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+
+        <p-tabpanel value="1">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <div class="flex align-items-center gap-3">
+                <h3>
+                  <i class="pi pi-star" style="font-size: 28px; margin-right: 6px;"></i>
+                  Compétences par groupe
+                </h3>
+                <p-dropdown
+                  [options]="groupes"
+                  optionLabel="name"
+                  optionValue="id"
+                  [(ngModel)]="selectedGroupeId"
+                  (onChange)="onSelectGroupeForCompetences()"
+                  styleClass="w-20rem"
+                  appendTo="body"
+                  [styleClass]="selectedGroupeId ? 'p-filled w-full' : 'w-full'"
+                ></p-dropdown>
+              </div>
+
+              <p-button
+                label="Ajouter une compétence"
+                icon="pi pi-plus"
+                styleClass="p-button-success"
+                [disabled]="!selectedGroupeId"
+                (onClick)="showAddCompetenceDialog()"
+              ></p-button>
+            </div>
+
+            <p-table
+              #dtCompetences
+              [value]="competences"
+              dataKey="id"
+              [rows]="competencesPageSize"
+              [paginator]="true"
+              [lazy]="true"
+              [totalRecords]="competencesTotal"
+              (onPage)="onCompetencesPageChange($event)"
+              [loading]="loadingCompetences"
+              [rowsPerPageOptions]="[5,10,20]"
+              [responsiveLayout]="'scroll'"
+              [globalFilterFields]="['competence','description']"
+            >
+              <ng-template pTemplate="caption">
+                <div class="flex">
+                  <p-button label="Effacer" icon="pi pi-filter-slash" [outlined]="true" (onClick)="clearTable(dtCompetences)" />
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter field="competence" type="text" display="menu"></p-columnFilter>Compétence</th>
+                  <th><p-columnFilter field="description" type="text" display="menu"></p-columnFilter>Description</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td><strong>{{ item.competence }}</strong></td>
+                  <td>{{ item.description }}</td>
+
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" pTooltip="Visualiser" (click)="onView(item)"></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Modifier" (click)="showEditCompetenceDialog(item)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" pTooltip="Supprimer" (click)="deleteCompetence(item)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="3" class="text-center">Aucune compétence trouvée.</td></tr>
+              </ng-template>
+            </p-table>
+
+          </div>
+        </p-tabpanel>
+
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" header="Détails" [(visible)]="displayView" [modal]="true" [style]="{width:'450px'}">
+  <div *ngIf="selectedItem" class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full" *ngIf="selectedItem.name">
+      <p-floatLabel>
+        <input pInputText id="v_name" [ngModel]="selectedItem.name" [disabled]="true" />
+        <label for="v_name">Groupe</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full" *ngIf="selectedItem.competence">
+      <p-floatLabel>
+        <input pInputText id="v_comp" [ngModel]="selectedItem.competence" [disabled]="true" />
+        <label for="v_comp">Compétence</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="v_desc" [ngModel]="selectedItem.description" rows="4" [disabled]="true"></textarea>
+        <label for="v_desc">Description</label>
+      </p-floatLabel>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [header]="dialogModeGroupe === 'add' ? 'Ajouter un groupe' : 'Modifier un groupe'" [(visible)]="displayDialogGroupe" [modal]="true" [style]="{width:'550px'}">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="a_gname" name="a_gname" [(ngModel)]="formGroupe.name" #a_gname="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': a_gname.invalid && (a_gname.dirty || a_gname.touched)}" />
+        <label for="a_gname">Nom du groupe <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="a_gname.invalid && (a_gname.dirty || a_gname.touched)">Le nom du groupe est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="a_gdesc" name="a_gdesc" rows="4" [(ngModel)]="formGroupe.description"></textarea>
+        <label for="a_gdesc">Description</label>
+      </p-floatLabel>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogModeGroupe === 'add' ? 'Ajouter' : 'Modifier'" icon="pi pi-check" severity="success" (onClick)="saveGroupe()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialogGroupe=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [header]="dialogModeCompetence === 'add' ? 'Ajouter une compétence' : 'Modifier une compétence'" [(visible)]="displayDialogCompetence" [modal]="true" [style]="{width:'550px'}">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="a_cname" name="a_cname" [(ngModel)]="formCompetence.competence" #a_cname="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': a_cname.invalid && (a_cname.dirty || a_cname.touched)}" />
+        <label for="a_cname">Compétence <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="a_cname.invalid && (a_cname.dirty || a_cname.touched)">Le nom de la compétence est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="a_cdesc" name="a_cdesc" rows="4" [(ngModel)]="formCompetence.description"></textarea>
+        <label for="a_cdesc">Description</label>
+      </p-floatLabel>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogModeCompetence === 'add' ? 'Ajouter' : 'Modifier'" icon="pi pi-check" severity="success" (onClick)="saveCompetence()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialogCompetence=false"></p-button>
+  </ng-template>
+</p-dialog>

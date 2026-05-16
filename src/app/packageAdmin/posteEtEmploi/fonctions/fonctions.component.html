@@ -1,0 +1,250 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">{{ 'POSTE_ET_EMPLOI.FONCTIONS.TITLE' | translate }}</h1>
+
+  <div class="card">
+    <div class="container primTable">
+
+      <div class="flex justify-content-between align-items-center mb-3">
+        <h3>
+          <i class="pi pi-briefcase" style="font-size: 28px; margin-right: 6px;"></i>
+          {{ 'POSTE_ET_EMPLOI.FONCTIONS.LIST_TITLE' | translate }}
+        </h3>
+        <p-button
+          [label]="'POSTE_ET_EMPLOI.FONCTIONS.ADD_BTN' | translate"
+          icon="pi pi-plus"
+          styleClass="p-button-success"
+          (onClick)="showAddDialog()">
+        </p-button>
+      </div>
+
+      <p-table
+        #dtFonctions
+        [value]="fonctions"
+        [rows]="pageSize"
+        [paginator]="true"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        [responsiveLayout]="'scroll'"
+        [totalRecords]="totalRecords"
+        [lazy]="true"
+        (onPage)="onPageChange($event)"
+        [loading]="loading"
+        [globalFilterFields]="['code','libelle','dateCreation','dateFin']">
+
+        <ng-template pTemplate="caption">
+          <div class="flex align-items-center justify-content-between">
+            <p-button
+              [label]="'GLOBAL.EFFACER' | translate"
+              [outlined]="true"
+              icon="pi pi-filter-slash"
+              (onClick)="clearTable(dtFonctions)">
+            </p-button>
+
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input
+                pInputText
+                type="text"
+                [(ngModel)]="search"
+                (input)="dtFonctions.filterGlobal(search, 'contains'); applySearch();"
+                [placeholder]="'GLOBAL.RECHERCHER' | translate" />
+            </span>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th>
+              <p-columnFilter field="code" display="menu" />
+              {{ 'GLOBAL.CODE' | translate }}
+            </th>
+            <th>
+              <p-columnFilter field="libelle" display="menu" />
+              {{ 'GLOBAL.LIBELLE' | translate }}
+            </th>
+            <th>
+              <p-columnFilter field="dateCreation" display="menu" />
+              {{ 'GLOBAL.DATE_CREATION' | translate }}
+            </th>
+            <th>
+              <p-columnFilter field="dateFin" display="menu" />
+              {{ 'GLOBAL.DATE_FIN' | translate }}
+            </th>
+            <th>{{ 'GLOBAL.STATUT' | translate }}</th>
+            <th style="width: 150px">{{ 'GLOBAL.ACTIONS' | translate }}</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-fonction>
+          <tr>
+            <td><strong>{{ fonction.code }}</strong></td>
+            <td>{{ fonction.libelle }}</td>
+            <td>{{ fonction.dateCreation | date:'dd/MM/yyyy' }}</td>
+            <td>{{ fonction.dateFin ? (fonction.dateFin | date:'dd/MM/yyyy') : '—' }}</td>
+            <td>
+              <p-tag
+                *ngIf="isExpired(fonction.dateFin)"
+                [value]="'POSTE_ET_EMPLOI.FONCTIONS.TAG_EXPIRED' | translate"
+                severity="danger">
+              </p-tag>
+              <p-tag
+                *ngIf="!isExpired(fonction.dateFin)"
+                [value]="'POSTE_ET_EMPLOI.FONCTIONS.TAG_ACTIVE' | translate"
+                severity="success">
+              </p-tag>
+            </td>
+            <td class="actions-cell">
+              <button
+                pButton icon="pi pi-eye"
+                class="p-button-rounded p-button-text p-button-success mr-2"
+                [pTooltip]="'GLOBAL.VISUALISER' | translate"
+                (click)="onView(fonction)">
+              </button>
+              <button
+                pButton icon="pi pi-pencil"
+                class="p-button-rounded p-button-text p-button-info mr-2"
+                [pTooltip]="'GLOBAL.MODIFIER' | translate"
+                (click)="onEdit(fonction)">
+              </button>
+              <button
+                pButton icon="pi pi-trash"
+                class="p-button-rounded p-button-text p-button-danger"
+                [pTooltip]="'GLOBAL.SUPPRIMER' | translate"
+                (click)="onDelete(fonction)">
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="6" class="text-center">{{ 'POSTE_ET_EMPLOI.FONCTIONS.EMPTY_MESSAGE' | translate }}</td></tr>
+        </ng-template>
+      </p-table>
+
+    </div>
+  </div>
+</div>
+
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="'POSTE_ET_EMPLOI.FONCTIONS.DIALOG_VIEW_TITLE' | translate"
+  [(visible)]="displayView"
+  [modal]="true"
+  [style]="{width: '550px'}">
+
+  <ng-container *ngIf="selected">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_code" [ngModel]="selected.code" [disabled]="true" />
+          <label for="v_code">{{ 'GLOBAL.CODE' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_libelle" [ngModel]="selected.libelle" [disabled]="true" />
+          <label for="v_libelle">{{ 'GLOBAL.LIBELLE' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="v_dateCreation" [ngModel]="selected.dateCreation" [disabled]="true" dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"></p-datepicker>
+          <label for="v_dateCreation">{{ 'GLOBAL.DATE_CREATION' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="v_dateFin" [ngModel]="selected.dateFin" [disabled]="true" dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"></p-datepicker>
+          <label for="v_dateFin">{{ 'GLOBAL.DATE_FIN' | translate }}</label>
+        </p-floatLabel>
+      </div>
+    </div>
+
+    <div class="linked-postes-section">
+      <h4><i class="pi pi-briefcase" style="margin-right: 6px;"></i>{{ 'POSTE_ET_EMPLOI.FONCTIONS.LINKED_POSTES' | translate }}</h4>
+
+      <div *ngIf="loadingPostes" class="text-center" style="padding: 1rem;">
+        <i class="pi pi-spin pi-spinner" style="font-size: 1.5rem;"></i>
+      </div>
+
+      <div *ngIf="!loadingPostes && linkedPostes.length === 0" class="empty-postes">
+        {{ 'POSTE_ET_EMPLOI.FONCTIONS.EMPTY_LINKED_POSTES' | translate }}
+      </div>
+
+      <div *ngIf="!loadingPostes && linkedPostes.length > 0" class="postes-list">
+        <div class="poste-card" *ngFor="let poste of linkedPostes">
+          <div class="poste-card-header">
+            <span class="poste-code">{{ poste.codeCourt }}</span>
+            <span class="poste-label">{{ poste.libelleDuPoste }}</span>
+          </div>
+          <div class="poste-card-detail" *ngIf="poste.uniteStructurelleLibelle">
+            <i class="pi pi-building" style="margin-right: 4px;"></i> {{ poste.uniteStructurelleLibelle }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-template pTemplate="footer">
+    <p-button [label]="'GLOBAL.FERMER' | translate" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="(dialogMode === 'add' ? 'POSTE_ET_EMPLOI.FONCTIONS.DIALOG_ADD_TITLE' : 'POSTE_ET_EMPLOI.FONCTIONS.DIALOG_EDIT_TITLE') | translate"
+  [(visible)]="displayDialog"
+  [modal]="true"
+  [style]="{width: '550px'}">
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="code" name="code" [(ngModel)]="form.code" #code="ngModel" required [class.ng-dirty]="code.invalid && code.touched" />
+        <label for="code">{{ 'GLOBAL.CODE' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="code.invalid && code.touched">{{ 'POSTE_ET_EMPLOI.FONCTIONS.ERR_CODE' | translate }}</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="libelle" name="libelle" [(ngModel)]="form.libelle" #libelle="ngModel" required [class.ng-dirty]="libelle.invalid && libelle.touched" />
+        <label for="libelle">{{ 'GLOBAL.LIBELLE' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="libelle.invalid && libelle.touched">{{ 'POSTE_ET_EMPLOI.FONCTIONS.ERR_LIBELLE' | translate }}</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateCreation" name="dateCreation" [(ngModel)]="form.dateCreation" dateFormat="yy-mm-dd" appendTo="body" [showClear]="true" [showIcon]="true"></p-datepicker>
+        <label for="dateCreation">{{ 'GLOBAL.DATE_CREATION' | translate }}</label>
+      </p-floatLabel>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateFin" name="dateFin" [(ngModel)]="form.dateFin" dateFormat="yy-mm-dd" appendTo="body" [showClear]="true" [showIcon]="true"></p-datepicker>
+        <label for="dateFin">{{ 'GLOBAL.DATE_FIN' | translate }}</label>
+      </p-floatLabel>
+      <small class="text-muted" style="display:block; margin-top:5px; margin-left:14px">{{ 'POSTE_ET_EMPLOI.FONCTIONS.HINT_ACTIVE' | translate }}</small>
+    </div>
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="(dialogMode === 'add' ? 'GLOBAL.AJOUTER' : 'GLOBAL.MODIFIER') | translate"
+      icon="pi pi-check"
+      severity="success"
+      (onClick)="save()">
+    </p-button>
+    <p-button
+      [label]="'GLOBAL.ANNULER' | translate"
+      icon="pi pi-times"
+      [text]="true" severity="secondary"
+      (onClick)="displayDialog=false">
+    </p-button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,154 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Gestion des Échelles</h1>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Liste des échelles</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-sitemap" style="font-size: 28px; margin-right: 6px;"></i>
+                Liste des échelles
+              </h3>
+
+              <p-button
+                label="Ajouter une échelle"
+                icon="pi pi-plus"
+                styleClass="p-button-success"
+                (onClick)="showAddEchelleDialog()">
+              </p-button>
+            </div>
+
+            <p-table
+              #dtEchelle
+              [value]="situationEchelle"
+              [rows]="pageSize"
+              [paginator]="true"
+              [rowsPerPageOptions]="[5, 10, 20]"
+              [responsiveLayout]="'scroll'"
+              [globalFilterFields]="['echelle', 'description', 'niveauDiplome.libelle']"
+              [loading]="loading"
+              [lazy]="true"
+              [totalRecords]="totalRecords"
+              (onPage)="onPageChange($event)">
+
+              <ng-template pTemplate="caption">
+                <div class="flex">
+                  <p-button label="Effacer" [outlined]="true" icon="pi pi-filter-slash" (onClick)="clearTable(dtEchelle)" />
+                  <span class="p-input-icon-left ml-auto">
+                    <i class="pi pi-search"></i>
+                    <input
+                      pInputText
+                      type="text"
+                      [(ngModel)]="searchEchelle"
+                      (input)="dtEchelle.filterGlobal(searchEchelle, 'contains'); applySearch();"
+                      placeholder="Rechercher..." />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter type="text" field="echelle" display="menu" />Échelle</th>
+                  <th><p-columnFilter type="text" field="niveauDiplome.libelle" display="menu" />Niveau Diplôme</th>
+                  <th><p-columnFilter type="text" field="description" display="menu" />Description</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td>{{ item.echelle }}</td>
+                  <td>{{ item.niveauDiplome?.libelle }}</td>
+                  <td>{{ item.description }}</td>
+
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" pTooltip="Visualiser" (click)="onViewEchelle(item)"></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Modifier" (click)="onEditEchelle(item)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" pTooltip="Supprimer" (click)="onDeleteEchelle(item)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="4" class="text-center">Aucune échelle trouvée.</td></tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" header="Détails de l’échelle" [(visible)]="displayView" [modal]="true" [style]="{ width: '450px' }">
+  <ng-container *ngIf="selectedEchelle">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_echelle" [ngModel]="selectedEchelle.echelle" [disabled]="true" />
+          <label for="view_echelle">Échelle</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_niveauDiplome" [ngModel]="selectedEchelle.niveauDiplome?.libelle" [disabled]="true" />
+          <label for="view_niveauDiplome">Niveau Diplôme</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <textarea pInputTextarea id="view_description" [ngModel]="selectedEchelle.description" rows="3" [disabled]="true" class="w-full"></textarea>
+          <label for="view_description">Description</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [header]="dialogMode === 'add' ? 'Ajouter une échelle' : 'Modifier une échelle'" [(visible)]="displayDialog" [modal]="true" [style]="{ width: '550px' }">
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="echelle" name="echelle" [(ngModel)]="form.echelle" #echelle="ngModel" required [class.ng-dirty]="echelle.invalid && echelle.touched" />
+        <label for="echelle">Échelle <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="echelle.invalid && echelle.touched">L'échelle est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="niveauDiplomeId" name="niveauDiplomeId" [options]="niveauxDiplome" [(ngModel)]="form.niveauDiplomeId" #niveauDiplomeId="ngModel" required optionLabel="libelle" optionValue="id" appendTo="body" [styleClass]="form.niveauDiplomeId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="niveauDiplomeId.invalid && niveauDiplomeId.touched"></p-dropdown>
+        <label for="niveauDiplomeId">Niveau Diplôme <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="niveauDiplomeId.invalid && niveauDiplomeId.touched">Le niveau de diplôme est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="description" name="description" rows="3" [(ngModel)]="form.description" class="w-full"></textarea>
+        <label for="description">Description</label>
+      </p-floatLabel>
+    </div>
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogMode === 'add' ? 'Ajouter' : 'Modifier'" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+  </ng-template>
+</p-dialog>

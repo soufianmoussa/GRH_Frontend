@@ -1,0 +1,164 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Fichier des types d'établissement</h1>
+
+  <div class="card">
+    <div class="container primTable">
+      <div class="flex justify-content-between align-items-center mb-3">
+        <h3>
+          <i class="pi pi-building" style="font-size:30px;margin-right:5px"></i>
+          Liste des types d'établissement
+        </h3>
+
+        <p-button
+          label="Ajouter un type d'établissement"
+          icon="pi pi-plus"
+          styleClass="p-button-success"
+          (onClick)="showAddDialog()">
+        </p-button>
+      </div>
+
+      <p-table
+        #dt
+        [value]="list"
+        dataKey="id"
+        [rows]="size"
+        [paginator]="true"
+        [totalRecords]="total"
+        [lazy]="true"
+        (onPage)="onPageChange($event)"
+        [loading]="loading"
+        [rowsPerPageOptions]="[5,10,20]">
+
+        <ng-template pTemplate="caption">
+          <div class="flex">
+            <p-button
+              label="Effacer"
+              icon="pi pi-filter-slash"
+              [outlined]="true"
+              (onClick)="clearTable(dt)">
+            </p-button>
+
+            <span class="p-input-icon-left ml-auto">
+              <i class="pi pi-search"></i>
+              <input pInputText
+                     type="text"
+                     [(ngModel)]="searchValue"
+                     (input)="dt.filterGlobal(searchValue,'contains'); applySearch();"
+                     placeholder="Rechercher..." />
+            </span>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Libellé <p-columnFilter field="libelle" type="text" display="menu"></p-columnFilter></th>
+            <th>Code <p-columnFilter field="code" type="text" display="menu"></p-columnFilter></th>
+            <th>Actions</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td>{{ item.libelle }}</td>
+            <td>{{ item.code }}</td>
+
+            <td class="actions-cell">
+              <button pButton icon="pi pi-eye"
+                      class="p-button-rounded p-button-text p-button-success mr-2"
+                      (click)="onView(item)"></button>
+
+              <button pButton icon="pi pi-pencil"
+                      class="p-button-rounded p-button-text p-button-info mr-2"
+                      (click)="onEdit(item)"></button>
+
+              <button pButton icon="pi pi-trash"
+                      class="p-button-rounded p-button-text p-button-danger"
+                      (click)="onDelete(item)"></button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="3" class="text-center">
+              Aucun type d'établissement trouvé.
+            </td>
+          </tr>
+        </ng-template>
+
+      </p-table>
+    </div>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon"
+          header="Détails du type d'établissement"
+          [(visible)]="displayView"
+          [modal]="true">
+  <div *ngIf="selected" class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="view_libelle" [ngModel]="selected.libelle" [disabled]="true" />
+        <label for="view_libelle">Libellé</label>
+      </p-floatLabel>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="view_code" [ngModel]="selected.code" [disabled]="true" />
+        <label for="view_code">Code</label>
+      </p-floatLabel>
+    </div>
+  </div>
+  
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon"
+          [(visible)]="displayDialog"
+          [modal]="true"
+          [header]="dialogMode==='add' ? 'Ajouter un type' : 'Modifier un type'">
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="libelle" name="libelle" [(ngModel)]="form.libelle" #libelle="ngModel" required
+               [class.ng-dirty]="libelle.invalid && libelle.touched" />
+        <label for="libelle">Libellé <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="libelle.invalid && libelle.touched">
+        Le libellé est obligatoire.
+      </small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="code" name="code" [(ngModel)]="form.code" #code="ngModel" />
+        <label for="code">Code</label>
+      </p-floatLabel>
+    </div>
+
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="dialogMode==='add' ? 'Ajouter' : 'Modifier'"
+      icon="pi pi-check"
+      severity="success"
+      (onClick)="save()">
+    </p-button>
+    <p-button
+      label="Annuler"
+      icon="pi pi-times"
+      [text]="true" severity="secondary"
+      (onClick)="displayDialog=false">
+    </p-button>
+  </ng-template>
+</p-dialog>

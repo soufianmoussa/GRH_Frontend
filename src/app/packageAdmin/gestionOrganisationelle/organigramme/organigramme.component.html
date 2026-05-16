@@ -1,0 +1,335 @@
+<p-toast position="top-center"></p-toast>
+
+<div class="content organigramme-page">
+
+  <!-- ── Header ────────────────────────────────────────── -->
+  <div class="org-header">
+    <div>
+      <h1 class="titleh1">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.TITLE' | translate }}</h1>
+      <p class="org-subtitle">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.SUBTITLE' | translate }}</p>
+    </div>
+    <div class="org-header-actions">
+      <p-button
+        [label]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.BTN_REFRESH' | translate"
+        icon="pi pi-refresh"
+        [outlined]="true"
+        (onClick)="refresh()">
+      </p-button>
+    </div>
+  </div>
+
+  <!-- ── Summary cards ─────────────────────────────────── -->
+  <div class="org-summary">
+    <div class="summary-card summary-blue">
+      <div class="summary-icon"><i class="pi pi-building"></i></div>
+      <div class="summary-body">
+        <p class="summary-value">{{ stats.totalUnites }}</p>
+        <p class="summary-label">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.STAT_TOTAL' | translate }}</p>
+      </div>
+    </div>
+    <div class="summary-card summary-green">
+      <div class="summary-icon"><i class="pi pi-user-plus"></i></div>
+      <div class="summary-body">
+        <p class="summary-value">{{ stats.responsablesActifs }}</p>
+        <p class="summary-label">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.STAT_ACTIVE_RESP' | translate }}</p>
+      </div>
+    </div>
+    <div class="summary-card summary-purple">
+      <div class="summary-icon"><i class="pi pi-briefcase"></i></div>
+      <div class="summary-body">
+        <p class="summary-value">{{ stats.postesOccupes }}</p>
+        <p class="summary-label">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.STAT_OCCUPIED' | translate }}</p>
+      </div>
+    </div>
+    <div class="summary-card summary-orange">
+      <div class="summary-icon"><i class="pi pi-exclamation-triangle"></i></div>
+      <div class="summary-body">
+        <p class="summary-value">{{ stats.postesVacants }}</p>
+        <p class="summary-label">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.STAT_VACANT' | translate }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Two-column layout ────────────────────────────── -->
+  <div class="org-grid">
+
+    <!-- LEFT — Tree -->
+    <aside class="org-tree-card">
+      <div class="org-tree-toolbar">
+        <div class="org-search">
+          <i class="pi pi-search"></i>
+          <input
+            pInputText
+            type="text"
+            [(ngModel)]="searchQuery"
+            [placeholder]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.SEARCH_PLACEHOLDER' | translate" />
+          <button *ngIf="searchQuery" type="button" class="org-search-clear" (click)="clearSearch()" [attr.aria-label]="'GLOBAL.EFFACER' | translate">
+            <i class="pi pi-times"></i>
+          </button>
+        </div>
+
+        <div class="org-filters">
+          <i class="pi pi-filter"></i>
+          <button
+            type="button"
+            *ngFor="let f of typeFilters"
+            class="filter-chip"
+            [class.active]="typeFilter === f.key"
+            (click)="setTypeFilter(f.key)">
+            {{ f.labelKey | translate }}
+          </button>
+        </div>
+      </div>
+
+      <div class="org-tree-body">
+        <div *ngIf="loading" class="tree-state tree-state-loading">
+          <p-progressSpinner styleClass="org-spinner" strokeWidth="3"></p-progressSpinner>
+          <p>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.MSG_LOADING' | translate }}</p>
+        </div>
+
+        <div *ngIf="!loading && loadError" class="tree-state tree-state-error">
+          <i class="pi pi-exclamation-triangle"></i>
+          <p>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.MSG_ERR_LOAD' | translate }}</p>
+          <p-button [label]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.BTN_RETRY' | translate" icon="pi pi-refresh" [outlined]="true" (onClick)="refresh()"></p-button>
+        </div>
+
+        <div *ngIf="!loading && !loadError && roots.length === 0" class="tree-state tree-state-empty">
+          <i class="pi pi-sitemap"></i>
+          <p>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.MSG_EMPTY' | translate }}</p>
+        </div>
+
+        <ng-container *ngIf="!loading && !loadError && roots.length > 0">
+          <ng-container *ngFor="let root of roots">
+            <ng-container *ngTemplateOutlet="treeNode; context: { node: root, depth: 0 }"></ng-container>
+          </ng-container>
+        </ng-container>
+      </div>
+    </aside>
+
+    <!-- RIGHT — Detail -->
+    <section class="org-detail-card">
+      <header class="org-detail-header">
+        <ng-container *ngIf="selectedUnit; else noSelectionHeader">
+          <div class="left">
+            <i class="org-detail-type-icon" [class]="typeIcon(selectedUnit.type) + ' ' + typeIconColorClass(selectedUnit.type)"></i>
+            <h2>{{ selectedUnit.libelle }}</h2>
+            <span [class]="typeBadgeClass(selectedUnit.type)">{{ 'GLOBAL.' + selectedUnit.type | translate }}</span>
+          </div>
+          <button type="button" class="org-detail-close" (click)="clearSelection()" [attr.aria-label]="'GLOBAL.FERMER' | translate">
+            <i class="pi pi-times"></i>
+          </button>
+        </ng-container>
+        <ng-template #noSelectionHeader>
+          <h2 class="muted">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_UNIT_DETAILS' | translate }}</h2>
+        </ng-template>
+      </header>
+
+      <div class="org-detail-body" *ngIf="selectedUnit; else emptyState">
+
+        <!-- Information générale -->
+        <div class="detail-section">
+          <div class="detail-section-title">
+            <i [class]="typeIcon(selectedUnit.type) + ' ' + typeIconColorClass(selectedUnit.type)"></i>
+            <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_GENERAL_INFO' | translate }}</span>
+          </div>
+          <div class="info-grid">
+            <div>
+              <label>{{ 'GLOBAL.CODE' | translate }}</label>
+              <p>{{ selectedUnit.code }}</p>
+            </div>
+            <div>
+              <label>{{ 'GLOBAL.ABREVIATION' | translate }}</label>
+              <p>{{ selectedUnit.abreviation || '—' }}</p>
+            </div>
+            <div>
+              <label>{{ 'GLOBAL.LIBELLE' | translate }}</label>
+              <p>{{ selectedUnit.libelle }}</p>
+            </div>
+            <div>
+              <label>{{ 'GLOBAL.TYPE' | translate }}</label>
+              <p><span [class]="typeBadgeClass(selectedUnit.type)">{{ 'GLOBAL.' + selectedUnit.type | translate }}</span></p>
+            </div>
+            <div class="full">
+              <label>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_PARENT_UNIT' | translate }}</label>
+              <p>{{ parentLibelle(selectedUnit) }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Responsable -->
+        <div class="detail-section">
+          <div class="detail-section-title">
+            <i class="pi pi-user-plus"></i>
+            <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_RESPONSABLE' | translate }}</span>
+          </div>
+          <div *ngIf="selectedUnit.responsable; else noResponsable" class="responsable-row">
+            <div class="responsable-avatar">
+              {{ selectedUnit.responsable.nomComplet.charAt(0) }}
+            </div>
+            <div>
+              <p class="responsable-name">{{ selectedUnit.responsable.nomComplet }}</p>
+              <p class="responsable-meta" *ngIf="selectedUnit.responsable.matricule">
+                {{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_MATRICULE_RESP' | translate: { matricule: selectedUnit.responsable.matricule } }}
+              </p>
+              <span [class]="responsableBadgeClass(selectedUnit.responsable.statut)">
+                {{ selectedUnit.responsable.statut === 'ACTIF' ? ('GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_ACTIVE' | translate) : ('GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_EXPIRED' | translate) }}
+              </span>
+            </div>
+          </div>
+          <ng-template #noResponsable>
+            <div class="responsable-empty">
+              <i class="pi pi-exclamation-triangle"></i>
+              <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_NO_RESP' | translate }}</span>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Métriques -->
+        <div class="metrics-row">
+          <div class="metric metric-blue">
+            <p class="metric-value">{{ selectedUnit.postes.length }}</p>
+            <p class="metric-label">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_POSTES' | translate }}</p>
+          </div>
+          <div class="metric metric-teal">
+            <p class="metric-value">{{ countAgents(selectedUnit) }}</p>
+            <p class="metric-label">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_AGENTS' | translate }}</p>
+          </div>
+          <div class="metric metric-purple">
+            <p class="metric-value">{{ countDirectChildren(selectedUnit) }}</p>
+            <p class="metric-label">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_SUB_UNITS' | translate }}</p>
+          </div>
+        </div>
+
+        <!-- Postes -->
+        <div class="detail-section">
+          <div class="detail-section-title">
+            <i class="pi pi-briefcase"></i>
+            <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_POSTES' | translate }}</span>
+          </div>
+
+          <div class="primTable postes-table-wrapper" *ngIf="selectedUnit.postes.length > 0">
+            <p-table
+              [value]="selectedUnit.postes"
+              dataKey="id"
+              [rowHover]="true">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>{{ 'GLOBAL.POSTE' | translate }}</th>
+                  <th>{{ 'GLOBAL.FONCTION' | translate }}</th>
+                  <th>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_OCCUPANT' | translate }}</th>
+                  <th>{{ 'GLOBAL.STATUT' | translate }}</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-p>
+                <tr>
+                  <td>
+                    <div class="poste-cell">
+                      <strong>{{ p.libelle }}</strong>
+                      <small>{{ p.codeCourt }}</small>
+                    </div>
+                  </td>
+                  <td>{{ p.fonction || '—' }}</td>
+                  <td>
+                    <span *ngIf="p.occupant; else noOccupant">{{ p.occupant }}</span>
+                    <ng-template #noOccupant><span class="muted-italic">—</span></ng-template>
+                  </td>
+                  <td>
+                    <span [class]="posteStatusClass(p)">
+                      {{ p.statut === 'OCCUPE' ? ('GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_OCCUPIED' | translate) : ('GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_VACANT' | translate) }}
+                    </span>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+
+          <div *ngIf="selectedUnit.postes.length === 0" class="postes-empty">
+            <i class="pi pi-info-circle"></i>
+            <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_NO_POSTES' | translate }}</span>
+          </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="detail-section">
+          <div class="detail-section-title">
+            <i class="pi pi-bolt"></i>
+            <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_ACTIONS' | translate }}</span>
+          </div>
+          <div class="actions-grid">
+            <button type="button" class="action-btn action-blue" (click)="goToFiche(selectedUnit)">
+              <i class="pi pi-eye"></i>
+              <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_VIEW_FICHE' | translate }}</span>
+            </button>
+            <button type="button" class="action-btn action-teal" (click)="goToAjouterPoste(selectedUnit)">
+              <i class="pi pi-plus"></i>
+              <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_ADD_POSTE' | translate }}</span>
+            </button>
+            <button type="button" class="action-btn action-purple" (click)="goToAffecterResponsable(selectedUnit)">
+              <i class="pi pi-user-plus"></i>
+              <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_AFFECT_RESP' | translate }}</span>
+            </button>
+            <button type="button" class="action-btn action-grey" (click)="goToModifier(selectedUnit)">
+              <i class="pi pi-pencil"></i>
+              <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_EDIT_UNIT' | translate }}</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <ng-template #emptyState>
+        <div class="org-detail-empty">
+          <i class="pi pi-sitemap"></i>
+          <p>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.SUB_UNIT_DETAILS' | translate }}</p>
+        </div>
+      </ng-template>
+    </section>
+
+  </div>
+
+</div>
+
+
+<!-- ─────────────────────────────────────────────────────
+     Recursive tree-node template
+────────────────────────────────────────────────────── -->
+<ng-template #treeNode let-node="node" let-depth="depth">
+  <ng-container *ngIf="isNodeVisible(node)">
+    <div
+      class="tree-node"
+      [class.selected]="selectedUnit?.id === node.id"
+      [style.padding-left.px]="depth * 16"
+      (click)="select(node)">
+
+      <span class="tree-toggle" (click)="toggle(node, $event)">
+        <i *ngIf="node.children.length > 0"
+           class="pi"
+           [ngClass]="isExpanded(node) ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+      </span>
+
+      <i class="tree-type-icon" [class]="typeIcon(node.type) + ' ' + typeIconColorClass(node.type)"></i>
+
+      <div class="tree-node-body">
+        <div class="tree-node-title-row">
+          <span class="tree-node-title">{{ node.libelle }}</span>
+          <span [class]="typeBadgeClass(node.type)">{{ node.type }}</span>
+        </div>
+
+        <p *ngIf="node.responsable" class="tree-node-resp" [class.expired]="node.responsable.statut === 'EXPIRE'">
+          <i class="pi" [ngClass]="node.responsable.statut === 'ACTIF' ? 'pi-check-circle' : 'pi-clock'"></i>
+          {{ node.responsable.nomComplet }}
+        </p>
+        <p *ngIf="!node.responsable" class="tree-node-resp empty">
+          <i class="pi pi-exclamation-circle"></i>
+          {{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.TREE_NO_RESP' | translate }}
+        </p>
+      </div>
+    </div>
+
+    <div *ngIf="isExpanded(node) && node.children.length > 0">
+      <ng-container *ngFor="let child of node.children">
+        <ng-container *ngTemplateOutlet="treeNode; context: { node: child, depth: depth + 1 }"></ng-container>
+      </ng-container>
+    </div>
+  </ng-container>
+</ng-template>

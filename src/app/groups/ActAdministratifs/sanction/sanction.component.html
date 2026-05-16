@@ -1,0 +1,196 @@
+<p-toast position="top-center"></p-toast>
+<div class="content">
+  <h1 class="titleh1">{{ 'ACT_ADMINISTRATIFS.SANCTION.TITLE' | translate }}</h1>
+  <app-agentcard *ngIf="isAgent"></app-agentcard>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">{{ 'ACT_ADMINISTRATIFS.SANCTION.TAB_LIST' | translate }}</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-ban" style="font-size: 30px; margin-right: 5px;"></i>
+                {{ 'ACT_ADMINISTRATIFS.SANCTION.HEADER_LIST' | translate }}
+              </h3>
+              <p-button *ngIf="isAdmin" [label]="'ACT_ADMINISTRATIFS.SANCTION.ADD_BTN' | translate" icon="pi pi-plus"
+                styleClass="p-button-success" (onClick)="showAddDialog()" />
+            </div>
+
+            <p-table #dtSanction [value]="sanctionData" dataKey="id" [rows]="5" [paginator]="true"
+              [rowsPerPageOptions]="[5,10,20]"
+              [globalFilterFields]="['matricule','dateEffet','acte','dateFinPrevisionnelle']">
+
+              <ng-template pTemplate="caption">
+                <div class="flex">
+                  <p-button [label]="'GLOBAL.EFFACER' | translate" icon="pi pi-filter-slash" [outlined]="true"
+                    (onClick)="clearTable(dtSanction)" />
+                  <span class="p-input-icon-left ml-auto">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text" [(ngModel)]="searchSanction"
+                      (input)="dtSanction.filterGlobal(searchSanction,'contains'); applySearch();"
+                      [placeholder]="'GLOBAL.RECHERCHER' | translate" />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th *ngIf="isAdmin">{{ 'GLOBAL.MATRICULE' | translate }} <p-columnFilter field="matricule" type="text" display="menu" /></th>
+                  <th>{{ 'ACT_ADMINISTRATIFS.GLOBAL.DATE_EFFET' | translate }} <p-columnFilter field="dateEffet" display="menu" /></th>
+                  <th>{{ 'ACT_ADMINISTRATIFS.SANCTION.COL_ACTE' | translate }} <p-columnFilter field="acte" display="menu" /></th>
+                  <th>{{ 'ACT_ADMINISTRATIFS.GLOBAL.DATE_FIN_PREV' | translate }} <p-columnFilter field="dateFinPrevisionnelle" display="menu" /></th>
+                  <th>{{ 'GLOBAL.ACTIONS' | translate }}</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td *ngIf="isAdmin">{{ item.matricule }}</td>
+                  <td>{{ item.dateEffet }}</td>
+                  <td>{{ item.acte }}</td>
+                  <td>{{ item.dateFinPrevisionnelle }}</td>
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2"
+                      (click)="onView(item)"></button>
+                    <button *ngIf="isAdmin" pButton icon="pi pi-pencil"
+                      class="p-button-rounded p-button-text p-button-info mr-2" (click)="updateMouvement(item)"></button>
+                    <button *ngIf="isAdmin" pButton icon="pi pi-trash"
+                      class="p-button-rounded p-button-text p-button-danger" (click)="deleteMouvement(item)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="5" class="text-center">{{ 'ACT_ADMINISTRATIFS.SANCTION.EMPTY_MESSAGE' | translate }}</td>
+                </tr>
+              </ng-template>
+
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<!-- Dialog VISUALISATION -->
+<p-dialog styleClass="pdialogfon" [header]="'ACT_ADMINISTRATIFS.SANCTION.DIALOG_VIEW_TITLE' | translate" [(visible)]="displayView" [modal]="true">
+  <ng-container *ngIf="selected">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div *ngIf="isAdmin" class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_matricule" [ngModel]="selected.matricule" [disabled]="true" />
+          <label for="view_matricule">{{ 'GLOBAL.MATRICULE' | translate }}</label>
+        </p-floatLabel>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_acte" [ngModel]="selected.acte" [disabled]="true" />
+          <label for="view_acte">{{ 'ACT_ADMINISTRATIFS.SANCTION.LBL_ACTE' | translate }}</label>
+        </p-floatLabel>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="view_dateEffet" [ngModel]="selected.dateEffet" dateFormat="yy-mm-dd" [showIcon]="true"
+            appendTo="body" [disabled]="true"></p-datepicker>
+          <label for="view_dateEffet">{{ 'ACT_ADMINISTRATIFS.GLOBAL.DATE_EFFET' | translate }}</label>
+        </p-floatLabel>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="view_dateFinPrevisionnelle" [ngModel]="selected.dateFinPrevisionnelle" dateFormat="yy-mm-dd"
+            [showIcon]="true" appendTo="body" [disabled]="true"></p-datepicker>
+          <label for="view_dateFinPrevisionnelle">{{ 'ACT_ADMINISTRATIFS.GLOBAL.DATE_FIN_PREV' | translate }}</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template pTemplate="footer">
+    <p-button [label]="'GLOBAL.FERMER' | translate" icon="pi pi-times" [text]="true" severity="secondary"
+      (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog AJOUT / MODIFICATION -->
+<p-dialog styleClass="pdialogfon" [(visible)]="displayDialog" [modal]="true"
+  [header]="(dialogMode === 'add' ? 'ACT_ADMINISTRATIFS.SANCTION.DIALOG_ADD_TITLE' : 'ACT_ADMINISTRATIFS.SANCTION.DIALOG_EDIT_TITLE') | translate">
+  <form #addForm="ngForm">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+
+      <div *ngIf="isAdmin" class="w-full">
+        <p-floatLabel>
+          <p-select id="agentId" name="agentId" [(ngModel)]="newMouvement.agentId" #agentId="ngModel" required
+            styleClass="shared-field-dropdown w-full" [options]="agents" optionLabel="matricule" optionValue="id"
+            [filter]="true" filterBy="matricule,nom,prenom" [class.ng-dirty]="agentId.invalid && agentId.touched">
+            <ng-template let-agent pTemplate="item">
+              <span>{{ agent.matricule }} - {{ agent.nom }} {{ agent.prenom }}</span>
+            </ng-template>
+          </p-select>
+          <label for="agentId">{{ 'GLOBAL.MATRICULE' | translate }} <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="agentId.invalid && agentId.touched">
+          {{ 'ACT_ADMINISTRATIFS.GLOBAL.ERR_MATRICULE' | translate }}
+        </small>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="acte" name="acte" [(ngModel)]="newMouvement.acte" #acte="ngModel" required
+            [class.ng-dirty]="acte.invalid && acte.touched" />
+          <label for="acte">{{ 'ACT_ADMINISTRATIFS.SANCTION.LBL_ACTE' | translate }} <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="acte.invalid && acte.touched">
+          {{ 'ACT_ADMINISTRATIFS.SANCTION.ERR_ACTE' | translate }}
+        </small>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="dateEffet" name="dateEffet" [(ngModel)]="newMouvement.dateEffet" #dateEffet="ngModel" required
+            dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"
+            [class.ng-dirty]="dateEffet.invalid && dateEffet.touched"></p-datepicker>
+          <label for="dateEffet">{{ 'ACT_ADMINISTRATIFS.GLOBAL.DATE_EFFET' | translate }} <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="dateEffet.invalid && dateEffet.touched">
+          {{ 'ACT_ADMINISTRATIFS.GLOBAL.ERR_DATE_EFFET' | translate }}
+        </small>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="dateFinPrevisionnelle" name="dateFinPrevisionnelle"
+            [(ngModel)]="newMouvement.dateFinPrevisionnelle" #dateFinPrevisionnelle="ngModel" required
+            dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body" [minDate]="newMouvement.dateEffet"
+            [disabled]="!newMouvement.dateEffet"
+            [ngStyle]="{'opacity': !newMouvement.dateEffet ? '0.5' : '1', 'filter': !newMouvement.dateEffet ? 'grayscale(100%)' : 'none', 'transition': 'all 0.3s ease'}"
+            [class.ng-dirty]="dateFinPrevisionnelle.invalid && dateFinPrevisionnelle.touched"></p-datepicker>
+          <label for="dateFinPrevisionnelle">{{ 'ACT_ADMINISTRATIFS.GLOBAL.DATE_FIN_PREV' | translate }} <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="dateFinPrevisionnelle.invalid && dateFinPrevisionnelle.touched">
+          {{ 'ACT_ADMINISTRATIFS.GLOBAL.ERR_DATE_FIN' | translate }}
+        </small>
+      </div>
+
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button [label]="(dialogMode === 'add' ? 'GLOBAL.AJOUTER' : 'GLOBAL.MODIFIER') | translate" icon="pi pi-check"
+      severity="success" (onClick)="addMouvement()" />
+    <p-button [label]="'GLOBAL.ANNULER' | translate" icon="pi pi-times" [text]="true" severity="secondary"
+      (onClick)="displayDialog=false" />
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>

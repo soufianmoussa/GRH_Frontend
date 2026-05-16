@@ -1,0 +1,210 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">{{ 'GESTION_ORGANISATIONELLE.UNITE_STRUCTURELLE.TITLE' | translate }}</h1>
+
+  <div class="card">
+
+    <div class="breadcrumb-bar" *ngIf="breadcrumb.length > 1">
+      <ng-container *ngFor="let crumb of breadcrumb; let i = index; let last = last">
+        <button *ngIf="!last" pButton class="p-button-text p-button-plain breadcrumb-link" (click)="goToBreadcrumb(i)">
+          <i *ngIf="i === 0" class="pi pi-arrow-left" style="margin-right: 4px;"></i>
+          {{ (crumb.translateLabel ? (crumb.label | translate) : crumb.label) }}
+        </button>
+        <i *ngIf="!last" class="pi pi-chevron-right breadcrumb-separator"></i>
+        <span *ngIf="last" class="breadcrumb-current">{{ (crumb.translateLabel ? (crumb.label | translate) : crumb.label) }}</span>
+      </ng-container>
+    </div>
+
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">{{ 'GESTION_ORGANISATIONELLE.UNITE_STRUCTURELLE.TITLE' | translate }}</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+      <div class="flex justify-content-between align-items-center mb-3">
+        <h3>
+          <i [class]="currentIcon" style="font-size:28px;margin-right:6px"></i>
+          {{ currentTypeLabel }}
+        </h3>
+
+        <p-button
+          [label]="addButtonLabel"
+          icon="pi pi-plus"
+          styleClass="p-button-success"
+          (onClick)="showAddDialog()">
+        </p-button>
+      </div>
+
+      <p-table
+        #dt
+        [value]="list"
+        dataKey="id"
+        [rows]="pageSize"
+        [paginator]="true"
+        [totalRecords]="total"
+        [lazy]="true"
+        (onPage)="onPageChange($event)"
+        [loading]="loading"
+        [rowsPerPageOptions]="[5,10,20]"
+        [globalFilterFields]="['code','abreviation','libelle']">
+
+        <ng-template pTemplate="caption">
+          <div class="flex align-items-center justify-content-between">
+            <p-button [label]="'GLOBAL.EFFACER' | translate" icon="pi pi-filter-slash" [outlined]="true"
+              (onClick)="clearTable(dt)">
+            </p-button>
+
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input pInputText type="text" [(ngModel)]="search"
+                (input)="dt.filterGlobal(search,'contains'); applySearch();" [placeholder]="'GLOBAL.RECHERCHER' | translate" />
+            </span>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ 'GLOBAL.CODE' | translate }} <p-columnFilter field="code" display="menu" /></th>
+            <th>{{ 'GLOBAL.ABREVIATION' | translate }} <p-columnFilter field="abreviation" display="menu" /></th>
+            <th>{{ 'GLOBAL.LIBELLE' | translate }} <p-columnFilter field="libelle" display="menu" /></th>
+            <th style="width: 140px">{{ 'GLOBAL.ACTIONS' | translate }}</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr [class.row-clickable]="canDrillDown()" (click)="canDrillDown() ? drillDown(item) : null">
+            <td><strong>{{ item.code }}</strong></td>
+            <td>{{ item.abreviation }}</td>
+            <td>{{ item.libelle }}</td>
+            <td class="actions-cell" (click)="$event.stopPropagation()">
+              <button pButton icon="pi pi-eye"
+                class="p-button-rounded p-button-text p-button-success mr-2"
+                [pTooltip]="'GLOBAL.VISUALISER' | translate" (click)="onView(item)">
+              </button>
+              <button pButton icon="pi pi-pencil"
+                class="p-button-rounded p-button-text p-button-info mr-2"
+                [pTooltip]="'GLOBAL.MODIFIER' | translate" (click)="onEdit(item)">
+              </button>
+              <button pButton icon="pi pi-trash"
+                class="p-button-rounded p-button-text p-button-danger"
+                [pTooltip]="'GLOBAL.SUPPRIMER' | translate" (click)="onDelete(item)">
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="4" class="text-center">{{ 'GESTION_ORGANISATIONELLE.UNITE_STRUCTURELLE.EMPTY_MESSAGE' | translate }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" [header]="'GESTION_ORGANISATIONELLE.UNITE_STRUCTURELLE.DIALOG_VIEW_TITLE' | translate" [(visible)]="displayView" [modal]="true"
+  [style]="{width:'450px'}">
+  <div *ngIf="selected" class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="view_code" [ngModel]="selected.code" [disabled]="true" />
+        <label for="view_code">{{ 'GLOBAL.CODE' | translate }}</label>
+      </p-floatLabel>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="view_abreviation" [ngModel]="selected.abreviation" [disabled]="true" />
+        <label for="view_abreviation">{{ 'GLOBAL.ABREVIATION' | translate }}</label>
+      </p-floatLabel>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="view_libelle" [ngModel]="selected.libelle" [disabled]="true" />
+        <label for="view_libelle">{{ 'GLOBAL.LIBELLE' | translate }}</label>
+      </p-floatLabel>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="view_type" [ngModel]="selected.type" [disabled]="true" />
+        <label for="view_type">{{ 'GLOBAL.TYPE' | translate }}</label>
+      </p-floatLabel>
+    </div>
+  </div>
+  
+  <ng-template pTemplate="footer">
+    <p-button [label]="'GLOBAL.FERMER' | translate" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon"
+  [(visible)]="displayDialog"
+  [modal]="true"
+  [header]="dialogHeader"
+  [style]="{width:'550px'}">
+
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="code" name="code" [(ngModel)]="form.code" #code="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': code.invalid && code.touched}" />
+        <label for="code">{{ 'GLOBAL.CODE' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="code.invalid && code.touched">
+        {{ 'GESTION_ORGANISATIONELLE.UNITE_STRUCTURELLE.ERR_CODE' | translate }}
+      </small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="abreviation" name="abreviation" [(ngModel)]="form.abreviation" #abreviation="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': abreviation.invalid && abreviation.touched}" />
+        <label for="abreviation">{{ 'GLOBAL.ABREVIATION' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="abreviation.invalid && abreviation.touched">
+        {{ 'GESTION_ORGANISATIONELLE.UNITE_STRUCTURELLE.ERR_ABREVIATION' | translate }}
+      </small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="libelle" name="libelle" [(ngModel)]="form.libelle" #libelle="ngModel" required
+               [ngClass]="{'ng-invalid ng-dirty': libelle.invalid && libelle.touched}" />
+        <label for="libelle">{{ 'GLOBAL.LIBELLE' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="libelle.invalid && libelle.touched">
+        {{ 'GESTION_ORGANISATIONELLE.UNITE_STRUCTURELLE.ERR_LIBELLE' | translate }}
+      </small>
+    </div>
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="(dialogMode === 'add' ? ('GLOBAL.AJOUTER' | translate) : ('GLOBAL.MODIFIER' | translate))"
+      icon="pi pi-check"
+      severity="success"
+      (onClick)="save()">
+    </p-button>
+
+    <p-button
+      [label]="'GLOBAL.ANNULER' | translate"
+      icon="pi pi-times"
+      [text]="true" severity="secondary"
+      (onClick)="displayDialog=false">
+    </p-button>
+  </ng-template>
+</p-dialog>

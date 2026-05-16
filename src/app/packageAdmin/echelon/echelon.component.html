@@ -1,0 +1,237 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Gestion des Échelons</h1>
+
+  <div class="card">
+    <p-tabs [(value)]="activeTab" (valueChange)="onTabChange($event)">
+      <p-tablist>
+        <p-tab value="0">Échelons</p-tab>
+        <p-tab value="1">Attribution aux Agents</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+            <div class="flex justify-content-between align-items-center mb-3">
+              <div class="flex align-items-center gap-3">
+                <p-dropdown [options]="echellesDropdown" optionLabel="echelle" optionValue="id" [(ngModel)]="selectedEchelleIdForEchelons" (onChange)="onSelectEchelleForEchelons()" styleClass="w-20rem" appendTo="body"></p-dropdown>
+              </div>
+
+              <p-button label="Ajouter un échelon" icon="pi pi-plus" styleClass="p-button-success" (onClick)="showAddEchelonDialog()"></p-button>
+            </div>
+
+            <p-table #dtEchelon [value]="situationEchelon" [rows]="pageSizeEchelons" [paginator]="true" [rowsPerPageOptions]="[5, 10, 20]" [responsiveLayout]="'scroll'" [globalFilterFields]="['echelon', 'echelle.echelle', 'description']" [loading]="loadingEchelons" [lazy]="true" [totalRecords]="totalRecordsEchelons" (onPage)="onEchelonsPageChange($event)">
+              <ng-template pTemplate="caption">
+                <div class="flex">
+                  <p-button label="Effacer" [outlined]="true" icon="pi pi-filter-slash" (onClick)="clearEchelon(dtEchelon)"></p-button>
+                  <span class="p-input-icon-left ml-auto">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text" [(ngModel)]="searchEchelon" (input)="dtEchelon.filterGlobal(searchEchelon, 'contains'); applySearchEchelon();" placeholder="Rechercher..." />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter type="text" field="echelon" display="menu" />Échelon</th>
+                  <th><p-columnFilter type="text" field="echelle.echelle" display="menu" />Échelle</th>
+                  <th><p-columnFilter type="text" field="description" display="menu" />Description</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td>{{ item.echelon }}</td>
+                  <td>{{ item.echelle?.echelle }}</td>
+                  <td>{{ item.description }}</td>
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" pTooltip="Visualiser" (click)="onViewEchelon(item)"></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Modifier" (click)="onEditEchelon(item)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" pTooltip="Supprimer" (click)="onDeleteEchelon(item)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="4" class="text-center">Aucun échelon trouvé.</td></tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+
+        <p-tabpanel value="1">
+          <div class="container primTable">
+            <div class="flex justify-content-between align-items-center mb-3">
+              <div class="flex align-items-center gap-3">
+                <p-dropdown [options]="echelonsDropdown" optionLabel="echelon" optionValue="id" [(ngModel)]="selectedEchelonIdForAgentEchelons" (onChange)="onSelectEchelonForAgentEchelons()" styleClass="w-20rem" [filter]="true" appendTo="body">
+                  <ng-template let-item pTemplate="item">
+                    <div>{{item.echelon}} ({{item.echelle?.echelle}})</div>
+                  </ng-template>
+                </p-dropdown>
+              </div>
+
+              <p-button label="Attribuer un échelon" icon="pi pi-plus" styleClass="p-button-success" [disabled]="!selectedEchelonIdForAgentEchelons" (onClick)="showAddAgentEchelonDialog()"></p-button>
+            </div>
+
+            <p-table #dtAgentEchelon [value]="agentEchelons" [rows]="pageSizeAgentEchelons" [paginator]="true" [rowsPerPageOptions]="[5, 10, 20]" [responsiveLayout]="'scroll'" [loading]="loadingAgentEchelons" [lazy]="true" [totalRecords]="totalRecordsAgentEchelons" (onPage)="onAgentEchelonsPageChange($event)">
+              <ng-template pTemplate="caption">
+                <div class="flex">
+                  <p-button label="Effacer" [outlined]="true" icon="pi pi-filter-slash" (onClick)="clearAgentEchelon(dtAgentEchelon)"></p-button>
+                  <span class="p-input-icon-left ml-auto">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text" [(ngModel)]="searchAgentEchelon" (input)="dtAgentEchelon.filterGlobal(searchAgentEchelon, 'contains'); applySearchAgentEchelon();" placeholder="Rechercher..." />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter type="text" field="matricule" display="menu" />Matricule Agent</th>
+                  <th>Échelon Attribué</th>
+                  <th>Échelle</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td>{{ item.matricule }}</td>
+                  <td>{{ item.echelon?.echelon }}</td>
+                  <td>{{ item.echelon?.echelle?.echelle }}</td>
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" pTooltip="Visualiser" (click)="onViewAgentEchelon(item)"></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Modifier" (click)="onEditAgentEchelon(item)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" pTooltip="Supprimer" (click)="onDeleteAgentEchelon(item)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="4" class="text-center">Aucune attribution trouvée.</td></tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" header="Détails de l'échelon" [(visible)]="displayViewEchelon" [modal]="true" [style]="{width: '450px'}">
+  <ng-container *ngIf="selectedEchelon">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_echelon" [ngModel]="selectedEchelon.echelon" [disabled]="true" />
+          <label for="view_echelon">Échelon</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_echelle" [ngModel]="selectedEchelon.echelle.echelle" [disabled]="true" />
+          <label for="view_echelle">Échelle</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <textarea pInputTextarea id="view_description" [ngModel]="selectedEchelon.description" rows="3" [disabled]="true" class="w-full"></textarea>
+          <label for="view_description">Description</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayViewEchelon=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [header]="dialogModeEchelon === 'add' ? 'Ajouter un échelon' : 'Modifier un échelon'" [(visible)]="displayDialogEchelon" [modal]="true" [style]="{width: '550px'}">
+  <form #addFormEchelon="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="echelon" name="echelon" [(ngModel)]="formEchelon.echelon" #echelon="ngModel" required [class.ng-dirty]="echelon.invalid && echelon.touched" />
+        <label for="echelon">Échelon <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="echelon.invalid && echelon.touched">L'échelon est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="echelleId" name="echelleId" [options]="echellesDropdown" [(ngModel)]="formEchelon.echelleId" #echelleId="ngModel" required optionLabel="echelle" optionValue="id" appendTo="body" [styleClass]="formEchelon.echelleId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="echelleId.invalid && echelleId.touched"></p-dropdown>
+        <label for="echelleId">Échelle <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="echelleId.invalid && echelleId.touched">L'échelle est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="description" name="description" rows="3" [(ngModel)]="formEchelon.description" class="w-full"></textarea>
+        <label for="description">Description</label>
+      </p-floatLabel>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogModeEchelon === 'add' ? 'Ajouter' : 'Modifier'" icon="pi pi-check" severity="success" (onClick)="saveEchelon()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialogEchelon=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" header="Détails Attribution" [(visible)]="displayViewAgentEchelon" [modal]="true" [style]="{width: '450px'}">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="selectedAgentEchelon">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="view_attr_matricule" [ngModel]="selectedAgentEchelon.matricule" [disabled]="true" />
+        <label for="view_attr_matricule">Matricule Agent</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="view_attr_echelon" [ngModel]="selectedAgentEchelon.echelon.echelon" [disabled]="true" />
+        <label for="view_attr_echelon">Échelon Attribué</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="view_attr_echelle" [ngModel]="selectedAgentEchelon.echelon.echelle.echelle" [disabled]="true" />
+        <label for="view_attr_echelle">Échelle</label>
+      </p-floatLabel>
+    </div>
+  </div>
+  
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayViewAgentEchelon=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [header]="dialogModeAgentEchelon === 'add' ? 'Attribuer un échelon' : 'Modifier l\'attribution'" [(visible)]="displayDialogAgentEchelon" [modal]="true" [style]="{width: '550px'}">
+  <form #addFormAgentEchelon="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="attr_matricule" name="attr_matricule" [(ngModel)]="formAgentEchelon.matricule" #attr_matricule="ngModel" required [class.ng-dirty]="attr_matricule.invalid && attr_matricule.touched" />
+        <label for="attr_matricule">Agent (Matricule) <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="attr_matricule.invalid && attr_matricule.touched">Le matricule est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="attr_echelonId" name="attr_echelonId" [options]="echelonsDropdown" [(ngModel)]="formAgentEchelon.echelonId" #attr_echelonId="ngModel" required optionLabel="echelon" optionValue="id" [filter]="true" filterBy="echelon" appendTo="body" [styleClass]="formAgentEchelon.echelonId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="attr_echelonId.invalid && attr_echelonId.touched">
+          <ng-template let-item pTemplate="item">
+            <div>{{item.echelon}} ({{item.echelle?.echelle}})</div>
+          </ng-template>
+        </p-dropdown>
+        <label for="attr_echelonId">Échelon <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="attr_echelonId.invalid && attr_echelonId.touched">L'échelon est obligatoire.</small>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogModeAgentEchelon === 'add' ? 'Ajouter' : 'Modifier'" icon="pi pi-check" severity="success" (onClick)="saveAgentEchelon()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialogAgentEchelon=false"></p-button>
+  </ng-template>
+</p-dialog>

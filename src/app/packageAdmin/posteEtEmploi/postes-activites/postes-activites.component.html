@@ -1,0 +1,437 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.TITLE' | translate }}</h1>
+
+  <div class="card" *ngIf="currentView === 'postes'">
+    <div class="container primTable">
+
+      <div class="flex justify-content-between align-items-center mb-3">
+        <h3>
+          <i class="pi pi-briefcase" style="font-size: 28px; margin-right: 6px;"></i>
+          {{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.POSTES_TITLE' | translate }}
+        </h3>
+        <p-button
+          [label]="'POSTE_ET_EMPLOI.POSTES_ACTIVITES.ADD_POSTE_BTN' | translate"
+          icon="pi pi-plus"
+          styleClass="p-button-success"
+          (onClick)="showAddPosteDialog()">
+        </p-button>
+      </div>
+
+      <p-table
+        #dtPoste
+        [value]="postesData"
+        dataKey="id"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        [globalFilterFields]="['designationObjet','description','familleProfessionnelleLibelle','familleEmploiLibelle','emploiLibelle']">
+
+        <ng-template pTemplate="caption">
+          <div class="flex align-items-center justify-content-between">
+            <p-button
+              [label]="'GLOBAL.EFFACER' | translate"
+              [outlined]="true"
+              icon="pi pi-filter-slash"
+              (onClick)="clearPostesTable(dtPoste)">
+            </p-button>
+
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input
+                pInputText
+                type="text"
+                [(ngModel)]="postesSearch"
+                (input)="dtPoste.filterGlobal(postesSearch, 'contains'); applyPostesSearch();"
+                [placeholder]="'GLOBAL.RECHERCHER' | translate" />
+            </span>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th><p-columnFilter field="designationObjet" display="menu" />{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.COL_DESIGNATION' | translate }}</th>
+            <th><p-columnFilter field="description" display="menu" />{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.COL_DESCRIPTION' | translate }}</th>
+            <th><p-columnFilter field="familleProfessionnelleLibelle" display="menu" />{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.COL_FAMILLE_PROF' | translate }}</th>
+            <th><p-columnFilter field="familleEmploiLibelle" display="menu" />{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.COL_FAMILLE_EMPLOI' | translate }}</th>
+            <th><p-columnFilter field="emploiLibelle" display="menu" />{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.COL_EMPLOI' | translate }}</th>
+            <th style="width: 150px">{{ 'GLOBAL.ACTIONS' | translate }}</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr class="row-clickable" (click)="drillDown(item)">
+            <td><strong>{{ item.designationObjet }}</strong></td>
+            <td>{{ item.description || '—' }}</td>
+            <td>{{ item.familleProfessionnelleLibelle || '—' }}</td>
+            <td>{{ item.familleEmploiLibelle || '—' }}</td>
+            <td>{{ item.emploiLibelle || '—' }}</td>
+            <td class="actions-cell" (click)="$event.stopPropagation()">
+              <button
+                pButton icon="pi pi-eye"
+                class="p-button-rounded p-button-text p-button-success mr-2"
+                [pTooltip]="'GLOBAL.VISUALISER' | translate"
+                (click)="onViewPoste(item)">
+              </button>
+              <button
+                pButton icon="pi pi-pencil"
+                class="p-button-rounded p-button-text p-button-info mr-2"
+                [pTooltip]="'GLOBAL.MODIFIER' | translate"
+                (click)="onEditPoste(item)">
+              </button>
+              <button
+                pButton icon="pi pi-trash"
+                class="p-button-rounded p-button-text p-button-danger"
+                [pTooltip]="'GLOBAL.SUPPRIMER' | translate"
+                (click)="deletePoste(item)">
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="6" class="text-center">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.EMPTY_POSTE' | translate }}</td></tr>
+        </ng-template>
+      </p-table>
+
+    </div>
+  </div>
+
+  <div class="card" *ngIf="currentView === 'activites'">
+
+    <div class="breadcrumb-bar">
+      <button pButton class="p-button-text p-button-plain back-btn" (click)="goBackToPostes()">
+        <i class="pi pi-arrow-left"></i>
+        <span>{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.POSTES_TITLE' | translate }}</span>
+      </button>
+      <i class="pi pi-chevron-right breadcrumb-separator"></i>
+      <span class="breadcrumb-current">{{ selectedPosteForDrilldown?.designationObjet }}</span>
+    </div>
+
+    <div class="container primTable">
+
+      <div class="flex justify-content-between align-items-center mb-3">
+        <h3>
+          <i class="pi pi-list" style="font-size: 28px; margin-right: 6px;"></i>
+          {{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.ACTIVITES_TITLE' | translate }} — {{ selectedPosteForDrilldown?.designationObjet }}
+        </h3>
+        <p-button
+          [label]="'POSTE_ET_EMPLOI.POSTES_ACTIVITES.ADD_ACTIVITE_BTN' | translate"
+          icon="pi pi-plus"
+          styleClass="p-button-success"
+          (onClick)="showAddActiviteDialog()">
+        </p-button>
+      </div>
+
+      <p-table
+        #dtAct
+        [value]="activitesData"
+        dataKey="id"
+        [paginator]="true"
+        [rows]="10"
+        [rowsPerPageOptions]="[5, 10, 20]"
+        [globalFilterFields]="['designationObjet','description']">
+
+        <ng-template pTemplate="caption">
+          <div class="flex align-items-center justify-content-between">
+            <p-button
+              [label]="'GLOBAL.EFFACER' | translate"
+              [outlined]="true"
+              icon="pi pi-filter-slash"
+              (onClick)="clearActivitesTable(dtAct)">
+            </p-button>
+
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input
+                pInputText
+                type="text"
+                [(ngModel)]="activitesSearch"
+                (input)="dtAct.filterGlobal(activitesSearch, 'contains')"
+                [placeholder]="'GLOBAL.RECHERCHER' | translate" />
+            </span>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th><p-columnFilter field="designationObjet" display="menu" />{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.COL_DESIGNATION' | translate }}</th>
+            <th><p-columnFilter field="description" display="menu" />{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.COL_DESCRIPTION' | translate }}</th>
+            <th><p-columnFilter field="ordreAffichage" display="menu" />{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.COL_ORDRE' | translate }}</th>
+            <th style="width: 150px">{{ 'GLOBAL.ACTIONS' | translate }}</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td><strong>{{ item.designationObjet }}</strong></td>
+            <td>{{ item.description || '—' }}</td>
+            <td>{{ item.ordreAffichage ?? '—' }}</td>
+            <td class="actions-cell">
+              <button
+                pButton icon="pi pi-eye"
+                class="p-button-rounded p-button-text p-button-success mr-2"
+                [pTooltip]="'GLOBAL.VISUALISER' | translate"
+                (click)="onViewActivite(item)">
+              </button>
+              <button
+                pButton icon="pi pi-pencil"
+                class="p-button-rounded p-button-text p-button-info mr-2"
+                [pTooltip]="'GLOBAL.MODIFIER' | translate"
+                (click)="onEditActivite(item)">
+              </button>
+              <button
+                pButton icon="pi pi-trash"
+                class="p-button-rounded p-button-text p-button-danger"
+                [pTooltip]="'GLOBAL.SUPPRIMER' | translate"
+                (click)="deleteActivite(item)">
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr><td colspan="4" class="text-center">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.EMPTY_ACTIVITE' | translate }}</td></tr>
+        </ng-template>
+      </p-table>
+
+    </div>
+  </div>
+</div>
+
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="'POSTE_ET_EMPLOI.POSTES_ACTIVITES.DIALOG_VIEW_POSTE' | translate"
+  [(visible)]="displayPosteView"
+  [modal]="true"
+  [style]="{width: '550px'}">
+
+  <ng-container *ngIf="selectedPoste">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_designation" [ngModel]="selectedPoste.designationObjet" [disabled]="true" />
+          <label for="v_designation">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_DESIGNATION' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_fam_prof" [ngModel]="selectedPoste.familleProfessionnelleLibelle" [disabled]="true" />
+          <label for="v_fam_prof">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_FAMILLE_PROF' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_fam_emp" [ngModel]="selectedPoste.familleEmploiLibelle" [disabled]="true" />
+          <label for="v_fam_emp">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_FAMILLE_EMPLOI' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_emp" [ngModel]="selectedPoste.emploiLibelle" [disabled]="true" />
+          <label for="v_emp">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_EMPLOI' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <textarea pInputTextarea id="v_desc" [ngModel]="selectedPoste.description" rows="3" [disabled]="true" class="w-full"></textarea>
+          <label for="v_desc">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_DESCRIPTION' | translate }}</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-template pTemplate="footer">
+    <p-button [label]="'GLOBAL.FERMER' | translate" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayPosteView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="'POSTE_ET_EMPLOI.POSTES_ACTIVITES.DIALOG_VIEW_ACTIVITE' | translate"
+  [(visible)]="displayActiviteView"
+  [modal]="true"
+  [style]="{width: '550px'}">
+
+  <ng-container *ngIf="selectedActivite">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="va_designation" [ngModel]="selectedActivite.designationObjet" [disabled]="true" />
+          <label for="va_designation">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_DESIGNATION' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="va_poste" [ngModel]="selectedActivite.posteTravailDesignation || selectedPosteForDrilldown?.designationObjet" [disabled]="true" />
+          <label for="va_poste">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_POSTE_TRAVAIL' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="va_ordre" [ngModel]="selectedActivite.ordreAffichage" [disabled]="true" />
+          <label for="va_ordre">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_ORDRE' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <textarea pInputTextarea id="va_desc" [ngModel]="selectedActivite.description" rows="3" [disabled]="true" class="w-full"></textarea>
+          <label for="va_desc">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_DESCRIPTION' | translate }}</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </ng-container>
+  <ng-template pTemplate="footer">
+    <p-button [label]="'GLOBAL.FERMER' | translate" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayActiviteView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="(posteDialogMode === 'add' ? 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.DIALOG_ADD_POSTE' : 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.DIALOG_EDIT_POSTE') | translate"
+  [(visible)]="displayPosteDialog"
+  [modal]="true"
+  [style]="{width: '550px'}">
+  <form #addPosteForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="designationObjet" name="designationObjet" [(ngModel)]="posteForm.designationObjet" #designationObjet="ngModel" required [class.ng-dirty]="designationObjet.invalid && designationObjet.touched" />
+        <label for="designationObjet">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_DESIGNATION' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="designationObjet.invalid && designationObjet.touched">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.ERR_DESIGNATION' | translate }}</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select
+          id="familleProfessionnelleId"
+          name="familleProfessionnelleId"
+          [options]="famillesProfessionnelleData"
+          optionLabel="famille"
+          optionValue="id"
+          [(ngModel)]="posteForm.familleProfessionnelleId"
+          [filter]="true"
+          filterBy="famille"
+          [showClear]="true"
+          appendTo="body"
+          [styleClass]="posteForm.familleProfessionnelleId ? 'p-filled w-full shared-field-dropdown' : 'w-full shared-field-dropdown'">
+        </p-select>
+        <label for="familleProfessionnelleId">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_FAMILLE_PROF' | translate }}</label>
+      </p-floatLabel>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select
+          id="familleEmploiId"
+          name="familleEmploiId"
+          [options]="famillesEmploiData"
+          optionLabel="famillesEmploi"
+          optionValue="id"
+          [(ngModel)]="posteForm.familleEmploiId"
+          [filter]="true"
+          filterBy="famillesEmploi"
+          [showClear]="true"
+          (onChange)="onFamilleEmploiChange()"
+          appendTo="body"
+          [styleClass]="posteForm.familleEmploiId ? 'p-filled w-full shared-field-dropdown' : 'w-full shared-field-dropdown'">
+        </p-select>
+        <label for="familleEmploiId">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_FAMILLE_EMPLOI' | translate }}</label>
+      </p-floatLabel>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-select
+          id="emploiId"
+          name="emploiId"
+          [options]="emploisData"
+          optionLabel="emploi"
+          optionValue="id"
+          [(ngModel)]="posteForm.emploiId"
+          [filter]="true"
+          filterBy="emploi"
+          [showClear]="true"
+          [disabled]="!posteForm.familleEmploiId"
+          appendTo="body"
+          [styleClass]="posteForm.emploiId ? 'p-filled w-full shared-field-dropdown' : 'w-full shared-field-dropdown'">
+        </p-select>
+        <label for="emploiId">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_EMPLOI' | translate }}</label>
+      </p-floatLabel>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="description" name="description" rows="3" [(ngModel)]="posteForm.description" class="w-full"></textarea>
+        <label for="description">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_DESCRIPTION' | translate }}</label>
+      </p-floatLabel>
+    </div>
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="(posteDialogMode === 'add' ? 'GLOBAL.AJOUTER' : 'GLOBAL.MODIFIER') | translate"
+      icon="pi pi-check"
+      severity="success"
+      (onClick)="savePoste()">
+    </p-button>
+    <p-button
+      [label]="'GLOBAL.ANNULER' | translate"
+      icon="pi pi-times"
+      [text]="true" severity="secondary"
+      (onClick)="displayPosteDialog=false">
+    </p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="(activiteDialogMode === 'add' ? 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.DIALOG_ADD_ACTIVITE' : 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.DIALOG_EDIT_ACTIVITE') | translate"
+  [(visible)]="displayActiviteDialog"
+  [modal]="true"
+  [style]="{width: '550px'}">
+  <form #addActiviteForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="act_designation" name="act_designation" [(ngModel)]="activiteForm.designationObjet" #act_designation="ngModel" required [class.ng-dirty]="act_designation.invalid && act_designation.touched" />
+        <label for="act_designation">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_DESIGNATION' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="act_designation.invalid && act_designation.touched">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.ERR_DESIGNATION' | translate }}</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-inputNumber id="ordreAffichage" name="ordreAffichage" [(ngModel)]="activiteForm.ordreAffichage" [min]="1" [showButtons]="true" styleClass="w-full"></p-inputNumber>
+        <label for="ordreAffichage">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_ORDRE' | translate }}</label>
+      </p-floatLabel>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="act_description" name="act_description" rows="3" [(ngModel)]="activiteForm.description" class="w-full"></textarea>
+        <label for="act_description">{{ 'POSTE_ET_EMPLOI.POSTES_ACTIVITES.LBL_DESCRIPTION' | translate }}</label>
+      </p-floatLabel>
+    </div>
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button
+      [label]="(activiteDialogMode === 'add' ? 'GLOBAL.AJOUTER' : 'GLOBAL.MODIFIER') | translate"
+      icon="pi pi-check"
+      severity="success"
+      (onClick)="saveActivite()">
+    </p-button>
+    <p-button
+      [label]="'GLOBAL.ANNULER' | translate"
+      icon="pi pi-times"
+      [text]="true" severity="secondary"
+      (onClick)="displayActiviteDialog=false">
+    </p-button>
+  </ng-template>
+</p-dialog>

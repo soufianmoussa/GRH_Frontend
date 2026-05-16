@@ -1,0 +1,22 @@
+.app-wrapper {
+  width: 100%;
+  background: #f4f8fc;
+  overflow-y: hidden;
+}
+
+.main-layout {
+  display: flex;
+  margin-top: 60px;
+}
+
+.main-content {
+  flex: 1;
+  transition: margin-left 0.3s ease;
+  padding: 1.5rem;
+  background: #f4f8fc;
+  min-height: calc(100vh - 60px);
+
+  &.sidebar-open {
+    margin-left: 284px;
+  }
+}

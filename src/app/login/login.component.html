@@ -1,0 +1,73 @@
+<div class="login-wrapper">
+  <div class="login-card">
+
+    <!-- Colonne gauche : Image + Texte -->
+    <div class="login-left">
+      <div class="overlay"></div>
+      <img src="assets/slider-metier-assistant-rh.jpeg" alt="Illustration" class="login-image" />
+    </div>
+
+    <!-- Colonne droite : Formulaire -->
+    <div class="login-right">
+
+      <!-- Logo -->
+      <img src="assets/MastechRh-Logo.png" class="login-logo" />
+
+      <!-- Titre -->
+      <div class="title">
+        <h2>Bienvenue</h2>
+        <p>Connectez-vous pour accéder à votre espace RH.</p>
+      </div>
+
+      <!-- Message Alerte -->
+      <p-message *ngIf="message" severity="warn" [text]="message" class="mb-3"></p-message>
+
+      <!-- Formulaire -->
+      <form (ngSubmit)="onSubmit()" #loginForm="ngForm" novalidate>
+
+        <!-- Nom d'utilisateur -->
+        <div class="field">
+          <label for="username">Nom d'utilisateur</label>
+          <input
+            pInputText
+            id="username"
+            [(ngModel)]="username"
+            name="username"
+            placeholder="Entrez votre nom d'utilisateur"
+            autocomplete="username"
+            required />
+        </div>
+
+        <!-- Mot de passe -->
+        <div class="field">
+          <label for="password">Mot de passe</label>
+          <p-password
+            id="password"
+            [(ngModel)]="password"
+            name="password"
+            [feedback]="false"
+            [toggleMask]="true"
+            placeholder="Entrez votre mot de passe"
+          ></p-password>
+        </div>
+
+        <!-- Bouton -->
+        <button
+          pButton
+          [label]="loading ? 'Connexion...' : 'Se connecter'"
+          icon="pi pi-sign-in"
+          class="btn-login p-button-rounded p-button-lg p-mt-2 w-100"
+          type="submit"
+          [disabled]="loading">
+        </button>
+
+      </form>
+
+      <!-- Liens -->
+      <div class="extra-links">
+        <a routerLink="/forgot-password">Mot de passe oublié ?</a>
+      </div>
+
+    </div>
+  </div>
+</div>

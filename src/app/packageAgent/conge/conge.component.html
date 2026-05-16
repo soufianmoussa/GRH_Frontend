@@ -1,0 +1,377 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+<div class="conge-page">
+  <div class="page-header">
+    <div class="header-titles">
+      <h1 class="titleh1">Demande de Congé</h1>
+      <p class="page-subtitle">Soumettez votre demande de congé en quelques étapes</p>
+    </div>
+
+    <div class="agent-info-card">
+      <div class="agent-avatar">
+        <i class="pi pi-user"></i>
+      </div>
+      <div class="agent-details">
+        <span class="agent-name">{{ currentAgent.nom }}</span>
+        <span class="agent-role" pTooltip="Poste actuel" tooltipPosition="bottom">
+          <i class="pi pi-briefcase"></i> {{ currentAgent.poste }}
+        </span>
+        <span class="agent-manager" pTooltip="Responsable hiérarchique" tooltipPosition="bottom">
+          <i class="pi pi-sitemap"></i> Resp: {{ currentAgent.responsable }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card stepper-card">
+    <p-stepper [(value)]="activeStep" [linear]="true">
+
+      <p-step-list>
+        <p-step [value]="1">Saisie congé</p-step>
+        <p-stepper-separator />
+        <p-step [value]="2">Confirmation</p-step>
+      </p-step-list>
+
+      <p-step-panels>
+
+        <p-step-panel [value]="1">
+          <ng-template #content let-activateCallback="activateCallback">
+            <div class="step-content">
+    <form [formGroup]="exceptionalRequestForm" class="conge-form">
+
+      <div class="form-row">
+
+
+        <div class="form-col form-fields-col">
+
+
+          <div class="section-card categorie-card">
+            <div class="section-header">
+              <h4><i class="pi pi-tag"></i> Type de congé</h4>
+            </div>
+            <p-dropdown [options]="categories" optionLabel="label" optionValue="value"
+              placeholder="Sélectionnez un type de congé" formControlName="category" [style]="{ width: '100%' }"
+              (onChange)="onCategoryChange()">
+            </p-dropdown>
+
+
+            <div class="type-help-banner" *ngIf="currentTypeHelp"
+              [ngClass]="'type-help-' + currentTypeHelp.severity">
+              <i [class]="currentTypeHelp.icon"></i>
+              <div class="type-help-text">
+                <strong>{{ currentTypeHelp.title }}</strong>
+                <span>{{ currentTypeHelp.hint }}</span>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="section-card dates-card">
+            <div class="section-header">
+              <h4><i class="pi pi-calendar"></i> Période demandée</h4>
+              <button type="button" class="reset-btn" (click)="resetDates()">
+                <i class="pi pi-refresh"></i> Réinitialiser
+              </button>
+            </div>
+
+            <div class="date-labels">
+              <div class="date-label-box">
+                <span class="date-label-title">Date début</span>
+                <span class="date-label-value" *ngIf="selectedDateRange && selectedDateRange.length > 0">
+                  {{ selectedDateRange[0] | date: 'dd/MM/yyyy' }}
+                </span>
+                <span class="date-label-value placeholder" *ngIf="!selectedDateRange || selectedDateRange.length === 0">
+                  Cliquez sur le calendrier
+                </span>
+              </div>
+              <div class="date-label-box">
+                <span class="date-label-title">Date fin</span>
+                <span class="date-label-value" *ngIf="selectedDateRange && selectedDateRange.length > 1">
+                  {{ selectedDateRange[1] | date: 'dd/MM/yyyy' }}
+                </span>
+                <span class="date-label-value placeholder" *ngIf="!selectedDateRange || selectedDateRange.length <= 1">
+                  Cliquez sur le calendrier
+                </span>
+              </div>
+            </div>
+
+
+            <div class="duree-content">
+              <div class="duree-input-box">
+                <input formControlName="duree" type="number" pInputText min="0" placeholder="0" class="duree-input"
+                  (input)="onDureeInput($event)" />
+                <span class="duree-label">
+                  jour{{ (exceptionalRequestForm.get('duree')?.value || 0) > 1 ? 's' : '' }} ouvrable{{
+                  (exceptionalRequestForm.get('duree')?.value || 0) > 1 ? 's' : '' }}
+                </span>
+              </div>
+              <p class="duree-hint">
+                <i class="pi pi-info-circle"></i>
+                Sélectionnez les dates sur le calendrier ou saisissez le nombre de jours.
+              </p>
+            </div>
+          </div>
+
+
+          <div class="section-card solde-card" *ngIf="showSolde && loadingSolde">
+            <div class="section-header">
+              <h4><i class="pi pi-wallet"></i> Solde de congé</h4>
+            </div>
+            <div class="solde-content" style="text-align: center; padding: 1rem;">
+              <p-progressSpinner [style]="{width: '30px', height: '30px'}" strokeWidth="4"></p-progressSpinner>
+              <p style="margin-top: 0.5rem; color: #6b7280;">Chargement du solde...</p>
+            </div>
+          </div>
+
+
+          <div class="section-card solde-card" *ngIf="showSolde && !loadingSolde && solde">
+            <div class="section-header">
+              <h4><i class="pi pi-wallet"></i> Solde de congé</h4>
+            </div>
+            <div class="solde-content">
+              <div class="solde-row">
+                <span class="solde-label">Jours de base</span>
+                <span class="solde-value">{{ solde.joursBase || 0 }}</span>
+              </div>
+              <div class="solde-row">
+                <span class="solde-label">Jours reportés</span>
+                <span class="solde-value">{{ solde.joursReportes || 0 }}</span>
+              </div>
+              <div class="solde-row">
+                <span class="solde-label">Ajustement</span>
+                <span class="solde-value">{{ solde.joursAjustement || 0 }}</span>
+              </div>
+              <div class="solde-row solde-remaining"
+                [ngClass]="{ 'solde-low': soldeRemaining !== null && soldeRemaining <= 3 }">
+                <span class="solde-label"><strong>Restant</strong></span>
+                <span class="solde-value solde-remaining-value">
+                  <strong>{{ soldeRemaining }} jour{{ soldeRemaining !== null && soldeRemaining > 1 ? 's' : ''
+                    }}</strong>
+                </span>
+              </div>
+              <div *ngIf="soldeRemaining !== null && soldeRemaining <= 0"
+                   style="margin-top: 0.75rem; font-size: 0.85rem; color: #6b7280; text-align: center;">
+                <i class="pi pi-info-circle"></i>
+                Solde non initialisé ou épuisé. Contactez votre administrateur.
+              </div>
+            </div>
+          </div>
+
+
+          <div class="section-card attachment-card" *ngIf="showAttachment">
+            <div class="section-header">
+              <h4><i class="pi pi-paperclip"></i> Justificatif</h4>
+              <span class="attachment-badge" *ngIf="isAttachmentRecommended">
+                <i class="pi pi-exclamation-circle"></i> Recommandé
+              </span>
+            </div>
+            <div class="attachment-content">
+              <div class="file-upload-zone" *ngIf="!attachmentFile">
+                <label class="file-upload-label">
+                  <input type="file" (change)="onFileSelect($event)" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" hidden />
+                  <i class="pi pi-cloud-upload"></i>
+                  <span>Cliquer pour sélectionner un fichier</span>
+                  <small>PDF, JPG, PNG, DOC –” Max 5 Mo</small>
+                </label>
+              </div>
+              <div class="file-selected" *ngIf="attachmentFile">
+                <i class="pi pi-file"></i>
+                <span class="file-name">{{ attachmentFile.name }}</span>
+                <button type="button" class="file-remove-btn" (click)="removeAttachment()">
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="section-card notes-card">
+            <div class="section-header">
+              <h4><i class="pi pi-pencil"></i> Commentaire</h4>
+            </div>
+            <textarea pInputTextarea [(ngModel)]="notes" [ngModelOptions]="{standalone: true}"
+              placeholder="Ajoutez un commentaire ou une précision (optionnel)..."
+              [rows]="3" [autoResize]="true" class="notes-textarea" maxlength="500"></textarea>
+            <small class="notes-note">
+              <i class="pi pi-info-circle"></i> Optionnel –” 500 caractères max.
+            </small>
+          </div>
+
+        </div>
+
+
+        <div class="form-col calendar-col">
+
+
+          <div class="section-card calendar-card">
+            <div class="section-header">
+              <h4><i class="pi pi-calendar-plus"></i> Planning</h4>
+            </div>
+
+            <div class="calendar-wrapper">
+              <p-calendar formControlName="dateRange" inline="true" [showIcon]="false" [style]="{ width: '100%' }"
+                [numberOfMonths]="2" [defaultDate]="startDateDefault" selectionMode="range" [minDate]="minDate"
+                [disabledDays]="[0, 6]" [disabledDates]="holidayDates" (onMonthChange)="onMonthChange($event)">
+                <ng-template pTemplate="date" let-date>
+                  <span class="custom-date" (click)="onDateClick(date)" [ngClass]="{
+                      'custom-start': isValidDate(date, 'start'),
+                      'custom-end': isValidDate(date, 'end'),
+                      'custom-range': isValidDate(date, 'range'),
+                      'holiday-date': isHoliday(date),
+                      'weekend-date': isWeekend(date),
+                      'existing-approved': getExistingRequestClass(date) === 'existing-approved' && !isValidDate(date, 'start') && !isValidDate(date, 'end') && !isValidDate(date, 'range'),
+                      'existing-pending': getExistingRequestClass(date) === 'existing-pending' && !isValidDate(date, 'start') && !isValidDate(date, 'end') && !isValidDate(date, 'range'),
+                      'existing-rejected': getExistingRequestClass(date) === 'existing-rejected' && !isValidDate(date, 'start') && !isValidDate(date, 'end') && !isValidDate(date, 'range'),
+                      'existing-cancelled': getExistingRequestClass(date) === 'existing-cancelled' && !isValidDate(date, 'start') && !isValidDate(date, 'end') && !isValidDate(date, 'range')
+                    }"
+                    [pTooltip]="getExistingRequestTooltip(date) || getHolidayTooltip(date)"
+                    [tooltipPosition]="'top'">
+                    {{ date.day }}
+                  </span>
+                </ng-template>
+              </p-calendar>
+            </div>
+
+
+            <div class="calendar-legend">
+              <span class="legend-title">Légende :</span>
+              <div class="legend-items">
+                <div class="legend-item" *ngFor="let item of legendItems">
+                  <span class="legend-dot" [style.background-color]="item.color"></span>
+                  <span class="legend-label">{{ item.label }}</span>
+                </div>
+                <div class="legend-item">
+                  <span class="legend-dot legend-dot-selected"></span>
+                  <span class="legend-label">Sélection</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+
+          <div class="section-card summary-card" *ngIf="selectedDateRange && selectedDateRange.length === 2">
+            <div class="section-header">
+              <h4><i class="pi pi-check-square"></i> Résumé de la sélection</h4>
+            </div>
+            <div class="summary-content">
+              <div class="summary-row">
+                <span class="summary-icon"><i class="pi pi-arrow-right"></i></span>
+                <span class="summary-label">Début</span>
+                <span class="summary-value">{{ selectedDateRange[0] | date: 'dd MMMM yyyy' }}</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-icon"><i class="pi pi-arrow-left"></i></span>
+                <span class="summary-label">Fin</span>
+                <span class="summary-value">{{ selectedDateRange[1] | date: 'dd MMMM yyyy' }}</span>
+              </div>
+              <div class="summary-row summary-duree-row">
+                <span class="summary-icon"><i class="pi pi-clock"></i></span>
+                <span class="summary-label">Durée</span>
+                <span class="summary-value">
+                  <span class="duree-badge">{{ exceptionalRequestForm.get('duree')?.value }} jour(s) ouvrable(s)</span>
+                </span>
+              </div>
+              <div class="summary-row" *ngIf="exceptionalRequestForm.get('category')?.value">
+                <span class="summary-icon"><i class="pi pi-tag"></i></span>
+                <span class="summary-label">Type</span>
+                <span class="summary-value">{{ getCategoryLabel() }}</span>
+              </div>
+            </div>
+
+
+            <div class="overlap-warning" *ngIf="hasOverlapPublic()">
+              <i class="pi pi-exclamation-triangle"></i>
+              <span>Attention : cette période chevauche une demande existante.</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </form>
+
+      <div class="step-actions">
+        <span></span>
+        <button pButton label="Suivant" icon="pi pi-arrow-right" iconPos="right" (click)="nextStep(activateCallback)"
+          class="p-button-primary suivant-btn"></button>
+      </div>
+    </div>
+  </ng-template>
+</p-step-panel>
+
+
+<p-step-panel [value]="2">
+  <ng-template #content let-activateCallback="activateCallback">
+    <div class="step-content">
+      <div class="confirmation-card">
+        <h3 class="step-title">
+          <i class="pi pi-check-circle"></i>
+          Récapitulatif de votre demande
+        </h3>
+        <p class="step-subtitle">Vérifiez les informations avant d'envoyer votre demande</p>
+
+        <div class="recap-grid">
+          <div class="recap-section">
+            <h4>Détails de la demande</h4>
+            <div class="recap-row">
+              <span class="recap-label"><i class="pi pi-calendar"></i> Date de début</span>
+              <span class="recap-value" *ngIf="selectedDateRange && selectedDateRange.length > 0">
+                <strong>{{ selectedDateRange[0] | date: 'dd MMMM yyyy' }}</strong>
+              </span>
+            </div>
+            <div class="recap-row">
+              <span class="recap-label"><i class="pi pi-calendar"></i> Date de fin</span>
+              <span class="recap-value" *ngIf="selectedDateRange && selectedDateRange.length > 1">
+                <strong>{{ selectedDateRange[1] | date: 'dd MMMM yyyy' }}</strong>
+              </span>
+            </div>
+            <div class="recap-row">
+              <span class="recap-label"><i class="pi pi-clock"></i> Durée</span>
+              <span class="recap-value">
+                <span class="duree-badge">{{ exceptionalRequestForm.get('duree')?.value }} jour(s) ouvrable(s)</span>
+              </span>
+            </div>
+            <div class="recap-row">
+              <span class="recap-label"><i class="pi pi-tag"></i> Catégorie</span>
+              <span class="recap-value">{{ getCategoryLabel() }}</span>
+            </div>
+            <div class="recap-row" *ngIf="soldeRemaining !== null">
+              <span class="recap-label"><i class="pi pi-wallet"></i> Solde restant</span>
+              <span class="recap-value">
+                <span class="solde-remaining-value"><strong>{{ soldeRemaining }} jour(s)</strong></span>
+              </span>
+            </div>
+          </div>
+
+          <div class="recap-section" *ngIf="attachmentFile || notes">
+            <h4>Informations complémentaires</h4>
+            <div class="recap-row" *ngIf="attachmentFile">
+              <span class="recap-label"><i class="pi pi-paperclip"></i> Justificatif</span>
+              <span class="recap-value">{{ attachmentFile.name }}</span>
+            </div>
+            <div class="recap-row" *ngIf="notes">
+              <span class="recap-label"><i class="pi pi-pencil"></i> Commentaire</span>
+              <span class="recap-value">{{ notes }}</span>
+            </div>
+          </div>
+        </div>
+
+        <p class="confirmation-note" style="margin-top: 1.5rem;">
+          <i class="pi pi-info-circle"></i>
+          Votre demande va être transmise à votre supérieur hiérarchique pour validation.        </p>
+
+        <div class="step-actions">
+          <button pButton label="Précédent" icon="pi pi-arrow-left" (click)="prevStep(activateCallback)"
+            [outlined]="true" severity="secondary"></button>
+          <button pButton label="Envoyer la demande" icon="pi pi-send" (click)="confirmBeforeSubmit()"
+            severity="success" [loading]="submitting" [disabled]="submitting"></button>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</p-step-panel>
+
+      </p-step-panels>
+    </p-stepper>
+  </div>
+</div>

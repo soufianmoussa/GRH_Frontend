@@ -1,0 +1,255 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Accidents / Maladie</h1>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Liste des arrêts de travail</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-heart-fill" style="font-size: 28px; margin-right: 6px;"></i>
+                Liste des arrêts de travail
+              </h3>
+
+              <p-button
+                label="Ajouter un accident/maladie"
+                icon="pi pi-plus"
+                styleClass="p-button-success"
+                (onClick)="showAddDialog()">
+              </p-button>
+            </div>
+
+            <p-table
+              #dt
+              [value]="accidents"
+              dataKey="id"
+              [rows]="5"
+              [rowsPerPageOptions]="[5, 10, 20]"
+              [paginator]="true"
+              [loading]="loading"
+              [responsiveLayout]="'scroll'"
+              [globalFilterFields]="['agentMatricule','categorieMaladie','dateDebutArret','dateFinArret','numConseil']">
+
+              <ng-template pTemplate="caption">
+                <div class="flex">
+                  <p-button label="Effacer" icon="pi pi-filter-slash" [outlined]="true" (onClick)="clearTable(dt)" />
+                  <span class="p-input-icon-left ml-auto">
+                    <i class="pi pi-search"></i>
+                    <input
+                      pInputText
+                      type="text"
+                      [(ngModel)]="searchGlobal"
+                      (input)="dt.filterGlobal(searchGlobal, 'contains'); applySearch();"
+                      placeholder="Rechercher..." />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter type="text" field="agentMatricule" display="menu" />Matricule</th>
+                  <th><p-columnFilter type="text" field="categorieMaladie" display="menu" />Catégorie</th>
+                  <th><p-columnFilter type="date" field="dateDebutArret" display="menu" />Date début</th>
+                  <th><p-columnFilter type="date" field="dateFinArret" display="menu" />Date fin</th>
+                  <th><p-columnFilter type="date" field="dateNotification" display="menu" />Notification</th>
+                  <th><p-columnFilter type="text" field="numConseil" display="menu" />N° Conseil</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td><strong>{{ item.agentMatricule }}</strong></td>
+                  <td>{{ item.categorieMaladie }}</td>
+                  <td>{{ item.dateDebutArret | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ item.dateFinArret | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ item.dateNotification | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ item.numConseil }}</td>
+
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" pTooltip="Visualiser" (click)="onView(item)"></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Modifier" (click)="onEdit(item)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" pTooltip="Supprimer" (click)="onDelete(item)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="7" class="text-center">Aucun enregistrement trouvé.</td></tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" header="Détails Accident/Maladie" [(visible)]="displayView" [modal]="true" [style]="{ width: '450px' }">
+  <ng-container *ngIf="selected">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_matricule" [ngModel]="selected.agentMatricule" [disabled]="true" />
+          <label for="view_matricule">Matricule</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_categorieMaladie" [ngModel]="selected.categorieMaladie" [disabled]="true" />
+          <label for="view_categorieMaladie">Catégorie maladie</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="view_dateDebutArret" [ngModel]="selected.dateDebutArret" [disabled]="true" dateFormat="dd/mm/yy" appendTo="body"></p-datepicker>
+          <label for="view_dateDebutArret">Date début arrêt</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="view_dateFinArret" [ngModel]="selected.dateFinArret" [disabled]="true" dateFormat="dd/mm/yy" appendTo="body"></p-datepicker>
+          <label for="view_dateFinArret">Date fin arrêt</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="view_dateNotification" [ngModel]="selected.dateNotification" [disabled]="true" dateFormat="dd/mm/yy" appendTo="body"></p-datepicker>
+          <label for="view_dateNotification">Notification</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <textarea pInputTextarea id="view_caracteristiqueArret" [ngModel]="selected.caracteristiqueArret" rows="2" [disabled]="true" class="w-full"></textarea>
+          <label for="view_caracteristiqueArret">Caractéristique arrêt</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_numConseil" [ngModel]="selected.numConseil" [disabled]="true" />
+          <label for="view_numConseil">N° Conseil</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [header]="dialogMode === 'add' ? 'Ajouter Accident/Maladie' : 'Modifier Accident/Maladie'" [(visible)]="displayDialog" [modal]="true" [style]="{ width: '550px' }">
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="agentId" name="agentId" [options]="agents" optionLabel="matricule" optionValue="id" [(ngModel)]="form.agentId" #agentId="ngModel" required [filter]="true" appendTo="body" [styleClass]="form.agentId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="agentId.invalid && agentId.touched">
+            <ng-template pTemplate="selectedItem" let-selectedOption>
+                <div class="flex align-items-center gap-2">
+                    <div>{{selectedOption.matricule}} - {{selectedOption.nom}} {{selectedOption.prenom}}</div>
+                </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-agent>
+                <div class="flex align-items-center gap-2">
+                    <div>{{agent.matricule}} - {{agent.nom}} {{agent.prenom}}</div>
+                </div>
+            </ng-template>
+        </p-dropdown>
+        <label for="agentId">Agent <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="agentId.invalid && agentId.touched">L'agent est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="categorieMaladie" name="categorieMaladie" [(ngModel)]="form.categorieMaladie" #categorieMaladie="ngModel" required
+               [class.ng-dirty]="categorieMaladie.invalid && categorieMaladie.touched" />
+        <label for="categorieMaladie">Catégorie maladie <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="categorieMaladie.invalid && categorieMaladie.touched">La catégorie est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateDebutArret" name="dateDebutArret" [(ngModel)]="form.dateDebutArret" #dateDebutArret="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="dateDebutArret.invalid && dateDebutArret.touched"></p-datepicker>
+        <label for="dateDebutArret">Date début arrêt <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateDebutArret.invalid && dateDebutArret.touched">La date de début est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateFinArret" name="dateFinArret" [(ngModel)]="form.dateFinArret" #dateFinArret="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="dateFinArret.invalid && dateFinArret.touched"></p-datepicker>
+        <label for="dateFinArret">Date fin arrêt <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateFinArret.invalid && dateFinArret.touched">La date de fin est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateNotification" name="dateNotification" [(ngModel)]="form.dateNotification" #dateNotification="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="dateNotification.invalid && dateNotification.touched"></p-datepicker>
+        <label for="dateNotification">Date notification <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateNotification.invalid && dateNotification.touched">La date de notification est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="caracteristiqueArret" name="caracteristiqueArret" rows="2" [(ngModel)]="form.caracteristiqueArret" #caracteristiqueArret="ngModel" required
+                  [class.ng-dirty]="caracteristiqueArret.invalid && caracteristiqueArret.touched" class="w-full"></textarea>
+        <label for="caracteristiqueArret">Caractéristique arrêt <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="caracteristiqueArret.invalid && caracteristiqueArret.touched">La caractéristique est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="numConseil" name="numConseil" [(ngModel)]="form.numConseil" #numConseil="ngModel" required
+               [class.ng-dirty]="numConseil.invalid && numConseil.touched" />
+        <label for="numConseil">N° Conseil <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="numConseil.invalid && numConseil.touched">Le n° de conseil est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateConseil" name="dateConseil" [(ngModel)]="form.dateConseil" #dateConseil="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="dateConseil.invalid && dateConseil.touched"></p-datepicker>
+        <label for="dateConseil">Date Conseil <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateConseil.invalid && dateConseil.touched">La date de conseil est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateCommission" name="dateCommission" [(ngModel)]="form.dateCommission" #dateCommission="ngModel" required
+                      dateFormat="yy-mm-dd" appendTo="body" [showIcon]="true"
+                      [class.ng-dirty]="dateCommission.invalid && dateCommission.touched"></p-datepicker>
+        <label for="dateCommission">Date Commission <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateCommission.invalid && dateCommission.touched">La date de commission est obligatoire.</small>
+    </div>
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogMode === 'add' ? 'Ajouter' : 'Modifier'" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+  </ng-template>
+</p-dialog>

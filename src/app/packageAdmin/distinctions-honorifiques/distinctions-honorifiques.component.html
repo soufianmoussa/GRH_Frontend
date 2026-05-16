@@ -1,0 +1,156 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">{{ 'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.TITLE' | translate }}</h1>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">{{ 'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.LIST_TITLE' | translate }}</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-award" style="font-size:30px; margin-right:5px;"></i>
+                {{ 'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.LIST_TITLE' | translate }}
+              </h3>
+              <p-button
+                [label]="'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.ADD_BTN' | translate"
+                icon="pi pi-plus"
+                styleClass="p-button-success"
+                (onClick)="showAddDistinction()"
+              ></p-button>
+            </div>
+
+            <p-table
+              #dt
+              [value]="distinctions"
+              dataKey="id"
+              [rows]="5"
+              [rowsPerPageOptions]="[5,10,20]"
+              [paginator]="true"
+              [loading]="loading"
+              [globalFilterFields]="['matricule','dateEffet','distinction']"
+            >
+              <ng-template pTemplate="caption">
+                <div class="flex">
+                  <p-button [label]="'GLOBAL.EFFACER' | translate" icon="pi pi-filter-slash" [outlined]="true" (onClick)="clearTable(dt)" />
+                  <span class="p-input-icon-left ml-auto">
+                    <i class="pi pi-search"></i>
+                    <input
+                      pInputText
+                      type="text"
+                      [(ngModel)]="searchValue"
+                      (input)="dt.filterGlobal(searchValue,'contains'); applySearch();"
+                      [placeholder]="'GLOBAL.RECHERCHER' | translate" />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter type="text" field="matricule" display="menu"></p-columnFilter>{{ 'GLOBAL.MATRICULE' | translate }}</th>
+                  <th><p-columnFilter type="date" field="dateEffet" display="menu"></p-columnFilter>{{ 'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.COL_DATE_EFFET' | translate }}</th>
+                  <th><p-columnFilter type="text" field="distinction" display="menu"></p-columnFilter>{{ 'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.COL_DISTINCTION' | translate }}</th>
+                  <th>{{ 'GLOBAL.ACTIONS' | translate }}</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-dist>
+                <tr>
+                  <td><strong>{{ dist.matricule }}</strong></td>
+                  <td>{{ dist.dateEffet }}</td>
+                  <td>{{ dist.distinction }}</td>
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" [pTooltip]="'GLOBAL.VISUALISER' | translate" (click)="onView(dist)"></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" [pTooltip]="'GLOBAL.MODIFIER' | translate" (click)="onEdit(dist)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" [pTooltip]="'GLOBAL.SUPPRIMER' | translate" (click)="onDelete(dist)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="4" class="text-center">{{ 'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.EMPTY_MESSAGE' | translate }}</td></tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" [header]="'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.DIALOG_VIEW_TITLE' | translate" [(visible)]="displayView" [modal]="true" [style]="{ width: '450px' }">
+  <ng-container *ngIf="selectedDistinction">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_mat" [ngModel]="selectedDistinction.matricule" [disabled]="true" />
+          <label for="v_mat">{{ 'GLOBAL.MATRICULE' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="v_de" [ngModel]="selectedDistinction.dateEffet" [disabled]="true" dateFormat="yy-mm-dd" appendTo="body"></p-datepicker>
+          <label for="v_de">{{ 'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.COL_DATE_EFFET' | translate }}</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_dist" [ngModel]="selectedDistinction.distinction" [disabled]="true" />
+          <label for="v_dist">{{ 'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.LBL_DISTINCTION' | translate }}</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-template pTemplate="footer">
+    <p-button [label]="'GLOBAL.FERMER' | translate" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [header]="(dialogMode === 'add' ? 'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.DIALOG_ADD_TITLE' : 'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.DIALOG_EDIT_TITLE') | translate" [(visible)]="displayDialog" [modal]="true" [style]="{ width: '550px' }">
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="distinction" name="distinction" [options]="distinctions_list" [(ngModel)]="form.distinction" #distinction="ngModel" required
+                    [filter]="true" appendTo="body"
+                    [styleClass]="form.distinction ? 'p-filled w-full' : 'w-full'"
+                    [class.ng-dirty]="distinction.invalid && distinction.touched"></p-dropdown>
+        <label for="distinction">{{ 'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.LBL_DISTINCTION' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="distinction.invalid && distinction.touched">{{ 'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.ERR_DISTINCTION' | translate }}</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="matricule" name="matricule" [(ngModel)]="form.matricule" #matricule="ngModel" required
+               [class.ng-dirty]="matricule.invalid && matricule.touched" />
+        <label for="matricule">{{ 'GLOBAL.MATRICULE' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="matricule.invalid && matricule.touched">{{ 'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.ERR_MATRICULE' | translate }}</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateEffet" name="dateEffet" [(ngModel)]="form.dateEffet" #dateEffet="ngModel" required
+                      dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"
+                      [class.ng-dirty]="dateEffet.invalid && dateEffet.touched"></p-datepicker>
+        <label for="dateEffet">{{ 'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.COL_DATE_EFFET' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateEffet.invalid && dateEffet.touched">{{ 'PACKAGE_ADMIN.DISTINCTIONS_HONORIFIQUES.ERR_DATE_EFFET' | translate }}</small>
+    </div>
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="(dialogMode === 'add' ? 'GLOBAL.AJOUTER' : 'GLOBAL.MODIFIER') | translate" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+    <p-button [label]="'GLOBAL.ANNULER' | translate" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+  </ng-template>
+</p-dialog>

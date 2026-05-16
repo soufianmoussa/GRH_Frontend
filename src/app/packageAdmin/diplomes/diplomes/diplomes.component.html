@@ -1,0 +1,244 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Gestion des Diplômes</h1>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Liste des diplômes</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-graduation-cap" style="font-size: 30px; margin-right: 5px;"></i>
+                Liste des diplômes
+              </h3>
+              <p-button label="Ajouter un diplôme" icon="pi pi-plus" styleClass="p-button-success" (onClick)="showAddDiplome()" />
+            </div>
+
+            <p-table #dtDip [value]="diplomes" dataKey="id" [rows]="5" [paginator]="true" [rowsPerPageOptions]="[5,10,20]" [loading]="loading" [globalFilterFields]="['agentMatricule','dateObtention','mention','moyenne']">
+
+              <ng-template pTemplate="caption">
+                <div class="flex">
+                  <p-button label="Effacer" icon="pi pi-filter-slash" [outlined]="true" (onClick)="clearTable(dtDip)" />
+                  <span class="p-input-icon-left ml-auto">
+                    <i class="pi pi-search"></i>
+                    <input pInputText type="text" [(ngModel)]="searchValue" (input)="dtDip.filterGlobal(searchValue,'contains'); applySearch();" placeholder="Rechercher..." />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Matricule <p-columnFilter type="text" field="agentMatricule" display="menu" /></th>
+                  <th>Date d'obtention <p-columnFilter type="date" field="dateObtention" display="menu" /></th>
+                  <th>Niveau <p-columnFilter type="text" field="niveau.libelle" display="menu" /></th>
+                  <th>Spécialité <p-columnFilter type="text" field="specialite.libelle" display="menu" /></th>
+                  <th>Etablissement <p-columnFilter type="text" field="etablissement.libelle" display="menu" /></th>
+                  <th>Mention <p-columnFilter type="text" field="mention" display="menu" /></th>
+                  <th>Moyenne <p-columnFilter type="numeric" field="moyenne" display="menu" /></th>
+                  <th>Scan</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-dp>
+                <tr>
+                  <td><strong>{{ dp.agentMatricule }}</strong></td>
+                  <td>{{ dp.dateObtention }}</td>
+                  <td>{{ dp.niveau?.libelle }}</td>
+                  <td>{{ dp.specialite?.libelle }}</td>
+                  <td>{{ dp.etablissement?.libelle }}</td>
+                  <td>{{ dp.mention }}</td>
+                  <td>{{ dp.moyenne }}</td>
+                  <td>
+                    <a *ngIf="dp.scanUrl" [href]="dp.scanUrl" target="_blank" pTooltip="Voir le scan">
+                      <i class="pi pi-file-pdf" style="font-size: 1.2rem; color: var(--green-500);"></i>
+                    </a>
+                    <span *ngIf="!dp.scanUrl" style="color: var(--text-color-secondary);">—</span>
+                  </td>
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" pTooltip="Visualiser" (click)="onView(dp)"></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Modifier" (click)="onEdit(dp)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" pTooltip="Supprimer" (click)="onDelete(dp)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="9" class="text-center">Aucun diplôme trouvé.</td></tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" header="Détails du diplôme" [(visible)]="displayView" [modal]="true" [style]="{width: '450px'}">
+  <ng-container *ngIf="selectedDiplome">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_matricule" [ngModel]="selectedDiplome.agentMatricule" [disabled]="true" />
+          <label for="view_matricule">Matricule</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="view_date" [ngModel]="selectedDiplome.dateObtention" [disabled]="true" dateFormat="yy-mm-dd" appendTo="body"></p-datepicker>
+          <label for="view_date">Date d'obtention</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_niveau" [ngModel]="selectedDiplome.niveau?.libelle" [disabled]="true" />
+          <label for="view_niveau">Niveau</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_etab" [ngModel]="selectedDiplome.etablissement?.libelle" [disabled]="true" />
+          <label for="view_etab">Établissement</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_moyenne" [ngModel]="selectedDiplome.moyenne" [disabled]="true" />
+          <label for="view_moyenne">Moyenne</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full" *ngIf="selectedDiplome.scanFileName">
+        <label class="block mb-2 font-semibold">Scan du diplôme</label>
+        <div class="flex align-items-center gap-2">
+          <i class="pi pi-file" style="font-size: 1.2rem;"></i>
+          <a [href]="selectedDiplome.scanUrl" target="_blank" class="text-primary">{{ selectedDiplome.scanFileName }}</a>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [header]="dialogMode === 'add' ? 'Ajouter un diplôme' : 'Modifier un diplôme'" [(visible)]="displayDialog" [modal]="true" [style]="{width: '550px'}">
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="agentId" name="agentId" [options]="agents" optionLabel="matricule" optionValue="id" [(ngModel)]="form.agentId" #agentId="ngModel" required [filter]="true" appendTo="body" [styleClass]="form.agentId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="agentId.invalid && agentId.touched">
+            <ng-template pTemplate="selectedItem" let-selectedOption>
+                <div class="flex align-items-center gap-2">
+                    <div>{{selectedOption.matricule}} - {{selectedOption.nom}} {{selectedOption.prenom}}</div>
+                </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-agent>
+                <div class="flex align-items-center gap-2">
+                    <div>{{agent.matricule}} - {{agent.nom}} {{agent.prenom}}</div>
+                </div>
+            </ng-template>
+        </p-dropdown>
+        <label for="agentId">Agent <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="agentId.invalid && agentId.touched">L'agent est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="dateObtention" name="dateObtention" [(ngModel)]="form.dateObtention" #dateObtention="ngModel" required dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body" [class.ng-dirty]="dateObtention.invalid && dateObtention.touched"></p-datepicker>
+        <label for="dateObtention">Date d'obtention <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateObtention.invalid && dateObtention.touched">La date d'obtention est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="niveauId" name="niveauId" [options]="niveaux" optionLabel="libelle" optionValue="id" [(ngModel)]="form.niveauId" #niveauId="ngModel" required [filter]="true" appendTo="body" [styleClass]="form.niveauId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="niveauId.invalid && niveauId.touched"></p-dropdown>
+        <label for="niveauId">Niveau <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="niveauId.invalid && niveauId.touched">Le niveau est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="etablissementId" name="etablissementId" [options]="etablissements" optionLabel="libelle" optionValue="id" [(ngModel)]="form.etablissementId" #etablissementId="ngModel" required [filter]="true" appendTo="body" [styleClass]="form.etablissementId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="etablissementId.invalid && etablissementId.touched"></p-dropdown>
+        <label for="etablissementId">Établissement <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="etablissementId.invalid && etablissementId.touched">L'établissement est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="specialiteId" name="specialiteId" [options]="specialites" optionLabel="libelle" optionValue="id" [(ngModel)]="form.specialiteId" #specialiteId="ngModel" required [filter]="true" appendTo="body" [styleClass]="form.specialiteId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="specialiteId.invalid && specialiteId.touched"></p-dropdown>
+        <label for="specialiteId">Spécialité <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="specialiteId.invalid && specialiteId.touched">La spécialité est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input type="number" pInputText id="moyenne" name="moyenne" [(ngModel)]="form.moyenne" #moyenne="ngModel" required (ngModelChange)="onMoyenneChange()" min="10" max="20" step="0.01" [class.ng-dirty]="moyenne.invalid && moyenne.touched" />
+        <label for="moyenne">Moyenne <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="moyenne.invalid && moyenne.touched">La moyenne est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="codePays" name="codePays" [(ngModel)]="form.codePays" #codePays="ngModel" required [class.ng-dirty]="codePays.invalid && codePays.touched" />
+        <label for="codePays">Code Pays <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="codePays.invalid && codePays.touched">Le code pays est obligatoire.</small>
+    </div>
+
+    <!-- File upload (optional) -->
+    <div class="w-full dialog-upload">
+      <input #fileInput type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="onFileSelect($event)" hidden />
+
+      <!-- Existing file (edit mode) -->
+      <div class="file-selected" *ngIf="dialogMode === 'edit' && form.scanFileName && !selectedFile">
+        <i class="pi pi-file"></i>
+        <a [href]="form.scanUrl" target="_blank" class="file-name">{{ form.scanFileName }}</a>
+        <button type="button" class="file-remove-btn" pTooltip="Supprimer" (click)="onDeleteScanById(form.id)">
+          <i class="pi pi-trash"></i>
+        </button>
+      </div>
+
+      <!-- Upload card (empty state) -->
+      <div class="file-upload-zone" *ngIf="!selectedFile && !(dialogMode === 'edit' && form.scanFileName)" (click)="fileInput.click()">
+        <label class="file-upload-label">
+          <div class="upload-icon-box"><i class="pi pi-cloud-upload"></i></div>
+          <div class="upload-text">
+            <span class="upload-title">Scan du diplôme <span class="optional-tag">(optionnel)</span></span>
+            <span class="upload-hint">PDF, JPEG ou PNG — max 10 Mo</span>
+          </div>
+          <span class="upload-browse-btn">Parcourir</span>
+        </label>
+      </div>
+
+      <!-- File selected chip -->
+      <div class="file-selected" *ngIf="selectedFile">
+        <i class="pi pi-file"></i>
+        <span class="file-name">{{ selectedFile.name }}</span>
+        <button type="button" class="file-remove-btn" pTooltip="Retirer" (click)="clearFile(fileInput)">
+          <i class="pi pi-times"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogMode === 'add' ? 'Ajouter' : 'Modifier'" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+  </ng-template>
+</p-dialog>

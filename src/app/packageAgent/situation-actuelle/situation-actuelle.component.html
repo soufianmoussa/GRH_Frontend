@@ -1,0 +1,222 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Situation Actuelle</h1>
+  <app-agentcard></app-agentcard>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Liste des situations actuelles</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-briefcase" style="font-size: 28px; margin-right: 6px;"></i>
+                Liste des situations actuelles
+              </h3>
+
+              <p-button
+                label="Ajouter une situation"
+                icon="pi pi-plus"
+                styleClass="p-button-success"
+                (onClick)="showAddDialog()"
+              ></p-button>
+            </div>
+
+            <p-table
+              #dtSituation
+              [value]="situations"
+              [rows]="pageSize"
+              [paginator]="true"
+              [rowsPerPageOptions]="[5, 10, 20]"
+              [responsiveLayout]="'scroll'"
+              [totalRecords]="totalRecords"
+              [loading]="loading"
+              (onPage)="onPageChange($event)"
+              [globalFilterFields]="['structure','fonction','observation']"
+            >
+
+              <ng-template pTemplate="caption">
+                <div class="flex align-items-center justify-content-between">
+                  <p-button
+                    label="Effacer"
+                    [outlined]="true"
+                    icon="pi pi-filter-slash"
+                    (onClick)="clearTable(dtSituation)"
+                  ></p-button>
+
+                  <span class="p-input-icon-left">
+                    <i class="pi pi-search"></i>
+                    <input
+                      pInputText
+                      type="text"
+                      [(ngModel)]="search"
+                      (input)="dtSituation.filterGlobal(search, 'contains'); applySearch();"
+                      placeholder="Rechercher..."
+                    />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th><p-columnFilter field="ordre" type="numeric" display="menu"></p-columnFilter>Ordre</th>
+                  <th><p-columnFilter field="structure" type="text" display="menu"></p-columnFilter>Structure</th>
+                  <th><p-columnFilter field="fonction" type="text" display="menu"></p-columnFilter>Fonction</th>
+                  <th><p-columnFilter field="dateDebut" type="date" display="menu"></p-columnFilter>Date début</th>
+                  <th><p-columnFilter field="dateFin" type="date" display="menu"></p-columnFilter>Date fin</th>
+                  <th><p-columnFilter field="observation" type="text" display="menu"></p-columnFilter>Observation</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td>{{ item.ordre }}</td>
+                  <td pTooltip="{{ item.structure }}">{{ item.structure.length > 20 ? (item.structure | slice:0:15)+'…' : item.structure }}</td>
+                  <td pTooltip="{{ item.fonction }}">{{ item.fonction.length > 20 ? (item.fonction | slice:0:15)+'…' : item.fonction }}</td>
+                  <td>{{ item.dateDebut | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ item.dateFin | date:'dd/MM/yyyy' }}</td>
+                  <td pTooltip="{{ item.observation }}">{{ item.observation?.length > 25 ? (item.observation | slice:0:15)+'…' : item.observation }}</td>
+                  <td>
+                    <button
+                      pButton
+                      icon="pi pi-eye"
+                      class="p-button-rounded p-button-text p-button-success mr-2"
+                      pTooltip="Visualiser"
+                      (click)="onView(item)"
+                    ></button>
+
+                    <button
+                      pButton
+                      icon="pi pi-pencil"
+                      class="p-button-rounded p-button-text p-button-info mr-2"
+                      pTooltip="Modifier"
+                      (click)="onEdit(item)"
+                    ></button>
+
+                    <button
+                      pButton
+                      icon="pi pi-trash"
+                      class="p-button-rounded p-button-text p-button-danger"
+                      pTooltip="Supprimer"
+                      (click)="onDelete(item)"
+                    ></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="7" class="text-center">Aucune situation trouvée</td></tr>
+              </ng-template>
+
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" header="Détails de la situation" [(visible)]="displayView" [modal]="true" [style]="{width: '500px'}">
+  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="selected">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_ordre" [ngModel]="selected.ordre" [disabled]="true" />
+        <label for="v_ordre">Ordre</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_structure" [ngModel]="selected.structure" [disabled]="true" />
+        <label for="v_structure">Structure</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="v_fonction" [ngModel]="selected.fonction" [disabled]="true" />
+        <label for="v_fonction">Fonction</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="v_dateDebut" [ngModel]="selected.dateDebut" [disabled]="true" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+        <label for="v_dateDebut">Date début</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="v_dateFin" [ngModel]="selected.dateFin" [disabled]="true" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+        <label for="v_dateFin">Date fin</label>
+      </p-floatLabel>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="v_observation" [ngModel]="selected.observation" [disabled]="true" rows="3"></textarea>
+        <label for="v_observation">Observation</label>
+      </p-floatLabel>
+    </div>
+  </div>
+  
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [header]="dialogMode === 'add' ? 'Ajouter une situation' : 'Modifier la situation'" [(visible)]="displayDialog" [modal]="true" [style]="{width:'520px'}">
+  <form #situationForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input type="number" pInputText id="f_ordre" name="f_ordre" [(ngModel)]="currentSituation.ordre" #f_ordre="ngModel" required [class.ng-dirty]="f_ordre.invalid && f_ordre.touched">
+        <label for="f_ordre">Ordre <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_ordre.invalid && f_ordre.touched">L'ordre est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_structure" name="f_structure" [(ngModel)]="currentSituation.structure" #f_structure="ngModel" required [class.ng-dirty]="f_structure.invalid && f_structure.touched">
+        <label for="f_structure">Structure <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_structure.invalid && f_structure.touched">La structure est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="f_fonction" name="f_fonction" [(ngModel)]="currentSituation.fonction" #f_fonction="ngModel" required [class.ng-dirty]="f_fonction.invalid && f_fonction.touched">
+        <label for="f_fonction">Fonction <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_fonction.invalid && f_fonction.touched">La fonction est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="f_dateDebut" name="f_dateDebut" [(ngModel)]="currentSituation.dateDebut" #f_dateDebut="ngModel" required dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" [class.ng-dirty]="f_dateDebut.invalid && f_dateDebut.touched"></p-datepicker>
+        <label for="f_dateDebut">Date début <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_dateDebut.invalid && f_dateDebut.touched">La date début est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="f_dateFin" name="f_dateFin" [(ngModel)]="currentSituation.dateFin" #f_dateFin="ngModel" required dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" [class.ng-dirty]="f_dateFin.invalid && f_dateFin.touched"></p-datepicker>
+        <label for="f_dateFin">Date fin <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="f_dateFin.invalid && f_dateFin.touched">La date fin est obligatoire.</small>
+    </div>
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="f_observation" name="f_observation" [(ngModel)]="currentSituation.observation" rows="3"></textarea>
+        <label for="f_observation">Observation</label>
+      </p-floatLabel>
+    </div>
+  </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogMode === 'add' ? 'Ajouter' : 'Modifier'" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,490 @@
+<p-toast position="top-center"></p-toast>
+
+<div class="content">
+  <h1 class="page-title"><i class="pi pi-user"></i> Mes donnees personnelles</h1>
+
+  <app-agentcard (agentLoaded)="onAgentLoaded($event)"></app-agentcard>
+
+  <div class="card" *ngIf="agentFull">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0"><i class="pi pi-home"></i> Adresse</p-tab>
+        <p-tab value="1"><i class="pi pi-wallet"></i> Bancaire</p-tab>
+        <p-tab value="2"><i class="pi pi-briefcase"></i> Professionnel</p-tab>
+        <p-tab value="3"><i class="pi pi-users"></i> Famille</p-tab>
+        <p-tab value="4"><i class="pi pi-list-check"></i> Mes demandes</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <!-- ═══════════════════════ ADRESSE ═══════════════════════ -->
+        <p-tabpanel value="0">
+
+          <!-- READ MODE -->
+          <ng-container *ngIf="!editingAdresse">
+            <div class="tab-header">
+              <h3 class="section-subtitle"><i class="pi pi-home"></i> Mes adresses</h3>
+              <p-button icon="pi pi-pencil" label="Modifier" severity="info" [outlined]="true"
+                        size="small" (onClick)="startEditAdresse()"></p-button>
+            </div>
+
+            <ng-container *ngIf="agentFull.adresses?.length; else noAdresse">
+              <div class="data-section" *ngFor="let a of agentFull.adresses" style="margin-bottom: 1rem;">
+                <div class="address-type-badge">
+                  <p-tag [severity]="a.type === 'PRINCIPALE' ? 'success' : 'info'"
+                         [value]="typeAdresseLabel(a.type)"></p-tag>
+                </div>
+                <div class="data-grid">
+                  <div class="data-item"><span class="data-label">Adresse</span><span class="data-value">{{ a.adresse || '—' }}</span></div>
+                  <div class="data-item"><span class="data-label">Code postal</span><span class="data-value">{{ a.codePostal || '—' }}</span></div>
+                  <div class="data-item"><span class="data-label">Localite</span><span class="data-value">{{ a.localite || '—' }}</span></div>
+                  <div class="data-item"><span class="data-label">Ville</span><span class="data-value">{{ a.ville || '—' }}</span></div>
+                  <div class="data-item"><span class="data-label">Pays</span><span class="data-value">{{ a.pays || '—' }}</span></div>
+                  <div class="data-item"><span class="data-label">Telephone</span><span class="data-value">{{ a.telephone || '—' }}</span></div>
+                </div>
+              </div>
+            </ng-container>
+            <ng-template #noAdresse>
+              <div class="empty-section">
+                <i class="pi pi-info-circle"></i>
+                <p>Aucune adresse renseignee.</p>
+              </div>
+            </ng-template>
+          </ng-container>
+
+          <!-- EDIT MODE -->
+          <ng-container *ngIf="editingAdresse">
+            <div class="tab-header">
+              <h3 class="section-subtitle"><i class="pi pi-pencil"></i> Modifier mes adresses</h3>
+              <div class="header-actions">
+                <p-button icon="pi pi-plus" label="Ajouter" severity="success" [outlined]="true"
+                          size="small" (onClick)="addAdresse()"></p-button>
+              </div>
+            </div>
+
+            <div class="edit-adresse-card" *ngFor="let a of editAdresses; let i = index">
+              <div class="edit-card-header">
+                <p-select [options]="typeAdresseOptions" [(ngModel)]="a.type"
+                          placeholder="Type" optionLabel="label" optionValue="value"
+                          styleClass="type-select"></p-select>
+                <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
+                          (onClick)="removeAdresse(i)" pTooltip="Supprimer"></p-button>
+              </div>
+              <div class="edit-grid">
+                <div class="edit-field">
+                  <label>Adresse</label>
+                  <input pInputText [(ngModel)]="a.adresse" placeholder="Adresse" />
+                </div>
+                <div class="edit-field">
+                  <label>Code postal</label>
+                  <input pInputText [(ngModel)]="a.codePostal" placeholder="Code postal" />
+                </div>
+                <div class="edit-field">
+                  <label>Localite</label>
+                  <input pInputText [(ngModel)]="a.localite" placeholder="Localite" />
+                </div>
+                <div class="edit-field">
+                  <label>Ville</label>
+                  <input pInputText [(ngModel)]="a.ville" placeholder="Ville" />
+                </div>
+                <div class="edit-field">
+                  <label>Pays</label>
+                  <input pInputText [(ngModel)]="a.pays" placeholder="Pays" />
+                </div>
+                <div class="edit-field">
+                  <label>Telephone</label>
+                  <input pInputText [(ngModel)]="a.telephone" placeholder="Telephone" />
+                </div>
+              </div>
+            </div>
+
+            <div class="edit-actions">
+              <p-button icon="pi pi-times" label="Annuler" severity="secondary" [outlined]="true"
+                        (onClick)="cancelEditAdresse()"></p-button>
+              <p-button icon="pi pi-check" label="Enregistrer" severity="success"
+                        [loading]="savingAdresse" (onClick)="saveAdresses()"></p-button>
+            </div>
+          </ng-container>
+        </p-tabpanel>
+
+        <!-- ═══════════════════════ BANCAIRE ═══════════════════════ -->
+        <p-tabpanel value="1">
+          <div class="tab-header">
+            <h3 class="section-subtitle"><i class="pi pi-wallet"></i> Coordonnees bancaires</h3>
+            <p-button icon="pi pi-send" label="Demander une modification" severity="info" [outlined]="true"
+                      size="small" (onClick)="openBancaireDialog()" [disabled]="hasPendingBancaire()"></p-button>
+          </div>
+
+          <div class="info-banner" *ngIf="hasPendingBancaire()">
+            <i class="pi pi-clock"></i>
+            <span>Vous avez une demande de modification bancaire en attente de validation.</span>
+          </div>
+
+          <div class="data-section" *ngIf="agentFull.coordonneesBancaires as b; else noBancaire">
+            <div class="data-grid">
+              <div class="data-item"><span class="data-label">Banque</span><span class="data-value">{{ b.banque || '—' }}</span></div>
+              <div class="data-item"><span class="data-label">Compte</span><span class="data-value">{{ b.compte || '—' }}</span></div>
+              <div class="data-item"><span class="data-label">IBAN</span><span class="data-value iban-value">{{ b.iban || '—' }}</span></div>
+              <div class="data-item"><span class="data-label">RIB</span><span class="data-value">{{ b.rib || '—' }}</span></div>
+              <div class="data-item"><span class="data-label">Date d'ouverture</span><span class="data-value">{{ b.dateOuverture || '—' }}</span></div>
+              <div class="data-item"><span class="data-label">Date de validite</span><span class="data-value">{{ b.dateValidite || '—' }}</span></div>
+            </div>
+          </div>
+          <ng-template #noBancaire>
+            <div class="empty-section">
+              <i class="pi pi-info-circle"></i>
+              <p>Aucune donnee bancaire renseignee.</p>
+            </div>
+          </ng-template>
+        </p-tabpanel>
+
+        <!-- ═══════════════════════ PROFESSIONNEL ═══════════════════════ -->
+        <p-tabpanel value="2">
+
+          <!-- READ MODE -->
+          <ng-container *ngIf="!editingPro">
+            <div class="tab-header">
+              <h3 class="section-subtitle"><i class="pi pi-briefcase"></i> Coordonnees professionnelles</h3>
+              <p-button icon="pi pi-pencil" label="Modifier" severity="info" [outlined]="true"
+                        size="small" (onClick)="startEditPro()"></p-button>
+            </div>
+
+            <div class="data-section" *ngIf="agentFull.coordonneesProfessionnelles as p; else noPro">
+              <div class="data-grid">
+                <div class="data-item"><span class="data-label">Email professionnel</span><span class="data-value">{{ p.emailPro || '—' }}</span></div>
+                <div class="data-item"><span class="data-label">Telephone fixe</span><span class="data-value">{{ p.telFixe || '—' }}</span></div>
+                <div class="data-item"><span class="data-label">Telephone portable</span><span class="data-value">{{ p.telPortable || '—' }}</span></div>
+                <div class="data-item"><span class="data-label">Bureau</span><span class="data-value">{{ p.bureau || '—' }}</span></div>
+              </div>
+            </div>
+            <ng-template #noPro>
+              <div class="empty-section">
+                <i class="pi pi-info-circle"></i>
+                <p>Aucune coordonnee professionnelle renseignee.</p>
+              </div>
+            </ng-template>
+          </ng-container>
+
+          <!-- EDIT MODE -->
+          <ng-container *ngIf="editingPro">
+            <div class="tab-header">
+              <h3 class="section-subtitle"><i class="pi pi-pencil"></i> Modifier mes coordonnees</h3>
+            </div>
+
+            <div class="edit-grid">
+              <div class="edit-field">
+                <label>Email professionnel</label>
+                <input pInputText [(ngModel)]="editPro.emailPro" placeholder="Email professionnel" />
+              </div>
+              <div class="edit-field">
+                <label>Telephone fixe</label>
+                <input pInputText [(ngModel)]="editPro.telFixe" placeholder="Telephone fixe" />
+              </div>
+              <div class="edit-field">
+                <label>Telephone portable</label>
+                <input pInputText [(ngModel)]="editPro.telPortable" placeholder="Telephone portable" />
+              </div>
+              <div class="edit-field">
+                <label>Bureau</label>
+                <input pInputText [(ngModel)]="editPro.bureau" placeholder="Bureau" />
+              </div>
+            </div>
+
+            <div class="edit-actions">
+              <p-button icon="pi pi-times" label="Annuler" severity="secondary" [outlined]="true"
+                        (onClick)="cancelEditPro()"></p-button>
+              <p-button icon="pi pi-check" label="Enregistrer" severity="success"
+                        [loading]="savingPro" (onClick)="savePro()"></p-button>
+            </div>
+          </ng-container>
+        </p-tabpanel>
+
+        <!-- ═══════════════════════ FAMILLE ═══════════════════════ -->
+        <p-tabpanel value="3">
+          <!-- Situation familiale -->
+          <div class="tab-header">
+            <h3 class="section-subtitle"><i class="pi pi-users"></i> Situation familiale</h3>
+            <p-button icon="pi pi-plus" label="Ajouter un enfant" severity="info" [outlined]="true"
+                      size="small" (onClick)="openEnfantDialog()" [disabled]="hasPendingEnfant()"></p-button>
+          </div>
+
+          <div class="info-banner" *ngIf="hasPendingEnfant()">
+            <i class="pi pi-clock"></i>
+            <span>Vous avez une demande d'ajout d'enfant en attente de validation.</span>
+          </div>
+
+          <div class="family-badge" *ngIf="agentFull.situation">
+            <p-tag [value]="'Situation : ' + situationLabel" severity="info" icon="pi pi-heart"></p-tag>
+          </div>
+
+          <!-- Conjoint -->
+          <div class="data-section" *ngIf="agentFull.conjoint as conj">
+            <h3 class="section-subtitle"><i class="pi pi-heart"></i> Conjoint</h3>
+            <div class="data-grid">
+              <div class="data-item"><span class="data-label">Nom & Prenom</span><span class="data-value">{{ conj.prenom }} {{ conj.nom }}</span></div>
+              <div class="data-item"><span class="data-label">CIN</span><span class="data-value">{{ conj.cin || '—' }}</span></div>
+              <div class="data-item"><span class="data-label">Date de naissance</span><span class="data-value">{{ conj.dateNaissance || '—' }}</span></div>
+              <div class="data-item"><span class="data-label">Pays</span><span class="data-value">{{ conj.pays || '—' }}</span></div>
+              <div class="data-item"><span class="data-label">Profession</span><span class="data-value">{{ conj.profession || '—' }}</span></div>
+              <div class="data-item"><span class="data-label">Lieu</span><span class="data-value">{{ conj.lieu || '—' }}</span></div>
+              <div class="data-item"><span class="data-label">Nationalite</span><span class="data-value">{{ conj.nationalite || '—' }}</span></div>
+              <div class="data-item"><span class="data-label">Date de situation</span><span class="data-value">{{ conj.dateSituation || '—' }}</span></div>
+              <div class="data-item" *ngIf="conj.matricule"><span class="data-label">Matricule</span><span class="data-value">{{ conj.matricule }}</span></div>
+            </div>
+          </div>
+
+          <div class="empty-section" *ngIf="!agentFull.conjoint" style="margin-bottom: 1.5rem;">
+            <i class="pi pi-info-circle"></i>
+            <p>Aucun conjoint renseigne.</p>
+          </div>
+
+          <!-- Enfants table -->
+          <div class="container primTable">
+            <p-table [value]="agentFull.enfants || []"
+              [paginator]="(agentFull.enfants?.length || 0) > 10" [rows]="10"
+              [rowsPerPageOptions]="[5, 10, 20]"
+              [responsiveLayout]="'scroll'"
+              emptyMessage="Aucun enfant renseigne."
+              styleClass="p-datatable-sm">
+
+              <ng-template pTemplate="caption">
+                <div class="flex">
+                  <span class="table-title">
+                    <i class="pi pi-child"></i> Enfants ({{ agentFull.enfants?.length || 0 }})
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th pSortableColumn="nom">Nom <p-sortIcon field="nom"></p-sortIcon></th>
+                  <th pSortableColumn="prenom">Prenom <p-sortIcon field="prenom"></p-sortIcon></th>
+                  <th pSortableColumn="dateNaissance">Date de naissance <p-sortIcon field="dateNaissance"></p-sortIcon></th>
+                  <th pSortableColumn="sexe">Sexe <p-sortIcon field="sexe"></p-sortIcon></th>
+                  <th>Situation</th>
+                  <th pSortableColumn="niveauScolaire">Niveau scolaire <p-sortIcon field="niveauScolaire"></p-sortIcon></th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-enfant>
+                <tr>
+                  <td>{{ enfant.nom || '—' }}</td>
+                  <td>{{ enfant.prenom || '—' }}</td>
+                  <td>{{ (enfant.dateNaissance | date:'dd/MM/yyyy') || '—' }}</td>
+                  <td>{{ enfant.sexe === 'M' ? 'Masculin' : enfant.sexe === 'F' ? 'Feminin' : '—' }}</td>
+                  <td>
+                    <p-tag *ngIf="enfant.situation"
+                      [value]="enfant.situation === 'C' ? 'Celibataire' : enfant.situation === 'M' ? 'Marie(e)' : enfant.situation === 'V' ? 'Veuf(ve)' : 'Divorce(e)'"
+                      [severity]="enfant.situation === 'M' ? 'success' : 'secondary'">
+                    </p-tag>
+                    <span *ngIf="!enfant.situation">—</span>
+                  </td>
+                  <td>{{ enfant.niveauScolaire || '—' }}</td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="6" class="text-center">Aucun enfant renseigne.</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+
+        <!-- ═══════════════════════ MES DEMANDES ═══════════════════════ -->
+        <p-tabpanel value="4">
+          <div class="tab-header">
+            <h3 class="section-subtitle"><i class="pi pi-list-check"></i> Suivi de mes demandes</h3>
+          </div>
+
+          <div *ngIf="loadingRequests" class="loading-section">
+            <p-progressSpinner strokeWidth="3" [style]="{ width: '40px', height: '40px' }"></p-progressSpinner>
+          </div>
+
+          <div class="container primTable" *ngIf="!loadingRequests">
+            <p-table [value]="myRequests"
+              [paginator]="myRequests.length > 10" [rows]="10"
+              [rowsPerPageOptions]="[5, 10, 20]"
+              [responsiveLayout]="'scroll'"
+              styleClass="p-datatable-sm">
+
+              <ng-template pTemplate="caption">
+                <div class="flex">
+                  <span class="table-title">
+                    <i class="pi pi-inbox"></i> Demandes ({{ myRequests.length }})
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th pSortableColumn="type">Type <p-sortIcon field="type"></p-sortIcon></th>
+                  <th pSortableColumn="dateCreation">Date <p-sortIcon field="dateCreation"></p-sortIcon></th>
+                  <th pSortableColumn="statut">Statut <p-sortIcon field="statut"></p-sortIcon></th>
+                  <th>Commentaire admin</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-req>
+                <tr>
+                  <td>
+                    <div class="type-cell">
+                      <i [class]="req.type === 'BANCAIRE' ? 'pi pi-wallet' : 'pi pi-child'"></i>
+                      {{ typeModificationLabel(req.type) }}
+                    </div>
+                  </td>
+                  <td>{{ req.dateCreation | date:'dd/MM/yyyy HH:mm' }}</td>
+                  <td><p-tag [value]="statutLabel(req.statut)" [severity]="statutSeverity(req.statut)"></p-tag></td>
+                  <td>{{ req.commentaireAdmin || '—' }}</td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="4" class="text-center">Aucune demande soumise.</td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<!-- ═══════════════════════ DIALOGS ═══════════════════════ -->
+
+<!-- BANCAIRE CHANGE REQUEST DIALOG -->
+<p-dialog header="Demande de modification bancaire" [(visible)]="showBancaireDialog"
+          [modal]="true" [draggable]="false" [resizable]="false"
+          [style]="{ width: '650px' }" styleClass="pdialogfon">
+
+  <div class="dialog-info">
+    <i class="pi pi-info-circle"></i>
+    <span>Les modifications bancaires necessitent une validation par l'administration. Veuillez joindre votre attestation de RIB.</span>
+  </div>
+
+  <div class="dialog-form-grid">
+    <div class="dialog-field">
+      <label>Banque</label>
+      <input pInputText [(ngModel)]="bancaireForm.banque" placeholder="Nom de la banque" />
+    </div>
+    <div class="dialog-field">
+      <label>Compte</label>
+      <input pInputText [(ngModel)]="bancaireForm.compte" placeholder="Numero de compte" />
+    </div>
+    <div class="dialog-field full-width">
+      <label>IBAN</label>
+      <input pInputText [(ngModel)]="bancaireForm.iban" placeholder="IBAN" />
+    </div>
+    <div class="dialog-field">
+      <label>RIB</label>
+      <input pInputText [(ngModel)]="bancaireForm.rib" placeholder="RIB" />
+    </div>
+    <div class="dialog-field">
+      <label>Date d'ouverture</label>
+      <p-datepicker [(ngModel)]="bancaireForm.dateOuverture" dateFormat="dd/mm/yy" [showIcon]="true"
+                    placeholder="Date d'ouverture"></p-datepicker>
+    </div>
+    <div class="dialog-field">
+      <label>Date de validite</label>
+      <p-datepicker [(ngModel)]="bancaireForm.dateValidite" dateFormat="dd/mm/yy" [showIcon]="true"
+                    placeholder="Date de validite"></p-datepicker>
+    </div>
+  </div>
+
+  <div class="dialog-upload">
+    <label class="upload-label"><i class="pi pi-paperclip"></i> Attestation de RIB <span class="required">*</span></label>
+    <div class="file-upload-zone" *ngIf="!bancaireFile">
+      <label class="file-upload-label">
+        <input type="file" (change)="onBancaireFileSelect($event)" accept=".pdf,.jpg,.jpeg,.png,.webp" hidden />
+        <i class="pi pi-cloud-upload"></i>
+        <span>Cliquer pour selectionner un fichier</span>
+        <small>PDF, JPEG, PNG, WebP - Max 10 Mo</small>
+      </label>
+    </div>
+    <div class="file-selected" *ngIf="bancaireFile">
+      <i class="pi pi-file"></i>
+      <span class="file-name">{{ bancaireFile.name }}</span>
+      <button type="button" class="file-remove-btn" (click)="removeBancaireFile()">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button icon="pi pi-times" label="Annuler" severity="secondary" [text]="true"
+              (onClick)="showBancaireDialog = false"></p-button>
+    <p-button icon="pi pi-send" label="Soumettre la demande" severity="success"
+              [loading]="submittingBancaire" (onClick)="submitBancaire()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- ENFANT CHANGE REQUEST DIALOG -->
+<p-dialog header="Demande d'ajout d'enfant" [(visible)]="showEnfantDialog"
+          [modal]="true" [draggable]="false" [resizable]="false"
+          [style]="{ width: '650px' }" styleClass="pdialogfon">
+
+  <div class="dialog-info">
+    <i class="pi pi-info-circle"></i>
+    <span>L'ajout d'un enfant necessite une validation par l'administration. Veuillez joindre le certificat de naissance.</span>
+  </div>
+
+  <div class="dialog-form-grid">
+    <div class="dialog-field">
+      <label>Nom <span class="required">*</span></label>
+      <input pInputText [(ngModel)]="enfantForm.nom" placeholder="Nom de l'enfant" />
+    </div>
+    <div class="dialog-field">
+      <label>Prenom <span class="required">*</span></label>
+      <input pInputText [(ngModel)]="enfantForm.prenom" placeholder="Prenom de l'enfant" />
+    </div>
+    <div class="dialog-field">
+      <label>Date de naissance</label>
+      <p-datepicker [(ngModel)]="enfantForm.dateNaissance" dateFormat="dd/mm/yy" [showIcon]="true"
+                    placeholder="Date de naissance"></p-datepicker>
+    </div>
+    <div class="dialog-field">
+      <label>Sexe</label>
+      <p-select [options]="sexeOptions" [(ngModel)]="enfantForm.sexe"
+                optionLabel="label" optionValue="value" placeholder="Sexe"
+                styleClass="shared-field-dropdown"></p-select>
+    </div>
+    <div class="dialog-field">
+      <label>Situation</label>
+      <p-select [options]="situationOptions" [(ngModel)]="enfantForm.situation"
+                optionLabel="label" optionValue="value" placeholder="Situation"
+                styleClass="shared-field-dropdown"></p-select>
+    </div>
+    <div class="dialog-field">
+      <label>Niveau scolaire</label>
+      <input pInputText [(ngModel)]="enfantForm.niveauScolaire" placeholder="Niveau scolaire" />
+    </div>
+  </div>
+
+  <div class="dialog-upload">
+    <label class="upload-label"><i class="pi pi-paperclip"></i> Certificat de naissance <span class="required">*</span></label>
+    <div class="file-upload-zone" *ngIf="!enfantFile">
+      <label class="file-upload-label">
+        <input type="file" (change)="onEnfantFileSelect($event)" accept=".pdf,.jpg,.jpeg,.png,.webp" hidden />
+        <i class="pi pi-cloud-upload"></i>
+        <span>Cliquer pour selectionner un fichier</span>
+        <small>PDF, JPEG, PNG, WebP - Max 10 Mo</small>
+      </label>
+    </div>
+    <div class="file-selected" *ngIf="enfantFile">
+      <i class="pi pi-file"></i>
+      <span class="file-name">{{ enfantFile.name }}</span>
+      <button type="button" class="file-remove-btn" (click)="removeEnfantFile()">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button icon="pi pi-times" label="Annuler" severity="secondary" [text]="true"
+              (onClick)="showEnfantDialog = false"></p-button>
+    <p-button icon="pi pi-send" label="Soumettre la demande" severity="success"
+              [loading]="submittingEnfant" (onClick)="submitEnfant()"></p-button>
+  </ng-template>
+</p-dialog>

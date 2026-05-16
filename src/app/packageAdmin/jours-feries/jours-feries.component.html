@@ -1,0 +1,223 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content jf-page">
+
+  <header class="jf-header">
+    <div>
+      <h1 class="titleh1">Gestion des Jours Fériés</h1>
+      <p class="jf-subtitle">Visualisez et configurez les jours fériés de l'année dans un calendrier interactif.</p>
+    </div>
+    <div class="jf-header-actions">
+      <p-button
+        label="Ajouter un jour férié"
+        icon="pi pi-plus"
+        (onClick)="showAddDialog()">
+      </p-button>
+    </div>
+  </header>
+
+  <!-- Stats -->
+  <section class="jf-stats">
+    <div class="jf-stat-card">
+      <div class="stat-icon stat-icon--total"><i class="pi pi-calendar"></i></div>
+      <div class="stat-body">
+        <span class="stat-label">Total {{ viewYear }}</span>
+        <span class="stat-value">{{ joursFeries.length }}</span>
+      </div>
+    </div>
+    <div class="jf-stat-card">
+      <div class="stat-icon stat-icon--national"><i class="pi pi-flag"></i></div>
+      <div class="stat-body">
+        <span class="stat-label">National</span>
+        <span class="stat-value">{{ countByType('NATIONAL') }}</span>
+      </div>
+    </div>
+    <div class="jf-stat-card">
+      <div class="stat-icon stat-icon--religieux"><i class="pi pi-star"></i></div>
+      <div class="stat-body">
+        <span class="stat-label">Religieux</span>
+        <span class="stat-value">{{ countByType('RELIGIEUX') }}</span>
+      </div>
+    </div>
+
+    <div class="jf-stat-card">
+      <div class="stat-icon stat-icon--recurring"><i class="pi pi-refresh"></i></div>
+      <div class="stat-body">
+        <span class="stat-label">Récurrents</span>
+        <span class="stat-value">{{ recurringCount }}</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Calendar card -->
+  <section class="jf-calendar-card">
+    <div class="calendar-toolbar">
+      <div class="month-nav">
+        <button type="button" class="nav-btn" (click)="shiftMonth(-1)" pTooltip="Mois précédent">
+          <i class="pi pi-chevron-left"></i>
+        </button>
+        <span class="month-title">{{ monthLabels[viewMonth] }} {{ viewYear }}</span>
+        <button type="button" class="nav-btn" (click)="shiftMonth(1)" pTooltip="Mois suivant">
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+
+      <div class="calendar-actions">
+        <button type="button" class="today-btn" (click)="goToToday()">
+          <i class="pi pi-calendar-clock"></i>
+          Aujourd'hui
+        </button>
+        <div class="jf-legend">
+          <span class="legend-item"><span class="legend-dot legend-dot--national"></span> National</span>
+          <span class="legend-item"><span class="legend-dot legend-dot--religieux"></span> Religieux</span>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="calendar-loading" *ngIf="loading">
+      <i class="pi pi-spin pi-spinner"></i>
+    </div>
+
+    <div class="calendar-table" *ngIf="!loading">
+      <div class="weekdays-row">
+        <span *ngFor="let w of weekdayHeaders" class="weekday-cell">{{ w }}</span>
+      </div>
+
+      <div class="weeks">
+        <div class="week-row" *ngFor="let week of calendarWeeks; trackBy: trackByWeek">
+          <button
+            *ngFor="let cell of week; trackBy: trackByIso"
+            type="button"
+            class="day-cell"
+            [class.out-of-month]="!cell.inMonth"
+            [class.is-today]="cell.isToday"
+            [class.is-sunday]="cell.isSunday"
+            [class.has-holiday]="cell.holidays.length > 0"
+            [disabled]="cell.holidays.length === 0"
+            (click)="onDayClick($event, cell)">
+            <span class="day-num">{{ cell.day }}</span>
+
+            <div class="day-events" *ngIf="cell.holidays.length">
+              <span
+                *ngFor="let h of cell.holidays.slice(0, 2); trackBy: trackById"
+                class="day-event"
+                [attr.data-type]="h.type"
+                [pTooltip]="h.label + ' (' + getTypeLabel(h.type) + ')'"
+                tooltipPosition="top">
+                <span class="event-dot"></span>
+                <span class="event-label">{{ h.label }}</span>
+              </span>
+              <span class="day-event-more" *ngIf="cell.holidays.length > 2">
+                +{{ cell.holidays.length - 2 }}
+              </span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- Day-detail popover -->
+<p-popover #dayPopover [dismissable]="true" styleClass="jf-day-popover">
+  <div class="jf-day-popover-content">
+    <div class="popover-header">
+      <i class="pi pi-calendar"></i>
+      <span>{{ selectedDayLabel }}</span>
+    </div>
+    <ul class="popover-list">
+      <li
+        *ngFor="let h of selectedDayHolidays; trackBy: trackById"
+        class="popover-item"
+        [attr.data-type]="h.type">
+        <div class="popover-item-bar"></div>
+        <div class="popover-item-body">
+          <div class="popover-item-title">
+            <span class="title-text">{{ h.label }}</span>
+            <i
+              *ngIf="h.recurring"
+              class="pi pi-refresh recurring-flag"
+              pTooltip="Récurrent chaque année"></i>
+          </div>
+          <p-tag
+            [value]="getTypeLabel(h.type)"
+            [severity]="getTypeSeverity(h.type)"
+            styleClass="jf-type-tag">
+          </p-tag>
+        </div>
+        <div class="popover-item-actions">
+          <button
+            pButton
+            icon="pi pi-pencil"
+            class="p-button-rounded p-button-text p-button-info"
+            pTooltip="Modifier"
+            (click)="onEdit(h)">
+          </button>
+          <button
+            pButton
+            icon="pi pi-trash"
+            class="p-button-rounded p-button-text p-button-danger"
+            pTooltip="Supprimer"
+            (click)="onDelete(h)">
+          </button>
+        </div>
+      </li>
+    </ul>
+  </div>
+</p-popover>
+
+<!-- Add/Edit dialog -->
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="dialogMode === 'add' ? 'Ajouter un jour férié' : 'Modifier un jour férié'"
+  [(visible)]="displayDialog"
+  [modal]="true"
+  [style]="{ width: '550px' }">
+  <form #addForm="ngForm">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+      <div class="w-full">
+        <p-floatLabel>
+          <p-calendar id="date" name="date" [(ngModel)]="form.date" #dateField="ngModel" required
+                      dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"
+                      [class.ng-dirty]="dateField.invalid && dateField.touched">
+          </p-calendar>
+          <label for="date">Date <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="dateField.invalid && dateField.touched">La date est obligatoire.</small>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="label" name="label" [(ngModel)]="form.label" #labelField="ngModel" required
+                 [class.ng-dirty]="labelField.invalid && labelField.touched" />
+          <label for="label">Libellé <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="labelField.invalid && labelField.touched">Le libellé est obligatoire.</small>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <p-dropdown id="type" name="type" [options]="typeOptions" [(ngModel)]="form.type" #typeField="ngModel" required
+                      optionLabel="label" optionValue="value" appendTo="body"
+                      [styleClass]="form.type ? 'p-filled w-full' : 'w-full'"
+                      [class.ng-dirty]="typeField.invalid && typeField.touched">
+          </p-dropdown>
+          <label for="type">Type <span style="color: red;">*</span></label>
+        </p-floatLabel>
+        <small class="text-red-500 block mt-1" *ngIf="typeField.invalid && typeField.touched">Le type est obligatoire.</small>
+      </div>
+
+      <div class="w-full flex align-items-center gap-2">
+        <p-checkbox id="recurring" name="recurring" [(ngModel)]="form.recurring" [binary]="true"></p-checkbox>
+        <label for="recurring">Récurrent chaque année</label>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogMode === 'add' ? 'Ajouter' : 'Modifier'" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+  </ng-template>
+</p-dialog>

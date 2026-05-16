@@ -1,0 +1,234 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+<div class="content">
+  <h1 class="titleh1">{{ 'GESTION_ORGANISATIONELLE.AFFECTATION_AGENT_POSTE.TITLE' | translate }}</h1>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">{{ 'GESTION_ORGANISATIONELLE.AFFECTATION_AGENT_POSTE.TAB_LIST' | translate }}</p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+        <h3>
+          <i class="pi pi-users" style="font-size: 28px; margin-right: 6px;"></i>
+          {{ 'GESTION_ORGANISATIONELLE.AFFECTATION_AGENT_POSTE.HEADER_LIST' | translate }}
+        </h3>
+        <p-button [label]="'GESTION_ORGANISATIONELLE.AFFECTATION_AGENT_POSTE.ADD_BTN' | translate" icon="pi pi-plus" styleClass="p-button-success"
+          (onClick)="showAddDialog()">
+        </p-button>
+      </div>
+
+      <p-table #dtAffect [value]="affectations" [rows]="pageSize" [paginator]="true" [rowsPerPageOptions]="[5, 10, 20]"
+        [responsiveLayout]="'scroll'" [totalRecords]="totalRecords" [lazy]="true" (onPage)="onPageChange($event)"
+        [loading]="loading"
+        [globalFilterFields]="['agentNom','agentPrenom','agentMatricule','posteLibelle','posteCodeCourt','uniteLibelle','statut']">
+
+        <ng-template pTemplate="caption">
+          <div class="flex align-items-center justify-content-between">
+            <p-button [label]="'GLOBAL.EFFACER' | translate" [outlined]="true" icon="pi pi-filter-slash" (onClick)="clearTable(dtAffect)">
+            </p-button>
+
+            <span class="p-input-icon-left">
+              <i class="pi pi-search"></i>
+              <input pInputText type="text" [(ngModel)]="search" (input)="dtAffect.filterGlobal(search,'contains'); applySearch();" [placeholder]="'GLOBAL.RECHERCHER' | translate" />
+            </span>
+          </div>
+        </ng-template>
+
+        <ng-template pTemplate="header">
+          <tr>
+            <th><p-columnFilter field="agentMatricule" type="text" display="menu"></p-columnFilter>{{ 'GLOBAL.MATRICULE' | translate }}</th>
+            <th><p-columnFilter field="agentNom" type="text" display="menu"></p-columnFilter>{{ 'GLOBAL.AGENT' | translate }}</th>
+            <th><p-columnFilter field="posteLibelle" type="text" display="menu"></p-columnFilter>{{ 'GLOBAL.POSTE' | translate }}</th>
+            <th><p-columnFilter field="uniteLibelle" type="text" display="menu"></p-columnFilter>{{ 'GLOBAL.UNITE' | translate }}</th>
+            <th><p-columnFilter field="dateDebut" type="date" display="menu"></p-columnFilter>{{ 'GLOBAL.DATE_DEBUT' | translate }}</th>
+            <th><p-columnFilter field="dateFin" type="date" display="menu"></p-columnFilter>{{ 'GLOBAL.DATE_FIN' | translate }}</th>
+            <th><p-columnFilter field="statut" type="text" display="menu"></p-columnFilter>{{ 'GLOBAL.STATUT' | translate }}</th>
+            <th>{{ 'GLOBAL.ACTIONS' | translate }}</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td>{{ item.agentMatricule }}</td>
+            <td><strong>{{ item.agentNom }} {{ item.agentPrenom }}</strong></td>
+            <td>{{ item.posteLibelle }} <small class="text-muted">({{ item.posteCodeCourt }})</small></td>
+            <td>{{ item.uniteLibelle }}</td>
+            <td>{{ item.dateDebut | date:'dd/MM/yyyy' }}</td>
+            <td>{{ item.dateFin ? (item.dateFin | date:'dd/MM/yyyy') : '—' }}</td>
+            <td>
+              <p-tag [value]="getStatutLabel(item.statut)" [severity]="getStatutSeverity(item.statut)">
+              </p-tag>
+            </td>
+            <td class="actions-cell">
+              <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2"
+                [pTooltip]="'GLOBAL.VISUALISER' | translate" (click)="onView(item)">
+              </button>
+              <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2"
+                [pTooltip]="'GLOBAL.MODIFIER' | translate" (click)="onEdit(item)" *ngIf="item.statut === 'ACTIVE'">
+              </button>
+              <button pButton icon="pi pi-lock" class="p-button-rounded p-button-text p-button-secondary mr-2"
+                style="border: none !important;"
+                [pTooltip]="'GLOBAL.CLOSE_ACTION' | translate" (click)="onClose(item)" *ngIf="item.statut === 'ACTIVE'">
+              </button>
+              <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger"
+                [pTooltip]="'GLOBAL.SUPPRIMER' | translate" (click)="onDelete(item)">
+              </button>
+            </td>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="8" class="text-center">{{ 'GESTION_ORGANISATIONELLE.AFFECTATION_AGENT_POSTE.EMPTY_MESSAGE' | translate }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<p-dialog styleClass="pdialogfon" [header]="'GESTION_ORGANISATIONELLE.AFFECTATION_AGENT_POSTE.DIALOG_VIEW_TITLE' | translate" [(visible)]="displayView" [modal]="true" [style]="{width: '450px'}">
+  <ng-container *ngIf="selected">
+    <div class="p-fluid mt-4 flex flex-column gap-4">
+
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_agent" [ngModel]="selected.agentNom + ' ' + selected.agentPrenom" [disabled]="true" />
+          <label for="view_agent">{{ 'GLOBAL.AGENT' | translate }}</label>
+        </p-floatLabel>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_matricule" [ngModel]="selected.agentMatricule" [disabled]="true" />
+          <label for="view_matricule">{{ 'GLOBAL.MATRICULE' | translate }}</label>
+        </p-floatLabel>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_poste" [ngModel]="selected.posteLibelle" [disabled]="true" />
+          <label for="view_poste">{{ 'GLOBAL.POSTE' | translate }}</label>
+        </p-floatLabel>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_unite" [ngModel]="selected.uniteLibelle" [disabled]="true" />
+          <label for="view_unite">{{ 'GLOBAL.UNITE' | translate }}</label>
+        </p-floatLabel>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="view_dateDebut" [ngModel]="selected.dateDebut" dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body" [disabled]="true"></p-datepicker>
+          <label for="view_dateDebut">{{ 'GLOBAL.DATE_DEBUT' | translate }}</label>
+        </p-floatLabel>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <p-datepicker id="view_dateFin" [ngModel]="selected.dateFin" dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body" [disabled]="true"></p-datepicker>
+          <label for="view_dateFin">{{ 'GLOBAL.DATE_FIN' | translate }}</label>
+        </p-floatLabel>
+      </div>
+
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_statut" [ngModel]="getStatutLabel(selected.statut)" [disabled]="true" />
+          <label for="view_statut">{{ 'GLOBAL.STATUT' | translate }}</label>
+        </p-floatLabel>
+      </div>
+
+      <div class="w-full" *ngIf="selected.motif">
+        <p-floatLabel>
+          <textarea pInputTextarea id="view_motif" [ngModel]="selected.motif" rows="3" [disabled]="true"></textarea>
+          <label for="view_motif">{{ 'GLOBAL.MOTIF' | translate }}</label>
+        </p-floatLabel>
+      </div>
+
+    </div>
+  </ng-container>
+
+  <ng-template pTemplate="footer">
+    <p-button [label]="'GLOBAL.FERMER' | translate" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog styleClass="pdialogfon" [(visible)]="displayDialog" [modal]="true" [style]="{width: '550px'}"
+  [header]="(dialogMode === 'add' ? 'GESTION_ORGANISATIONELLE.AFFECTATION_AGENT_POSTE.DIALOG_ADD_TITLE' : 'GESTION_ORGANISATIONELLE.AFFECTATION_AGENT_POSTE.DIALOG_EDIT_TITLE') | translate">
+
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="form_agent" name="agentId" [options]="agents" optionLabel="nom" optionValue="id" [(ngModel)]="form.agentId"
+          #agentId="ngModel" required [filter]="true" filterBy="nom" appendTo="body"
+          [disabled]="dialogMode === 'edit'" styleClass="w-full" panelStyleClass="w-full"
+          [class.ng-dirty]="agentId.invalid && agentId.touched">
+        </p-dropdown>
+        <label for="form_agent">{{ 'GLOBAL.AGENT' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="agentId.invalid && agentId.touched">
+        {{ 'GESTION_ORGANISATIONELLE.AFFECTATION_AGENT_POSTE.ERR_AGENT' | translate }}
+      </small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-dropdown id="form_poste" name="posteId" [options]="postes" optionLabel="libelleDuPoste" optionValue="id" [(ngModel)]="form.posteId"
+          #posteId="ngModel" required [filter]="true" filterBy="libelleDuPoste" appendTo="body"
+          [disabled]="dialogMode === 'edit'" styleClass="w-full" panelStyleClass="w-full"
+          [class.ng-dirty]="posteId.invalid && posteId.touched">
+        </p-dropdown>
+        <label for="form_poste">{{ 'GLOBAL.POSTE' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="posteId.invalid && posteId.touched">
+        {{ 'GESTION_ORGANISATIONELLE.AFFECTATION_AGENT_POSTE.ERR_POSTE' | translate }}
+      </small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="form_dateDebut" name="dateDebut" [(ngModel)]="form.dateDebut" #dateDebut="ngModel" required
+          dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body" [class.ng-dirty]="dateDebut.invalid && dateDebut.touched"></p-datepicker>
+        <label for="form_dateDebut">{{ 'GLOBAL.DATE_DEBUT' | translate }} <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="dateDebut.invalid && dateDebut.touched">
+        {{ 'GESTION_ORGANISATIONELLE.AFFECTATION_AGENT_POSTE.ERR_DATE_DEBUT' | translate }}
+      </small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <p-datepicker id="form_dateFin" name="dateFin" [(ngModel)]="form.dateFin" dateFormat="yy-mm-dd" [showIcon]="true" appendTo="body"></p-datepicker>
+        <label for="form_dateFin">{{ 'GLOBAL.DATE_FIN' | translate }}</label>
+      </p-floatLabel>
+      <small class="text-muted" style="display:block; margin-top:5px; margin-left:14px">{{ 'GESTION_ORGANISATIONELLE.AFFECTATION_AGENT_POSTE.HINT_DATE_FIN' | translate }}</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <textarea pInputTextarea id="form_motif" name="motif" [(ngModel)]="form.motif" rows="3" class="w-full"></textarea>
+        <label for="form_motif">{{ 'GESTION_ORGANISATIONELLE.AFFECTATION_AGENT_POSTE.LBL_MOTIF_OPTIONAL' | translate }}</label>
+      </p-floatLabel>
+    </div>
+
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="(dialogMode === 'add' ? 'GLOBAL.AJOUTER' : 'GLOBAL.MODIFIER') | translate" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+    <p-button [label]="'GLOBAL.ANNULER' | translate" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+  </ng-template>
+</p-dialog>

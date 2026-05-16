@@ -1,0 +1,334 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Mes demandes de congé</h1>
+
+  <div class="container primTable">
+
+    <p-table #dt [value]="demandes" [loading]="loading" [paginator]="true" [rows]="10"
+      [rowsPerPageOptions]="[5, 10, 20]" [showCurrentPageReport]="true"
+      currentPageReportTemplate="{first} - {last} sur {totalRecords}"
+      [globalFilterFields]="['type', 'statut', 'dateDebut', 'dateFin', 'dateCreation']"
+      emptyMessage="Aucune demande trouvée"
+      [responsiveLayout]="'scroll'"
+      styleClass="p-datatable-sm">
+
+
+      <ng-template pTemplate="caption">
+        <div class="flex align-items-center justify-content-between flex-wrap gap-2">
+          <span class="table-title">Liste des demandes</span>
+          <span class="p-input-icon-left">
+            <i class="pi pi-search"></i>
+            <input pInputText type="text" [(ngModel)]="searchValue"
+                   (input)="dt.filterGlobal(searchValue, 'contains')"
+                   placeholder="Rechercher..." />
+          </span>
+        </div>
+      </ng-template>
+
+
+      <ng-template pTemplate="header">
+        <tr>
+          <th pSortableColumn="type">Type <p-sortIcon field="type"></p-sortIcon></th>
+          <th pSortableColumn="dateDebut">Date début <p-sortIcon field="dateDebut"></p-sortIcon></th>
+          <th pSortableColumn="dateFin">Date fin <p-sortIcon field="dateFin"></p-sortIcon></th>
+          <th pSortableColumn="duree">Durée <p-sortIcon field="duree"></p-sortIcon></th>
+          <th pSortableColumn="dateCreation">Date création <p-sortIcon field="dateCreation"></p-sortIcon></th>
+          <th pSortableColumn="statut">Statut <p-sortIcon field="statut"></p-sortIcon></th>
+          <th class="text-center">Actions</th>
+        </tr>
+      </ng-template>
+
+
+      <ng-template pTemplate="body" let-demande>
+        <tr>
+          <td>{{ getTypeLabel(demande.type) }}</td>
+          <td>{{ demande.dateDebut | date: 'dd/MM/yyyy' }}</td>
+          <td>{{ demande.dateFin | date: 'dd/MM/yyyy' }}</td>
+          <td>
+            <span class="duree-badge">{{ demande.duree }} j</span>
+          </td>
+          <td>{{ demande.dateCreation | date: 'dd/MM/yyyy' }}</td>
+          <td>
+            <p-tag [value]="getStatusLabel(demande.statut)"
+                   [severity]="getStatusSeverity(demande.statut)"
+                   [icon]="getStatusIcon(demande.statut)"></p-tag>
+          </td>
+          <td>
+              <button pButton type="button" icon="pi pi-eye"
+                      class="p-button-rounded p-button-text p-button-success mr-2"
+                      pTooltip="Voir" tooltipPosition="top"
+                      (click)="onView(demande)"></button>
+              <button pButton type="button" icon="pi pi-pencil"
+                      class="p-button-rounded p-button-text p-button-info mr-2"
+                      [pTooltip]="isApproved(demande) ? 'Ajouter des documents' : 'Modifier'"
+                      tooltipPosition="top"
+                      (click)="onEdit(demande)"
+                      [disabled]="!canEdit(demande)"></button>
+              <button pButton type="button" icon="pi pi-times"
+                      class="p-button-rounded p-button-text p-button-danger"
+                      pTooltip="Annuler" tooltipPosition="top"
+                      (click)="onCancel(demande)"
+                      [disabled]="!isPending(demande)"></button>
+          </td>
+        </tr>
+      </ng-template>
+
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7" class="text-center">Aucune demande trouvée.</td>
+        </tr>
+      </ng-template>
+
+    </p-table>
+  </div>
+
+
+  <p-dialog header="Détails de la demande" [(visible)]="viewDialogVisible"
+            [modal]="true" [style]="{width: '620px'}" [draggable]="false">
+    <div class="detail-grid" *ngIf="selectedDemande">
+      <div class="detail-row">
+        <span class="detail-label"><i class="pi pi-tag"></i> Type</span>
+        <span class="detail-value">{{ getTypeLabel(selectedDemande.type) }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label"><i class="pi pi-calendar"></i> Date début</span>
+        <span class="detail-value">{{ selectedDemande.dateDebut | date: 'dd MMMM yyyy' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label"><i class="pi pi-calendar"></i> Date fin</span>
+        <span class="detail-value">{{ selectedDemande.dateFin | date: 'dd MMMM yyyy' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label"><i class="pi pi-clock"></i> Durée</span>
+        <span class="detail-value">
+          <span class="duree-badge">{{ selectedDemande.duree }} jour(s) ouvrable(s)</span>
+        </span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label"><i class="pi pi-calendar-plus"></i> Date création</span>
+        <span class="detail-value">{{ selectedDemande.dateCreation | date: 'dd MMMM yyyy' }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label"><i class="pi pi-info-circle"></i> Statut</span>
+        <span class="detail-value">
+          <p-tag [value]="getStatusLabel(selectedDemande.statut)"
+                 [severity]="getStatusSeverity(selectedDemande.statut)"
+                 [icon]="getStatusIcon(selectedDemande.statut)"></p-tag>
+        </span>
+      </div>
+      <div class="detail-row" *ngIf="selectedDemande.commentaire">
+        <span class="detail-label"><i class="pi pi-pencil"></i> Commentaire</span>
+        <span class="detail-value">{{ selectedDemande.commentaire }}</span>
+      </div>
+
+
+      <div class="documents-section">
+        <h4 class="documents-title"><i class="pi pi-paperclip"></i> Documents</h4>
+
+        <div class="documents-list" *ngIf="!documentsLoading">
+          <div class="document-item" *ngFor="let doc of documents">
+            <div class="document-info">
+              <span class="document-name" [pTooltip]="doc.originalFileName" tooltipPosition="top">
+                <i class="pi pi-file"></i> {{ doc.originalFileName }}
+              </span>
+              <div class="document-meta">
+                <p-tag [value]="getCategoryLabel(doc.fileCategory)"
+                       [severity]="getCategorySeverity(doc.fileCategory)"
+                       [style]="{'font-size': '0.7rem'}"></p-tag>
+                <span class="document-size">{{ formatFileSize(doc.size) }}</span>
+                <span class="document-date">{{ doc.uploadedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+            </div>
+            <div class="document-actions">
+              <button pButton type="button" icon="pi pi-eye"
+                      class="p-button-rounded p-button-text p-button-success p-button-sm"
+                      pTooltip="Voir" tooltipPosition="top"
+                      (click)="onViewDocument(doc)"></button>
+            </div>
+          </div>
+
+          <div class="documents-empty" *ngIf="documents.length === 0">
+            <i class="pi pi-inbox"></i>
+            <span>Aucun document</span>
+          </div>
+        </div>
+
+        <div class="documents-loading" *ngIf="documentsLoading">
+          <i class="pi pi-spin pi-spinner"></i> Chargement...
+        </div>
+      </div>
+    </div>
+  </p-dialog>
+
+
+  <p-dialog header="Supprimer le document" [(visible)]="deleteDocDialogVisible"
+            [modal]="true" [style]="{width: '420px'}" [draggable]="false">
+    <div class="cancel-confirm" *ngIf="deletingDocument">
+      <p>
+        <i class="pi pi-exclamation-triangle" style="color: #e74c3c; font-size: 1.2rem;"></i>
+        Êtes-vous sûr de vouloir supprimer le document
+        <strong>{{ deletingDocument.originalFileName }}</strong> ?
+      </p>
+      <p class="cancel-warning">Cette action est irréversible.</p>
+      <div class="dialog-actions">
+        <button pButton label="Non, garder" icon="pi pi-arrow-left"
+                class="btn-dialog btn-dialog-cancel"
+                (click)="deleteDocDialogVisible = false"></button>
+        <button pButton label="Oui, supprimer" icon="pi pi-trash"
+                class="btn-dialog btn-dialog-reject"
+                (click)="confirmDeleteDocument()"></button>
+      </div>
+    </div>
+  </p-dialog>
+
+
+  <p-dialog [header]="isApproved(editingDemande) ? 'Documents –” Demande approuvée' : 'Modifier la demande'"
+            [(visible)]="editDialogVisible"
+            [modal]="true" [style]="{width: '620px'}" [draggable]="false">
+    <div *ngIf="editingDemande">
+
+
+      <div class="approved-banner" *ngIf="isApproved(editingDemande)">
+        <i class="pi pi-info-circle"></i>
+        Cette demande est approuvée. Vous pouvez uniquement ajouter des documents.
+      </div>
+
+
+      <form [formGroup]="editForm" class="edit-form" *ngIf="isPending(editingDemande)">
+        <div class="form-field">
+          <label>Type de congé</label>
+          <p-dropdown [options]="categories" optionLabel="label" optionValue="value"
+                      formControlName="type" [style]="{width: '100%'}"></p-dropdown>
+        </div>
+
+        <div class="form-field">
+          <label>Date de début</label>
+          <p-calendar formControlName="dateDebut" dateFormat="dd/mm/yy"
+                      [showIcon]="true" [style]="{width: '100%'}"
+                      [disabledDays]="[0, 6]"></p-calendar>
+        </div>
+
+        <div class="form-field">
+          <label>Date de fin</label>
+          <p-calendar formControlName="dateFin" dateFormat="dd/mm/yy"
+                      [showIcon]="true" [style]="{width: '100%'}"
+                      [disabledDays]="[0, 6]"></p-calendar>
+        </div>
+
+        <div class="form-field duree-preview">
+          <span class="duree-preview-label">Durée calculée :</span>
+          <span class="duree-badge">{{ calculateEditDuree() }} jour(s)</span>
+        </div>
+
+        <div class="form-field">
+          <label>Commentaire (optionnel)</label>
+          <textarea pInputTextarea formControlName="commentaire"
+                    placeholder="Ajoutez un commentaire ou une précision..."
+                    [rows]="3" [autoResize]="true" maxlength="500"
+                    [style]="{width: '100%'}"></textarea>
+        </div>
+      </form>
+
+
+      <div class="documents-section">
+        <h4 class="documents-title"><i class="pi pi-paperclip"></i> Documents</h4>
+
+        <div class="documents-list" *ngIf="!editDocumentsLoading">
+          <div class="document-item" *ngFor="let doc of editDocuments">
+            <div class="document-info">
+              <span class="document-name" [pTooltip]="doc.originalFileName" tooltipPosition="top">
+                <i class="pi pi-file"></i> {{ doc.originalFileName }}
+              </span>
+              <div class="document-meta">
+                <p-tag [value]="getCategoryLabel(doc.fileCategory)"
+                       [severity]="getCategorySeverity(doc.fileCategory)"
+                       [style]="{'font-size': '0.7rem'}"></p-tag>
+                <span class="document-size">{{ formatFileSize(doc.size) }}</span>
+                <span class="document-date">{{ doc.uploadedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+            </div>
+            <div class="document-actions">
+              <button pButton type="button" icon="pi pi-eye"
+                      class="p-button-rounded p-button-text p-button-success p-button-sm"
+                      pTooltip="Voir" tooltipPosition="top"
+                      (click)="onViewDocument(doc)"></button>
+              <button pButton type="button" icon="pi pi-trash"
+                      class="p-button-rounded p-button-text p-button-danger p-button-sm"
+                      pTooltip="Supprimer" tooltipPosition="top"
+                      (click)="onDeleteDocument(doc)"
+                      *ngIf="isPending(editingDemande)"></button>
+            </div>
+          </div>
+
+          <div class="documents-empty" *ngIf="editDocuments.length === 0">
+            <i class="pi pi-inbox"></i>
+            <span>Aucun document</span>
+          </div>
+        </div>
+
+        <div class="documents-loading" *ngIf="editDocumentsLoading">
+          <i class="pi pi-spin pi-spinner"></i> Chargement...
+        </div>
+
+
+        <div class="upload-section">
+          <div class="upload-row">
+            <p-dropdown [options]="fileCategories" optionLabel="label" optionValue="value"
+                        [(ngModel)]="editDocCategory" placeholder="Catégorie"
+                        [style]="{width: '100%'}"></p-dropdown>
+          </div>
+          <div class="upload-row">
+            <input #editFileInput type="file" class="file-input" (change)="onEditFileSelect($event)"
+                   accept=".pdf,.jpg,.jpeg,.png" />
+          </div>
+          <div class="upload-row">
+            <button pButton type="button" label="Uploader" icon="pi pi-upload"
+                    class="btn-dialog btn-dialog-save"
+                    [style]="{width: '100%'}"
+                    (click)="uploadEditDocument()"
+                    [disabled]="!editSelectedFile || !editDocCategory || editUploading">
+            </button>
+          </div>
+        </div>
+      </div>
+
+
+      <div class="dialog-actions">
+        <button pButton label="Fermer" icon="pi pi-times"
+                class="btn-dialog btn-dialog-cancel"
+                (click)="editDialogVisible = false"></button>
+        <button pButton label="Enregistrer" icon="pi pi-check"
+                class="btn-dialog btn-dialog-save"
+                (click)="submitEdit()"
+                *ngIf="isPending(editingDemande)"></button>
+      </div>
+    </div>
+  </p-dialog>
+
+
+  <p-dialog header="Confirmer l'annulation" [(visible)]="cancelDialogVisible"
+            [modal]="true" [style]="{width: '420px'}" [draggable]="false">
+    <div class="cancel-confirm" *ngIf="cancellingDemande">
+      <p>
+        <i class="pi pi-exclamation-triangle" style="color: #e74c3c; font-size: 1.2rem;"></i>
+        Êtes-vous sûr de vouloir annuler cette demande de
+        <strong>{{ getTypeLabel(cancellingDemande.type) }}</strong>
+        du <strong>{{ cancellingDemande.dateDebut | date: 'dd/MM/yyyy' }}</strong>
+        au <strong>{{ cancellingDemande.dateFin | date: 'dd/MM/yyyy' }}</strong> ?
+      </p>
+      <p class="cancel-warning">Cette action est irréversible.</p>
+      <div class="dialog-actions">
+        <button pButton label="Non, garder" icon="pi pi-arrow-left"
+                class="btn-dialog btn-dialog-cancel"
+                (click)="cancelDialogVisible = false"></button>
+        <button pButton label="Oui, annuler" icon="pi pi-trash"
+                class="btn-dialog btn-dialog-reject"
+                (click)="confirmCancel()"></button>
+      </div>
+    </div>
+  </p-dialog>
+
+</div>

@@ -1,0 +1,166 @@
+<div class="content">
+  <h1 class="titleh1">Données Administratives</h1>
+  <app-agentcard></app-agentcard>
+  <div class="card">
+
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Situation Administrative</p-tab>
+        <p-tab value="1">Situation Fonctionnelle</p-tab>
+      </p-tablist>
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div>
+            <div class="admin-container">
+              <div class="card">
+                <h2 class="card-header">🧾 Situation Administrative</h2>
+
+                <div class="admin-info">
+                  <div class="field"><strong>Date de recrutement :</strong> {{ situationAdministrative.DateRecrutement }}</div>
+                  <div class="field"><strong>Grade :</strong> {{ situationAdministrative.Grade }}</div>
+                  <div class="field"><strong>Échelle :</strong> {{ situationAdministrative.Echelle }}</div>
+                  <div class="field"><strong>Échelon :</strong> {{ situationAdministrative.Echelon }}</div>
+                  <div class="field"><strong>Indice :</strong> {{ situationAdministrative.Indice }}</div>
+                  <div class="field"><strong>Position :</strong> {{ situationAdministrative.Position }}</div>
+                </div>
+
+                <div class="actions">
+                  <button class="btn-view" (click)="onViewAdmin(situationAdministrative)">
+                    <i class="pi pi-eye" style="color: #fff"></i>  Visualiser
+                  </button>
+                </div>
+              </div>
+            </div>
+
+
+          </div>
+        </p-tabpanel>
+        <p-tabpanel value="1">
+          <div>
+            <div class="fonction-container">
+              <div class="card">
+                <h2 class="card-header">🏢 Situation Fonctionnelle</h2>
+
+                <div class="fonction-info">
+                  <div class="field"><strong>Fonction :</strong> {{ situationFonctionnelle.fonction }}</div>
+                  <div class="field"><strong>Lieu :</strong> {{ situationFonctionnelle.Lieu }}</div>
+                  <div class="field"><strong>Date d'entrée en service :</strong> {{ situationFonctionnelle.dateEntreeService }}</div>
+                  <div class="field"><strong>Date d'entrée dans la position actuelle :</strong> {{ situationFonctionnelle.datePosition }}</div>
+                </div>
+
+                <div class="actions">
+                  <button class="btn-view" (click)="onViewFonction(situationFonctionnelle)">
+                    <i class="pi pi-eye" style="color: #fff"></i> Visualiser
+                  </button>
+                </div>
+              </div>
+            </div>
+
+
+          </div>
+        </p-tabpanel>
+
+      </p-tabpanels>
+    </p-tabs>
+
+
+  </div>
+</div>
+
+
+
+
+<p-dialog
+  styleClass="pdialogfon"
+  header="Détails de la situation administrative"
+  [(visible)]="displayDialogAdmin"
+  [modal]="true"
+  [closable]="true"
+  [style]="{ width: '550px' }"
+>
+  <ng-container *ngIf="selectedAdmin">
+    <div class="p-fluid mt-4 flex flex-column gap-4 pdialogfon2">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_dateRecrutement" [ngModel]="selectedAdmin.DateRecrutement" [disabled]="true" />
+          <label for="v_dateRecrutement">Date de recrutement</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_grade" [ngModel]="selectedAdmin.Grade" [disabled]="true" />
+          <label for="v_grade">Grade</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_echelle" [ngModel]="selectedAdmin.Echelle" [disabled]="true" />
+          <label for="v_echelle">Échelle</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_echelon" [ngModel]="selectedAdmin.Echelon" [disabled]="true" />
+          <label for="v_echelon">Échelon</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_indice" [ngModel]="selectedAdmin.Indice" [disabled]="true" />
+          <label for="v_indice">Indice</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_position" [ngModel]="selectedAdmin.Position" [disabled]="true" />
+          <label for="v_position">Position</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </ng-container>
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialogAdmin=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+
+<p-dialog
+  styleClass="pdialogfon"
+  header="Détails de la situation fonctionnelle"
+  [(visible)]="displayDialogFonction"
+  [modal]="true"
+  [closable]="true"
+  [style]="{ width: '550px' }"
+>
+  <ng-container *ngIf="selectedItem">
+    <div class="p-fluid mt-4 flex flex-column gap-4 pdialogfon2">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_fonction" [ngModel]="selectedItem.fonction" [disabled]="true" />
+          <label for="v_fonction">Fonction</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_lieu" [ngModel]="selectedItem.Lieu" [disabled]="true" />
+          <label for="v_lieu">Lieu / École</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_dateEntreeService" [ngModel]="selectedItem.dateEntreeService" [disabled]="true" />
+          <label for="v_dateEntreeService">Date d'entrée en service</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="v_datePosition" [ngModel]="selectedItem.datePosition" [disabled]="true" />
+          <label for="v_datePosition">Date d'entrée dans la position actuelle</label>
+        </p-floatLabel>
+      </div>
+    </div>
+  </ng-container>
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialogFonction=false"></p-button>
+  </ng-template>
+</p-dialog>

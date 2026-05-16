@@ -1,0 +1,214 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{width: '450px'}"></p-confirmDialog>
+
+<div class="content">
+  <h1 class="titleh1">Gestion des Types de Congé</h1>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Liste des types de congé</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+          <div class="container primTable">
+
+            <div class="flex justify-content-between align-items-center mb-3">
+              <h3>
+                <i class="pi pi-list" style="font-size: 28px; margin-right: 6px;"></i>
+                Types de congé
+              </h3>
+
+              <p-button
+                label="Ajouter un type"
+                icon="pi pi-plus"
+                styleClass="p-button-success"
+                (onClick)="showAddDialog()">
+              </p-button>
+            </div>
+
+            <p-table
+              #dtTypes
+              [value]="filteredTypes"
+              [rows]="10"
+              [paginator]="true"
+              [rowsPerPageOptions]="[5, 10, 20]"
+              [responsiveLayout]="'scroll'"
+              [loading]="loading">
+
+              <ng-template pTemplate="caption">
+                <div class="flex">
+                  <p-button label="Effacer" [outlined]="true" icon="pi pi-filter-slash" (onClick)="clearTable(dtTypes)" />
+                  <span class="p-input-icon-left ml-auto">
+                    <i class="pi pi-search"></i>
+                    <input
+                      pInputText
+                      type="text"
+                      [(ngModel)]="searchText"
+                      (input)="applyFilter()"
+                      placeholder="Rechercher..." />
+                  </span>
+                </div>
+              </ng-template>
+
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Code</th>
+                  <th>Libellé</th>
+                  <th>Déductible</th>
+                  <th>Jours max</th>
+                  <th>Préavis (j)</th>
+                  <th>Jours base</th>
+                  <th>Actif</th>
+                  <th>Actions</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-item>
+                <tr>
+                  <td><strong>{{ item.code }}</strong></td>
+                  <td>{{ item.label }}</td>
+                  <td>
+                    <i [class]="item.deductible ? 'pi pi-check text-green-500' : 'pi pi-times text-red-400'"></i>
+                  </td>
+                  <td>{{ item.maxDurationDays ?? '—' }}</td>
+                  <td>{{ item.minAdvanceNoticeDays ?? '—' }}</td>
+                  <td>{{ item.defaultBaseDays }}</td>
+                  <td>
+                    <p-tag [value]="item.active ? 'Actif' : 'Inactif'" [severity]="item.active ? 'success' : 'danger'"></p-tag>
+                  </td>
+                  <td class="actions-cell">
+                    <button pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" pTooltip="Visualiser" (click)="onView(item)"></button>
+                    <button pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Modifier" (click)="onEdit(item)"></button>
+                    <button pButton icon="pi pi-trash" class="p-button-rounded p-button-text p-button-danger" pTooltip="Supprimer" (click)="onDelete(item)"></button>
+                  </td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr><td colspan="8" class="text-center">Aucun type de congé trouvé.</td></tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>
+
+<!-- View dialog -->
+<p-dialog styleClass="pdialogfon" header="Détails du type de congé" [(visible)]="displayView" [modal]="true" [style]="{ width: '550px' }">
+  <ng-container *ngIf="selectedItem">
+    <div class="p-fluid mt-4 flex flex-column gap-3">
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_code" [ngModel]="selectedItem.code" [disabled]="true" />
+          <label for="view_code">Code</label>
+        </p-floatLabel>
+      </div>
+      <div class="w-full">
+        <p-floatLabel>
+          <input pInputText id="view_label" [ngModel]="selectedItem.label" [disabled]="true" />
+          <label for="view_label">Libellé</label>
+        </p-floatLabel>
+      </div>
+      <div class="grid">
+        <div class="col-6"><strong>Déductible :</strong> {{ selectedItem.deductible ? 'Oui' : 'Non' }}</div>
+        <div class="col-6"><strong>Actif :</strong> {{ selectedItem.active ? 'Oui' : 'Non' }}</div>
+        <div class="col-6"><strong>Pièce jointe requise :</strong> {{ selectedItem.requiresAttachment ? 'Oui' : 'Non' }}</div>
+        <div class="col-6"><strong>Certificat médical :</strong> {{ selectedItem.requiresMedicalCertificate ? 'Oui' : 'Non' }}</div>
+        <div class="col-6"><strong>Jours ouvrables seuls :</strong> {{ selectedItem.countsWorkingDaysOnly ? 'Oui' : 'Non' }}</div>
+        <div class="col-6"><strong>Nécessite approbation :</strong> {{ selectedItem.requiresApproval ? 'Oui' : 'Non' }}</div>
+        <div class="col-6"><strong>Durée max (jours) :</strong> {{ selectedItem.maxDurationDays ?? '—' }}</div>
+        <div class="col-6"><strong>Préavis min (jours) :</strong> {{ selectedItem.minAdvanceNoticeDays ?? '—' }}</div>
+        <div class="col-6"><strong>Jours de base :</strong> {{ selectedItem.defaultBaseDays }}</div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayView=false"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Add/Edit dialog -->
+<p-dialog styleClass="pdialogfon" [header]="dialogMode === 'add' ? 'Ajouter un type de congé' : 'Modifier un type de congé'" [(visible)]="displayDialog" [modal]="true" [style]="{ width: '550px' }">
+  <form #addForm="ngForm">
+  <div class="p-fluid mt-4 flex flex-column gap-4">
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="code" name="code" [(ngModel)]="form.code" #codeField="ngModel" required
+               [class.ng-dirty]="codeField.invalid && codeField.touched" style="text-transform: uppercase;" />
+        <label for="code">Code <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="codeField.invalid && codeField.touched">Le code est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="label" name="label" [(ngModel)]="form.label" #labelField="ngModel" required
+               [class.ng-dirty]="labelField.invalid && labelField.touched" />
+        <label for="label">Libellé <span style="color: red;">*</span></label>
+      </p-floatLabel>
+      <small class="text-red-500 block mt-1" *ngIf="labelField.invalid && labelField.touched">Le libellé est obligatoire.</small>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="maxDurationDays" name="maxDurationDays" type="number" [(ngModel)]="form.maxDurationDays" />
+        <label for="maxDurationDays">Durée max (jours)</label>
+      </p-floatLabel>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="minAdvanceNoticeDays" name="minAdvanceNoticeDays" type="number" [(ngModel)]="form.minAdvanceNoticeDays" />
+        <label for="minAdvanceNoticeDays">Préavis min (jours)</label>
+      </p-floatLabel>
+    </div>
+
+    <div class="w-full">
+      <p-floatLabel>
+        <input pInputText id="defaultBaseDays" name="defaultBaseDays" type="number" [(ngModel)]="form.defaultBaseDays" />
+        <label for="defaultBaseDays">Jours de base</label>
+      </p-floatLabel>
+    </div>
+
+    <div class="flex flex-wrap gap-3">
+      <div class="flex align-items-center gap-2">
+        <p-checkbox id="deductible" name="deductible" [(ngModel)]="form.deductible" [binary]="true"></p-checkbox>
+        <label for="deductible">Déductible du solde</label>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <p-checkbox id="requiresAttachment" name="requiresAttachment" [(ngModel)]="form.requiresAttachment" [binary]="true"></p-checkbox>
+        <label for="requiresAttachment">Pièce jointe requise</label>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <p-checkbox id="requiresMedicalCertificate" name="requiresMedicalCertificate" [(ngModel)]="form.requiresMedicalCertificate" [binary]="true"></p-checkbox>
+        <label for="requiresMedicalCertificate">Certificat médical</label>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-3">
+      <div class="flex align-items-center gap-2">
+        <p-checkbox id="active" name="active" [(ngModel)]="form.active" [binary]="true"></p-checkbox>
+        <label for="active">Actif</label>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <p-checkbox id="countsWorkingDaysOnly" name="countsWorkingDaysOnly" [(ngModel)]="form.countsWorkingDaysOnly" [binary]="true"></p-checkbox>
+        <label for="countsWorkingDaysOnly">Jours ouvrables seuls</label>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <p-checkbox id="requiresApproval" name="requiresApproval" [(ngModel)]="form.requiresApproval" [binary]="true"></p-checkbox>
+        <label for="requiresApproval">Nécessite approbation</label>
+      </div>
+    </div>
+  </div>
+
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button [label]="dialogMode === 'add' ? 'Ajouter' : 'Modifier'" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+    <p-button label="Annuler" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+  </ng-template>
+</p-dialog>

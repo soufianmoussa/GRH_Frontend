@@ -1,0 +1,85 @@
+<div class="content">
+  <h1 class="titleh1">Demande de Fiche de Poste de Travail</h1>
+
+
+  <app-agentcard></app-agentcard>
+
+  <div class="card">
+    <p-tabs value="0">
+      <p-tablist>
+        <p-tab value="0">Fiche de poste</p-tab>
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="0">
+
+
+          <div class="form-section mb-4">
+            <label for="poste" class="font-bold mb-2">Poste de Travail :</label>
+
+            <p-dropdown
+              id="poste"
+              [options]="postes"
+              optionLabel="label"
+              optionValue="value"
+              [(ngModel)]="selectedPoste"
+              placeholder="Sélectionner un poste"
+              (onChange)="chargerFiche()"
+              styleClass="w-full"
+            ></p-dropdown>
+          </div>
+
+          <div class="btn-actions">
+            <p-button
+              label="Envoyer"
+              icon="pi pi-send"
+              styleClass="p-button-success"
+              [disabled]="!selectedPoste"
+            ></p-button>
+
+            <p-button
+              label="Imprimer"
+              icon="pi pi-print"
+              styleClass="p-button-info"
+              (onClick)="imprimer()"
+              [disabled]="!fichePoste"
+            ></p-button>
+          </div>
+
+
+
+          <div id="fiche-section" *ngIf="fichePoste" class="fiche-container">
+
+            <h2>Fiche de poste de travail</h2>
+
+            <table class="table-fiche">
+              <tr>
+                <td><strong>Nom du poste :</strong></td>
+                <td>{{ fichePoste.nomPoste }}</td>
+              </tr>
+              <tr>
+                <td><strong>NÂ° Poste :</strong></td>
+                <td>{{ fichePoste.numeroPoste }}</td>
+              </tr>
+              <tr>
+                <td><strong>Région :</strong></td>
+                <td>{{ fichePoste.region }}</td>
+              </tr>
+            </table>
+
+            <h3 class="section-title">Missions</h3>
+            <p>{{ fichePoste.missions }}</p>
+
+            <h3 class="section-title">Descriptif des activités</h3>
+            <ul>
+              <li *ngFor="let act of fichePoste.activites">{{ act }}</li>
+            </ul>
+
+          </div>
+
+
+        </p-tabpanel>
+      </p-tabpanels>
+    </p-tabs>
+  </div>
+</div>

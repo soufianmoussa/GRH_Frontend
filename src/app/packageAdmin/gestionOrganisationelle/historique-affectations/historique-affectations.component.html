@@ -1,0 +1,242 @@
+<p-toast position="top-center"></p-toast>
+
+<div class="content">
+
+  <div class="page-header">
+    <h1 class="titleh1">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.TITLE' | translate }}</h1>
+    <div class="stats-cards">
+      <div class="stat-card stat-total">
+        <span class="stat-value">{{ stats.total }}</span>
+        <span class="stat-label">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.STAT_TOTAL' | translate }}</span>
+      </div>
+      <div class="stat-card stat-active">
+        <span class="stat-value">{{ stats.active }}</span>
+        <span class="stat-label">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.STAT_ACTIVE' | translate }}</span>
+      </div>
+      <div class="stat-card stat-cloturee">
+        <span class="stat-value">{{ stats.cloturee }}</span>
+        <span class="stat-label">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.STAT_CLOSED' | translate }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="master-detail">
+
+    <div class="master-panel">
+      <div class="card">
+        <div class="container primTable">
+
+          <p-table #dtHist
+                   [value]="affectations"
+                   [rows]="pageSize"
+                   [paginator]="true"
+                   [rowsPerPageOptions]="[5, 10, 20]"
+                   [totalRecords]="totalRecords"
+                   [lazy]="true"
+                   (onPage)="onPageChange($event)"
+                   [loading]="loading"
+                   selectionMode="single"
+                   [(selection)]="selectedRow"
+                   (onRowSelect)="onRowSelect($any($event).data)"
+                   [rowHover]="true"
+                   dataKey="id"
+                   [globalFilterFields]="['agentNom','agentPrenom','agentMatricule','posteLibelle','posteCodeCourt','uniteLibelle','statut']">
+
+            <ng-template pTemplate="caption">
+              <div class="flex align-items-center justify-content-between">
+                <p-button [label]="'GLOBAL.EFFACER' | translate" [outlined]="true" icon="pi pi-filter-slash"
+                          (onClick)="clearFilters(); dtHist.clear()">
+                </p-button>
+
+                <span class="p-input-icon-left">
+                  <i class="pi pi-search"></i>
+                  <input pInputText type="text" [(ngModel)]="search"
+                         (input)="dtHist.filterGlobal(search,'contains'); applyFilters();" [placeholder]="'GLOBAL.RECHERCHER' | translate" />
+                </span>
+              </div>
+            </ng-template>
+
+            <ng-template pTemplate="header">
+              <tr>
+                <th>
+                  <p-columnFilter field="posteLibelle" display="menu" />
+                  {{ 'GLOBAL.POSTE' | translate }}
+                </th>
+                <th>
+                  <p-columnFilter field="agentNom" display="menu" />
+                  {{ 'GLOBAL.AGENT' | translate }}
+                </th>
+                <th>{{ 'GLOBAL.UNITE' | translate }}</th>
+                <th>{{ 'GLOBAL.STATUT' | translate }}</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-item>
+              <tr [pSelectableRow]="item"
+                  [ngClass]="{'row-selected': selectedRow?.id === item.id}">
+                <td>
+                  <strong>{{ item.posteLibelle }}</strong>
+                  <br />
+                  <small class="text-muted">{{ item.posteCodeCourt }}</small>
+                </td>
+                <td>
+                  <strong>{{ item.agentNom }} {{ item.agentPrenom }}</strong>
+                  <br />
+                  <small class="text-muted">{{ item.agentMatricule }}</small>
+                </td>
+                <td>{{ item.uniteLibelle || '—' }}</td>
+                <td>
+                  <p-tag [value]="getStatutLabel(item.statut)" [severity]="getStatutSeverity(item.statut)"></p-tag>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="4" class="text-center">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.EMPTY_MESSAGE' | translate }}</td>
+              </tr>
+            </ng-template>
+
+          </p-table>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-panel">
+      <div class="card detail-card">
+
+        <ng-container *ngIf="!selectedRow">
+          <div class="empty-state">
+            <i class="pi pi-layers empty-icon"></i>
+            <h3>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.NO_SELECTION_TITLE' | translate }}</h3>
+            <p>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.NO_SELECTION_SUBTITLE' | translate }}</p>
+            <div class="empty-hint">
+              <i class="pi pi-arrow-left"></i>
+              <span>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.NO_SELECTION_HINT' | translate }}</span>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="selectedRow">
+          <div class="detail-content">
+
+          <div class="detail-header">
+            <div class="detail-title-row">
+              <div>
+                <h3>{{ selectedPosteDetail?.libelle }}</h3>
+                <span class="detail-code">{{ selectedPosteDetail?.codeCourt }}</span>
+              </div>
+              <p-tag [value]="getStatutLabel(selectedRow.statut)"
+                     [severity]="getStatutSeverity(selectedRow.statut)">
+              </p-tag>
+            </div>
+
+            <div class="detail-info-grid">
+              <div class="detail-info-item">
+                <i class="pi pi-building"></i>
+                <div>
+                  <small>{{ 'GLOBAL.UNITE' | translate }}</small>
+                  <span>{{ selectedPosteDetail?.unite || '—' }}</span>
+                </div>
+              </div>
+              <div class="detail-info-item">
+                <i class="pi pi-user"></i>
+                <div>
+                  <small>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.LBL_AGENT_ACTUEL' | translate }}</small>
+                  <span>{{ selectedRow.agentNom }} {{ selectedRow.agentPrenom }}</span>
+                </div>
+              </div>
+              <div class="detail-info-item">
+                <i class="pi pi-id-card"></i>
+                <div>
+                  <small>{{ 'GLOBAL.MATRICULE' | translate }}</small>
+                  <span>{{ selectedRow.agentMatricule }}</span>
+                </div>
+              </div>
+              <div class="detail-info-item">
+                <i class="pi pi-calendar"></i>
+                <div>
+                  <small>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.LBL_DATE_DEBUT' | translate }}</small>
+                  <span>{{ selectedRow.dateDebut | date:'dd/MM/yyyy' }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="timeline-section">
+            <h4>
+              <i class="pi pi-history"></i>
+              {{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.TIMELINE_TITLE' | translate }}
+              <span class="timeline-count">{{ timeline.length }}</span>
+            </h4>
+
+            <div *ngIf="timelineLoading" class="timeline-loading">
+              <i class="pi pi-spin pi-spinner"></i>
+              <span>{{ 'GLOBAL.CHARGEMENT' | translate }}</span>
+            </div>
+
+            <p-timeline *ngIf="!timelineLoading && timeline.length > 0"
+                        [value]="timeline" align="left" styleClass="custom-timeline">
+
+              <ng-template pTemplate="marker" let-event>
+                <span class="timeline-marker"
+                      [style.background-color]="getTimelineColor(event.statut)">
+                  <i [class]="getTimelineIcon(event.statut)"></i>
+                </span>
+              </ng-template>
+
+              <ng-template pTemplate="content" let-event>
+                <div class="timeline-card" [ngClass]="{'timeline-active': event.statut === 'ACTIVE'}">
+                  <div class="timeline-card-header">
+                    <div class="timeline-agent-info">
+                      <span class="timeline-avatar"
+                            [style.background-color]="event.statut === 'ACTIVE' ? '#dbeafe' : '#f1f5f9'"
+                            [style.color]="event.statut === 'ACTIVE' ? '#1d4ed8' : '#64748b'">
+                        {{ getInitials(event.agentNom, event.agentPrenom) }}
+                      </span>
+                      <div>
+                        <strong>{{ event.agentPrenom }} {{ event.agentNom }}</strong>
+                        <small>{{ event.agentMatricule }}</small>
+                      </div>
+                    </div>
+                    <p-tag [value]="getStatutLabel(event.statut)"
+                           [severity]="getStatutSeverity(event.statut)"
+                           [style]="{ fontSize: '0.75rem' }">
+                    </p-tag>
+                  </div>
+
+                  <div class="timeline-card-body">
+                    <div class="timeline-dates">
+                      <i class="pi pi-calendar"></i>
+                      <span>{{ event.dateDebut | date:'dd/MM/yyyy' }}</span>
+                      <i class="pi pi-arrow-right"></i>
+                      <span>{{ event.dateFin ? (event.dateFin | date:'dd/MM/yyyy') : ('GLOBAL.EN_COURS' | translate) }}</span>
+                    </div>
+                    <div class="timeline-duration">
+                      <i class="pi pi-clock"></i>
+                      <span>{{ event.duration }}</span>
+                    </div>
+                    <div class="timeline-motif" *ngIf="event.motif">
+                      <i class="pi pi-info-circle"></i>
+                      <span>{{ event.motif }}</span>
+                    </div>
+                  </div>
+                </div>
+              </ng-template>
+
+            </p-timeline>
+
+            <div *ngIf="!timelineLoading && timeline.length === 0" class="no-timeline">
+              <i class="pi pi-info-circle"></i>
+              <span>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.TIMELINE_EMPTY' | translate }}</span>
+            </div>
+
+          </div>
+          </div>
+        </ng-container>
+
+      </div>
+    </div>
+
+  </div>
+</div>
