@@ -1,4 +1,4 @@
-import {NiveauDiplome} from "./diplomes/niveau-diplome.model";
+import {NiveauDiplome} from "../features/documents/models/diplomes/niveau-diplome.model";
 
 export interface Echelle {
   id: number;

@@ -1,7 +1,7 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { NgIf, DatePipe } from '@angular/common';
-import { AgentService } from '../../../services/AdminService/agent.service';
-import { DossiersAgentsService } from '../../../services/AdminService/DossiersAgents/dossiers-agents.service';
+import { AgentService } from '../../../features/dossier-agent/services/agent.service';
+import { DossiersAgentsService } from '../../../features/dossier-agent/services/dossiers-agents/dossiers-agents.service';
 import { AgentModel } from '../../../models/Agent.model';
 import { AgentFullDto } from '../../../models/agent-full.model';
 import { AuthService } from '../../../core/auth/auth.service';
