@@ -4,9 +4,10 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
 import { UserInfo } from '../../auth/auth.models';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { LanguageService } from '../../services/language.service';
 
 interface RoleOption {
-  label: string;
+  labelKey: string;
   value: string;
   icon: string;
 }
@@ -29,15 +30,20 @@ export class TopbarComponent implements OnInit {
   dropdownOpen = false;
 
   private readonly roleLabels: Record<string, RoleOption> = {
-    'ADMIN':             { label: 'Mode Admin',        value: 'ADMIN',             icon: 'fa-solid fa-shield-halved' },
-    'AGENT':             { label: 'Mode Agent',         value: 'AGENT',             icon: 'fa-solid fa-id-card' },
-    'RESPONSABLE_UNITE': { label: 'Mode Responsable',  value: 'RESPONSABLE_UNITE', icon: 'fa-solid fa-user-tie' },
+    'ADMIN':             { labelKey: 'LAYOUT.TOPBAR.ROLE_ADMIN',              value: 'ADMIN',             icon: 'fa-solid fa-shield-halved' },
+    'AGENT':             { labelKey: 'LAYOUT.TOPBAR.ROLE_AGENT',              value: 'AGENT',             icon: 'fa-solid fa-id-card' },
+    'RESPONSABLE_UNITE': { labelKey: 'LAYOUT.TOPBAR.ROLE_RESPONSABLE_UNITE',  value: 'RESPONSABLE_UNITE', icon: 'fa-solid fa-user-tie' },
   };
 
-  constructor(private authService: AuthService, private router: Router, public translate: TranslateService) {}
+  constructor(
+    private authService: AuthService,
+    private router: Router,
+    public translate: TranslateService,
+    private languageService: LanguageService
+  ) {}
 
   get currentLanguage(): string {
-    return this.translate.currentLang || this.translate.getDefaultLang() || 'fr';
+    return this.languageService.current();
   }
 
   get targetLanguage(): string {
@@ -45,8 +51,7 @@ export class TopbarComponent implements OnInit {
   }
 
   toggleLanguage() {
-    const lang = this.currentLanguage.toLowerCase() === 'fr' ? 'en' : 'fr';
-    this.translate.use(lang);
+    this.languageService.toggle();
   }
 
   ngOnInit() {

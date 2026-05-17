@@ -22,13 +22,13 @@ export class Step6FamilyComponent {
 
   get sexeOptions() {
     return [
-      { label: this.translate.instant('GESTION_PERSONNELLE.GLOBAL.MASCULIN'), value: 'M' },
-      { label: this.translate.instant('GESTION_PERSONNELLE.GLOBAL.FEMININ'), value: 'F' },
+      { label: this.translate.instant('GLOBAL.MASCULIN'), value: 'M' },
+      { label: this.translate.instant('GLOBAL.FEMININ'), value: 'F' },
     ];
   }
 
   get situationOptions() {
-    const p = 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.VAL_';
+    const p = 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.VAL_';
     return [
       { label: this.translate.instant(p + 'CELIBATAIRE'), value: 'C' },
       { label: this.translate.instant(p + 'MARIE'), value: 'M' },

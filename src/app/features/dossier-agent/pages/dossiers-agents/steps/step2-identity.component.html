@@ -6,28 +6,28 @@
 
   <div class="step-form grid">
     <div class="field col-12 md:col-6">
-      <label for="nom">{{ 'GESTION_PERSONNELLE.GLOBAL.NOM' | translate }} <span class="required">*</span></label>
+      <label for="nom">{{ 'GLOBAL.NOM' | translate }} <span class="required">*</span></label>
       <input pInputText id="nom" [(ngModel)]="d.nom" [disabled]="state.mode() === 'view'" class="w-full" />
     </div>
 
     <div class="field col-12 md:col-6">
-      <label for="prenom">{{ 'GESTION_PERSONNELLE.GLOBAL.PRENOM' | translate }} <span class="required">*</span></label>
+      <label for="prenom">{{ 'GLOBAL.PRENOM' | translate }} <span class="required">*</span></label>
       <input pInputText id="prenom" [(ngModel)]="d.prenom" [disabled]="state.mode() === 'view'" class="w-full" />
     </div>
 
     <div class="field col-12 md:col-6">
-      <label for="cin">{{ 'GESTION_PERSONNELLE.GLOBAL.CIN' | translate }} <span class="required">*</span></label>
+      <label for="cin">{{ 'GLOBAL.CIN' | translate }} <span class="required">*</span></label>
       <input pInputText id="cin" [(ngModel)]="d.cin" [disabled]="state.mode() === 'view'" class="w-full" />
     </div>
 
     <div class="field col-12 md:col-6">
-      <label for="sexe">{{ 'GESTION_PERSONNELLE.GLOBAL.SEXE' | translate }} <span class="required">*</span></label>
+      <label for="sexe">{{ 'GLOBAL.SEXE' | translate }} <span class="required">*</span></label>
       <p-select id="sexe" [options]="sexeOptions" [(ngModel)]="d.sexe" [disabled]="state.mode() === 'view'"
                 optionLabel="label" optionValue="value" appendTo="body" styleClass="w-full"></p-select>
     </div>
 
     <div class="field col-12 md:col-6">
-      <label for="dateNaissance">{{ 'GESTION_PERSONNELLE.GLOBAL.DATE_NAISSANCE' | translate }} <span class="required">*</span></label>
+      <label for="dateNaissance">{{ 'GLOBAL.DATE_NAISSANCE' | translate }} <span class="required">*</span></label>
       <p-datepicker id="dateNaissance" [(ngModel)]="d.dateNaissance" [disabled]="state.mode() === 'view'"
                     dateFormat="dd/mm/yy" appendTo="body" styleClass="w-full"></p-datepicker>
     </div>
@@ -45,7 +45,7 @@
     </div>
 
     <div class="field col-12 md:col-6">
-      <label for="pprTuteur">{{ 'GESTION_PERSONNELLE.GLOBAL.PPR' | translate }} {{ 'GESTION_PERSONNELLE.AGENT_DETAIL.SUPERIEUR' | translate }}</label>
+      <label for="pprTuteur">{{ 'GLOBAL.PPR' | translate }} {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.SUPERIEUR' | translate }}</label>
       <input pInputText id="pprTuteur" [(ngModel)]="d.pprTuteur" [disabled]="state.mode() === 'view'" class="w-full" />
     </div>
   </div>

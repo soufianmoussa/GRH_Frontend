@@ -6,18 +6,18 @@
     <h2 class="wizard-title">
       <i class="pi pi-folder-open"></i>
       <ng-container [ngSwitch]="state.mode()">
-        <span *ngSwitchCase="'create'">{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.TITLE_CREATE' | translate }}</span>
-        <span *ngSwitchCase="'edit'">{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.TITLE_EDIT' | translate }}</span>
-        <span *ngSwitchCase="'view'">{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.TITLE_VIEW' | translate }}</span>
+        <span *ngSwitchCase="'create'">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.TITLE_CREATE' | translate }}</span>
+        <span *ngSwitchCase="'edit'">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.TITLE_EDIT' | translate }}</span>
+        <span *ngSwitchCase="'view'">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.TITLE_VIEW' | translate }}</span>
       </ng-container>
     </h2>
     <p class="wizard-subtitle" *ngIf="state.draft().matricule as m">
-      {{ 'GESTION_PERSONNELLE.AGENT_WIZARD.LBL_MATRICULE' | translate }} <strong>{{ m }}</strong>
+      {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.LBL_MATRICULE' | translate }} <strong>{{ m }}</strong>
     </p>
 
     <div *ngIf="loading" class="loading">
       <i class="pi pi-spin pi-spinner"></i>
-      {{ 'GESTION_PERSONNELLE.AGENT_WIZARD.LOADING' | translate }}
+      {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.LOADING' | translate }}
     </div>
 
     <p-stepper [value]="state.activeStep()" *ngIf="!loading">
@@ -118,7 +118,7 @@
               <p-button [label]="'GLOBAL.PRECEDENT' | translate" icon="pi pi-arrow-left" severity="secondary"
                 (onClick)="activateCallback(7)"></p-button>
               <p-button *ngIf="state.mode() !== 'view'"
-                [label]="'GESTION_PERSONNELLE.AGENT_WIZARD.BTN_CONFIRMER' | translate" icon="pi pi-check" severity="success"
+                [label]="'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.BTN_CONFIRMER' | translate" icon="pi pi-check" severity="success"
                 [loading]="saving" [disabled]="!state.canSubmit()"
                 (onClick)="submit()"></p-button>
             </div>
@@ -128,7 +128,7 @@
     </p-stepper>
 
     <div class="cancel-bar" *ngIf="!loading">
-      <p-button [label]="'GESTION_PERSONNELLE.AGENT_WIZARD.BTN_ANNULER' | translate" icon="pi pi-times" severity="secondary" [text]="true"
+      <p-button [label]="'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.BTN_ANNULER' | translate" icon="pi pi-times" severity="secondary" [text]="true"
         (onClick)="cancel()"></p-button>
     </div>
   </div>

@@ -31,7 +31,7 @@
       <h2>{{ fullName() }}</h2>
       <div class="badges">
         <p-tag severity="info" [value]="('GLOBAL.MATRICULE' | translate) + ' ' + (a.matricule.matricule || '—')"></p-tag>
-        <p-tag *ngIf="a.cin" severity="secondary" [value]="('GESTION_PERSONNELLE.GLOBAL.CIN' | translate) + ' ' + a.cin"></p-tag>
+        <p-tag *ngIf="a.cin" severity="secondary" [value]="('GLOBAL.CIN' | translate) + ' ' + a.cin"></p-tag>
         <p-tag *ngIf="a.situation" severity="success" [value]="situationLabel(a.situation)"></p-tag>
       </div>
       <div class="profile-meta" *ngIf="posteLabel() || departementLabel(); else noPosteMeta">
@@ -131,15 +131,15 @@
                     <div class="readonly-value">{{ d.matricule || '—' }}<i class="pi pi-lock"></i></div>
                   </div>
                   <div class="info-field">
-                    <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP1.LBL_DATE_RECRUTEMENT' | translate }}</label>
+                    <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP1.LBL_DATE_RECRUTEMENT' | translate }}</label>
                     <span class="value">{{ (d.dateRecrutement | date:'dd/MM/yyyy') || '—' }}</span>
                   </div>
                   <div class="info-field">
-                    <label>{{ 'GESTION_PERSONNELLE.GLOBAL.CATEGORIE' | translate }}</label>
+                    <label>{{ 'GLOBAL.CATEGORIE' | translate }}</label>
                     <span class="value">{{ d.categorie || '—' }}</span>
                   </div>
                   <div class="info-field">
-                    <label>{{ 'GESTION_PERSONNELLE.GLOBAL.TYPE_CONTRAT' | translate }}</label>
+                    <label>{{ 'GLOBAL.TYPE_CONTRAT' | translate }}</label>
                     <span class="value">{{ d.typeContrat || '—' }}</span>
                   </div>
                 </div>
@@ -341,37 +341,37 @@
 
             <!-- Informations personnelles -->
             <section class="info-card">
-              <h3><i class="pi pi-user"></i> {{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP2.TITLE' | translate }}</h3>
+              <h3><i class="pi pi-user"></i> {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP2.TITLE' | translate }}</h3>
               <div class="info-grid cols-3">
 
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.GLOBAL.NOM' | translate }}</label>
+                  <label>{{ 'GLOBAL.NOM' | translate }}</label>
                   <input *ngIf="editMode(); else nomView" pInputText [ngModel]="d.nom" (ngModelChange)="patch({ nom: $event })"/>
                   <ng-template #nomView><span class="value">{{ d.nom || '—' }}</span></ng-template>
                 </div>
 
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.GLOBAL.PRENOM' | translate }}</label>
+                  <label>{{ 'GLOBAL.PRENOM' | translate }}</label>
                   <input *ngIf="editMode(); else prView" pInputText [ngModel]="d.prenom" (ngModelChange)="patch({ prenom: $event })"/>
                   <ng-template #prView><span class="value">{{ d.prenom || '—' }}</span></ng-template>
                 </div>
 
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.GLOBAL.CIN' | translate }}</label>
+                  <label>{{ 'GLOBAL.CIN' | translate }}</label>
                   <input *ngIf="editMode(); else cinView" pInputText [ngModel]="d.cin" (ngModelChange)="patch({ cin: $event })"/>
                   <ng-template #cinView><span class="value">{{ d.cin || '—' }}</span></ng-template>
                 </div>
 
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.GLOBAL.SEXE' | translate }}</label>
+                  <label>{{ 'GLOBAL.SEXE' | translate }}</label>
                   <p-select *ngIf="editMode(); else sexeView"
                     [options]="sexeOptions" [ngModel]="d.sexe" (ngModelChange)="patch({ sexe: $event })"
                     optionLabel="label" optionValue="value" appendTo="body"></p-select>
-                  <ng-template #sexeView><span class="value">{{ d.sexe === 'M' ? ('GESTION_PERSONNELLE.GLOBAL.MASCULIN' | translate) : d.sexe === 'F' ? ('GESTION_PERSONNELLE.GLOBAL.FEMININ' | translate) : '—' }}</span></ng-template>
+                  <ng-template #sexeView><span class="value">{{ d.sexe === 'M' ? ('GLOBAL.MASCULIN' | translate) : d.sexe === 'F' ? ('GLOBAL.FEMININ' | translate) : '—' }}</span></ng-template>
                 </div>
 
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.LBL_SITUATION' | translate }}</label>
+                  <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.LBL_SITUATION' | translate }}</label>
                   <p-select *ngIf="editMode(); else sitView"
                     [options]="situationOptions" [ngModel]="d.situation" (ngModelChange)="patch({ situation: $event })"
                     optionLabel="label" optionValue="value" appendTo="body"></p-select>
@@ -379,7 +379,7 @@
                 </div>
 
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.GLOBAL.DATE_NAISSANCE' | translate }}</label>
+                  <label>{{ 'GLOBAL.DATE_NAISSANCE' | translate }}</label>
                   <p-datepicker *ngIf="editMode(); else dnView"
                     [ngModel]="d.dateNaissance" (ngModelChange)="patch({ dateNaissance: $event })"
                     dateFormat="dd/mm/yy" appendTo="body" styleClass="w-full"></p-datepicker>
@@ -387,7 +387,7 @@
                 </div>
 
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.GLOBAL.PPR' | translate }} {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.SUPERIEUR' | translate }}</label>
+                  <label>{{ 'GLOBAL.PPR' | translate }} {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.SUPERIEUR' | translate }}</label>
                   <input *ngIf="editMode(); else pprView" pInputText [ngModel]="d.pprTuteur" (ngModelChange)="patch({ pprTuteur: $event })"/>
                   <ng-template #pprView><span class="value">{{ d.pprTuteur || '—' }}</span></ng-template>
                 </div>
@@ -399,12 +399,12 @@
             <section class="info-card">
               <div class="section-head">
                 <h3><i class="pi pi-map-marker"></i> {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.CONTACT' | translate }} ({{ d.adresses?.length || 0 }})</h3>
-                <p-button *ngIf="editMode()" [label]="'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP3.BTN_ADD' | translate" icon="pi pi-plus" size="small"
+                <p-button *ngIf="editMode()" [label]="'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP3.BTN_ADD' | translate" icon="pi pi-plus" size="small"
                           [outlined]="true" (onClick)="addAdresse()"></p-button>
               </div>
 
               <p *ngIf="!d.adresses?.length" class="empty">
-                <i class="pi pi-info-circle"></i> {{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP3.EMPTY_HINT' | translate }}
+                <i class="pi pi-info-circle"></i> {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP3.EMPTY_HINT' | translate }}
               </p>
 
               <div *ngFor="let ad of d.adresses; let i = index; trackBy: trackByIndex" class="adresse-block">
@@ -413,45 +413,45 @@
                          [value]="typeAdresseLabel(ad.type)"></p-tag>
                   <button *ngIf="editMode()" pButton type="button" icon="pi pi-trash"
                           class="p-button-rounded p-button-text p-button-danger"
-                          [pTooltip]="'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP3.TOOLTIP_DEL' | translate" tooltipPosition="top"
+                          [pTooltip]="'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP3.TOOLTIP_DEL' | translate" tooltipPosition="top"
                           (click)="removeAdresse(i)"></button>
                 </div>
 
                 <div class="info-grid cols-3">
                   <div class="info-field" *ngIf="editMode()">
-                    <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP3.LBL_TYPE' | translate }}</label>
+                    <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP3.LBL_TYPE' | translate }}</label>
                     <p-select [options]="typeAdresseOptions"
                               [ngModel]="ad.type"
                               (ngModelChange)="updateAdresse(i, { type: $event })"
                               optionLabel="label" optionValue="value" appendTo="body"></p-select>
                   </div>
                   <div class="info-field">
-                    <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP3.LBL_ADRESSE' | translate }}</label>
+                    <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP3.LBL_ADRESSE' | translate }}</label>
                     <input *ngIf="editMode(); else aVw" pInputText [ngModel]="ad.adresse" (ngModelChange)="updateAdresse(i, { adresse: $event })"/>
                     <ng-template #aVw><span class="value">{{ ad.adresse || '—' }}</span></ng-template>
                   </div>
                   <div class="info-field">
-                    <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP3.LBL_CODE_POSTAL' | translate }}</label>
+                    <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP3.LBL_CODE_POSTAL' | translate }}</label>
                     <input *ngIf="editMode(); else cpVw" pInputText [ngModel]="ad.codePostal" (ngModelChange)="updateAdresse(i, { codePostal: $event })"/>
                     <ng-template #cpVw><span class="value">{{ ad.codePostal || '—' }}</span></ng-template>
                   </div>
                   <div class="info-field">
-                    <label>{{ 'GESTION_PERSONNELLE.GLOBAL.VILLE' | translate }}</label>
+                    <label>{{ 'GLOBAL.VILLE' | translate }}</label>
                     <input *ngIf="editMode(); else vVw" pInputText [ngModel]="ad.ville" (ngModelChange)="updateAdresse(i, { ville: $event })"/>
                     <ng-template #vVw><span class="value">{{ ad.ville || '—' }}</span></ng-template>
                   </div>
                   <div class="info-field">
-                    <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP3.LBL_LOCALITE' | translate }}</label>
+                    <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP3.LBL_LOCALITE' | translate }}</label>
                     <input *ngIf="editMode(); else lVw" pInputText [ngModel]="ad.localite" (ngModelChange)="updateAdresse(i, { localite: $event })"/>
                     <ng-template #lVw><span class="value">{{ ad.localite || '—' }}</span></ng-template>
                   </div>
                   <div class="info-field">
-                    <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP3.LBL_PAYS' | translate }}</label>
+                    <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP3.LBL_PAYS' | translate }}</label>
                     <input *ngIf="editMode(); else payVw" pInputText [ngModel]="ad.pays" (ngModelChange)="updateAdresse(i, { pays: $event })"/>
                     <ng-template #payVw><span class="value">{{ ad.pays || '—' }}</span></ng-template>
                   </div>
                   <div class="info-field">
-                    <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP3.LBL_TELEPHONE' | translate }}</label>
+                    <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP3.LBL_TELEPHONE' | translate }}</label>
                     <input *ngIf="editMode(); else telVw" pInputText [ngModel]="ad.telephone" (ngModelChange)="updateAdresse(i, { telephone: $event })"/>
                     <ng-template #telVw><span class="value">{{ ad.telephone || '—' }}</span></ng-template>
                   </div>
@@ -464,22 +464,22 @@
               <h3><i class="pi pi-wallet"></i> {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.COMPTE_BANCAIRE' | translate }}</h3>
               <div class="info-grid cols-2">
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP5.LBL_BANQUE' | translate }}</label>
+                  <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP5.LBL_BANQUE' | translate }}</label>
                   <input *ngIf="editMode(); else bqView" pInputText [ngModel]="d.coordonneesBancaires?.banque" (ngModelChange)="patchBank({ banque: $event })"/>
                   <ng-template #bqView><span class="value">{{ d.coordonneesBancaires?.banque || '—' }}</span></ng-template>
                 </div>
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP5.LBL_IBAN' | translate }}</label>
+                  <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP5.LBL_IBAN' | translate }}</label>
                   <input *ngIf="editMode(); else ibView" pInputText [ngModel]="d.coordonneesBancaires?.iban" (ngModelChange)="patchBank({ iban: $event })"/>
                   <ng-template #ibView><span class="value">{{ d.coordonneesBancaires?.iban || '—' }}</span></ng-template>
                 </div>
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP5.LBL_RIB' | translate }}</label>
+                  <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP5.LBL_RIB' | translate }}</label>
                   <input *ngIf="editMode(); else rbView" pInputText [ngModel]="d.coordonneesBancaires?.rib" (ngModelChange)="patchBank({ rib: $event })"/>
                   <ng-template #rbView><span class="value">{{ d.coordonneesBancaires?.rib || '—' }}</span></ng-template>
                 </div>
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP5.LBL_COMPTE' | translate }}</label>
+                  <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP5.LBL_COMPTE' | translate }}</label>
                   <input *ngIf="editMode(); else cmView" pInputText [ngModel]="d.coordonneesBancaires?.compte" (ngModelChange)="patchBank({ compte: $event })"/>
                   <ng-template #cmView><span class="value">{{ d.coordonneesBancaires?.compte || '—' }}</span></ng-template>
                 </div>
@@ -491,34 +491,34 @@
               <h3><i class="pi pi-heart"></i> {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.CONJOINT' | translate }}</h3>
               <div class="info-grid cols-3">
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.GLOBAL.NOM' | translate }}</label>
+                  <label>{{ 'GLOBAL.NOM' | translate }}</label>
                   <input *ngIf="editMode(); else cnView" pInputText [ngModel]="d.conjoint?.nom" (ngModelChange)="patchConjoint({ nom: $event })"/>
                   <ng-template #cnView><span class="value">{{ d.conjoint?.nom || '—' }}</span></ng-template>
                 </div>
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.GLOBAL.PRENOM' | translate }}</label>
+                  <label>{{ 'GLOBAL.PRENOM' | translate }}</label>
                   <input *ngIf="editMode(); else cpnView" pInputText [ngModel]="d.conjoint?.prenom" (ngModelChange)="patchConjoint({ prenom: $event })"/>
                   <ng-template #cpnView><span class="value">{{ d.conjoint?.prenom || '—' }}</span></ng-template>
                 </div>
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.GLOBAL.CIN' | translate }}</label>
+                  <label>{{ 'GLOBAL.CIN' | translate }}</label>
                   <input *ngIf="editMode(); else ccnView" pInputText [ngModel]="d.conjoint?.cin" (ngModelChange)="patchConjoint({ cin: $event })"/>
                   <ng-template #ccnView><span class="value">{{ d.conjoint?.cin || '—' }}</span></ng-template>
                 </div>
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.GLOBAL.DATE_NAISSANCE' | translate }}</label>
+                  <label>{{ 'GLOBAL.DATE_NAISSANCE' | translate }}</label>
                   <p-datepicker *ngIf="editMode(); else cdnView"
                     [ngModel]="d.conjoint?.dateNaissance" (ngModelChange)="patchConjoint({ dateNaissance: $event })"
                     dateFormat="dd/mm/yy" appendTo="body" styleClass="w-full"></p-datepicker>
                   <ng-template #cdnView><span class="value">{{ (d.conjoint?.dateNaissance | date:'dd/MM/yyyy') || '—' }}</span></ng-template>
                 </div>
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.LBL_PROFESSION' | translate }}</label>
+                  <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.LBL_PROFESSION' | translate }}</label>
                   <input *ngIf="editMode(); else cprView" pInputText [ngModel]="d.conjoint?.profession" (ngModelChange)="patchConjoint({ profession: $event })"/>
                   <ng-template #cprView><span class="value">{{ d.conjoint?.profession || '—' }}</span></ng-template>
                 </div>
                 <div class="info-field">
-                  <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.LBL_NATIONALITE' | translate }}</label>
+                  <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.LBL_NATIONALITE' | translate }}</label>
                   <input *ngIf="editMode(); else cnatView" pInputText [ngModel]="d.conjoint?.nationalite" (ngModelChange)="patchConjoint({ nationalite: $event })"/>
                   <ng-template #cnatView><span class="value">{{ d.conjoint?.nationalite || '—' }}</span></ng-template>
                 </div>
@@ -529,7 +529,7 @@
             <section class="info-card">
               <div class="section-head">
                 <h3><i class="pi pi-users"></i> {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.ENFANTS' | translate }} ({{ d.enfants?.length || 0 }})</h3>
-                <p-button *ngIf="editMode()" [label]="'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.BTN_ADD_ENFANT' | translate" icon="pi pi-plus" size="small"
+                <p-button *ngIf="editMode()" [label]="'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.BTN_ADD_ENFANT' | translate" icon="pi pi-plus" size="small"
                           [outlined]="true" (onClick)="addEnfant()"></p-button>
               </div>
 
@@ -542,10 +542,10 @@
 
                   <ng-template pTemplate="header">
                     <tr>
-                      <th pSortableColumn="nom">{{ 'GESTION_PERSONNELLE.GLOBAL.NOM' | translate }} <p-sortIcon field="nom"></p-sortIcon></th>
-                      <th pSortableColumn="prenom">{{ 'GESTION_PERSONNELLE.GLOBAL.PRENOM' | translate }} <p-sortIcon field="prenom"></p-sortIcon></th>
-                      <th pSortableColumn="dateNaissance">{{ 'GESTION_PERSONNELLE.GLOBAL.DATE_NAISSANCE' | translate }} <p-sortIcon field="dateNaissance"></p-sortIcon></th>
-                      <th pSortableColumn="sexe">{{ 'GESTION_PERSONNELLE.GLOBAL.SEXE' | translate }} <p-sortIcon field="sexe"></p-sortIcon></th>
+                      <th pSortableColumn="nom">{{ 'GLOBAL.NOM' | translate }} <p-sortIcon field="nom"></p-sortIcon></th>
+                      <th pSortableColumn="prenom">{{ 'GLOBAL.PRENOM' | translate }} <p-sortIcon field="prenom"></p-sortIcon></th>
+                      <th pSortableColumn="dateNaissance">{{ 'GLOBAL.DATE_NAISSANCE' | translate }} <p-sortIcon field="dateNaissance"></p-sortIcon></th>
+                      <th pSortableColumn="sexe">{{ 'GLOBAL.SEXE' | translate }} <p-sortIcon field="sexe"></p-sortIcon></th>
                       <th pSortableColumn="niveauScolaire">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.NIVEAU_SCOLAIRE' | translate }} <p-sortIcon field="niveauScolaire"></p-sortIcon></th>
                       <th *ngIf="editMode()" class="text-center">{{ 'GLOBAL.ACTIONS' | translate }}</th>
                     </tr>
@@ -588,7 +588,7 @@
 
                   <ng-template pTemplate="emptymessage">
                     <tr>
-                      <td [attr.colspan]="editMode() ? 6 : 5" class="text-center">{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.EMPTY_ENFANTS' | translate }}</td>
+                      <td [attr.colspan]="editMode() ? 6 : 5" class="text-center">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.EMPTY_ENFANTS' | translate }}</td>
                     </tr>
                   </ng-template>
                 </p-table>
@@ -875,8 +875,8 @@
       <div class="doc-file-upload" *ngIf="!documentForm.pendingFile" (click)="docFileInput.click()">
         <div class="upload-icon-box"><i class="pi pi-cloud-upload"></i></div>
         <div class="upload-text">
-          <span class="upload-title">{{ documentDialogMode() === 'edit' ? ('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.REMPLACER_FICHIER' | translate) : ('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.JOINDRE_FICHIER' | translate) }} <span class="optional-tag">({{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP7.DRAG_DROP_HINT' | translate }})</span></span>
-          <span class="upload-hint">{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP7.DRAG_DROP_HINT' | translate }}</span>
+          <span class="upload-title">{{ documentDialogMode() === 'edit' ? ('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.REMPLACER_FICHIER' | translate) : ('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.JOINDRE_FICHIER' | translate) }} <span class="optional-tag">({{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP7.DRAG_DROP_HINT' | translate }})</span></span>
+          <span class="upload-hint">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP7.DRAG_DROP_HINT' | translate }}</span>
         </div>
         <span class="upload-browse-btn">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.PARCOURIR' | translate }}</span>
       </div>
@@ -918,7 +918,7 @@
            [class.pi-image]="preview.kind === 'image'"
            [class.pi-file]="preview.kind === 'other'"></i>
         <div class="scan-preview-title-text">
-          <strong>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP7.ALT_PREVIEW' | translate }}</strong>
+          <strong>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP7.ALT_PREVIEW' | translate }}</strong>
           <span>{{ preview.fileName }}</span>
         </div>
       </div>
@@ -938,7 +938,7 @@
   <div class="scan-preview-body" *ngIf="scanPreview() as preview">
     <iframe *ngIf="preview.kind === 'pdf' && scanPreviewSafeUrl() as safeUrl"
             [src]="safeUrl"
-            [title]="'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP7.ALT_PREVIEW' | translate"
+            [title]="'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP7.ALT_PREVIEW' | translate"
             class="scan-preview-frame"></iframe>
 
     <div *ngIf="preview.kind === 'image'" class="scan-preview-image-wrap">

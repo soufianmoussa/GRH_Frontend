@@ -73,14 +73,14 @@ export class DossierAgentWizardComponent implements OnInit {
 
   get steps() {
     return [
-      { index: 1, label: this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP1.LABEL') },
-      { index: 2, label: this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP2.LABEL') },
-      { index: 3, label: this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP3.LABEL') },
-      { index: 4, label: this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP4.LABEL') },
-      { index: 5, label: this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP5.LABEL') },
-      { index: 6, label: this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.LABEL') },
-      { index: 7, label: this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP7.LABEL') },
-      { index: 8, label: this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP8.LABEL') },
+      { index: 1, label: this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP1.LABEL') },
+      { index: 2, label: this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP2.LABEL') },
+      { index: 3, label: this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP3.LABEL') },
+      { index: 4, label: this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP4.LABEL') },
+      { index: 5, label: this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP5.LABEL') },
+      { index: 6, label: this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.LABEL') },
+      { index: 7, label: this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP7.LABEL') },
+      { index: 8, label: this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP8.LABEL') },
     ];
   }
 
@@ -107,7 +107,7 @@ export class DossierAgentWizardComponent implements OnInit {
       },
       error: (err) => {
         this.loading = false;
-        ToastHelper.showError(this.toast, this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.ERR_LOAD'));
+        ToastHelper.showError(this.toast, this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.ERR_LOAD'));
         console.error(err);
       },
     });
@@ -165,19 +165,19 @@ export class DossierAgentWizardComponent implements OnInit {
           this.service.uploadProfilePicture(resp.id, photoFile).subscribe({
             next: () => {
               this.saving = false;
-              ToastHelper.showSuccess(this.toast, isEdit ? this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.MSG_UPDATED') : this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.MSG_CREATED_PHOTO'));
+              ToastHelper.showSuccess(this.toast, isEdit ? this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.MSG_UPDATED') : this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.MSG_CREATED_PHOTO'));
               this.finishSubmit();
             },
             error: (err) => {
               this.saving = false;
-              ToastHelper.showWarn(this.toast, this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.WARN_PHOTO'));
+              ToastHelper.showWarn(this.toast, this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.WARN_PHOTO'));
               console.error('Erreur upload photo:', err);
               this.finishSubmit();
             },
           });
         } else {
           this.saving = false;
-          ToastHelper.showSuccess(this.toast, isEdit ? this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.MSG_UPDATED') : this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.MSG_CREATED'));
+          ToastHelper.showSuccess(this.toast, isEdit ? this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.MSG_UPDATED') : this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.MSG_CREATED'));
           this.finishSubmit();
         }
       },
@@ -198,13 +198,13 @@ export class DossierAgentWizardComponent implements OnInit {
         return errors.map((e: any) => e.defaultMessage || e.message || JSON.stringify(e)).join(' • ');
       }
     }
-    return this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.ERR_SAVE');
+    return this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.ERR_SAVE');
   }
 
   cancel(): void {
     this.confirm.confirm({
       header: this.translateService.instant('GLOBAL.ANNULER'),
-      message: this.translateService.instant('GESTION_PERSONNELLE.AGENT_WIZARD.CONFIRM_CANCEL'),
+      message: this.translateService.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.CONFIRM_CANCEL'),
       accept: () => {
         this.state.reset();
         this.router.navigate(['/GestionUtilisateurs']);

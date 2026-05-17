@@ -95,40 +95,40 @@
   </div>
 </div>
 
-<p-dialog styleClass="pdialogfon" [header]="'GESTION_PERSONNELLE.INITIALISATION_MATRICULES.DIALOG_VIEW_TITLE' | translate" [(visible)]="displayView" [modal]="true" [style]="{width: '550px'}">
-  <div class="p-fluid mt-4 flex flex-column gap-4" *ngIf="selectedItem">
-    <div class="w-full">
-      <p-floatLabel>
+<p-dialog styleClass="pdialogfon matricule-dialog" [header]="'GESTION_PERSONNELLE.INITIALISATION_MATRICULES.DIALOG_VIEW_TITLE' | translate" [(visible)]="displayView" [modal]="true" [style]="{width: 'min(760px, 95vw)'}">
+  <div class="p-fluid matricule-form-grid mt-4" *ngIf="selectedItem">
+    <div class="field col-12 md:col-6">
+      <p-floatLabel class="w-full">
         <input pInputText id="v_matricule" [ngModel]="selectedItem.matricule" [disabled]="true" />
         <label for="v_matricule">{{ 'GLOBAL.MATRICULE' | translate }}</label>
       </p-floatLabel>
     </div>
-    <div class="w-full">
-      <p-floatLabel>
-        <p-datepicker id="v_dateRecrutement" [ngModel]="selectedItem.dateRecrutement" [disabled]="true" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+    <div class="field col-12 md:col-6">
+      <p-floatLabel class="w-full">
+        <p-datepicker id="v_dateRecrutement" [ngModel]="selectedItem.dateRecrutement" [disabled]="true" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" panelStyleClass="matricule-datepicker-panel"></p-datepicker>
         <label for="v_dateRecrutement">{{ 'GESTION_PERSONNELLE.INITIALISATION_MATRICULES.COL_DATE_RECRUTEMENT' | translate }}</label>
       </p-floatLabel>
     </div>
-    <div class="w-full">
-      <p-floatLabel>
+    <div class="field col-12 md:col-6">
+      <p-floatLabel class="w-full">
         <input pInputText id="v_domaine" [ngModel]="selectedItem.domaine" [disabled]="true" />
         <label for="v_domaine">{{ 'GLOBAL.DOMAINE' | translate }}</label>
       </p-floatLabel>
     </div>
-    <div class="w-full">
-      <p-floatLabel>
+    <div class="field col-12 md:col-6">
+      <p-floatLabel class="w-full">
         <input pInputText id="v_sousDomaine" [ngModel]="selectedItem.sousDomaine" [disabled]="true" />
         <label for="v_sousDomaine">{{ 'GLOBAL.SOUS_DOMAINE' | translate }}</label>
       </p-floatLabel>
     </div>
-    <div class="w-full">
-      <p-floatLabel>
+    <div class="field col-12 md:col-6">
+      <p-floatLabel class="w-full">
         <input pInputText id="v_categorie" [ngModel]="selectedItem.categorie" [disabled]="true" />
         <label for="v_categorie">{{ 'GLOBAL.CATEGORIE' | translate }}</label>
       </p-floatLabel>
     </div>
-    <div class="w-full">
-      <p-floatLabel>
+    <div class="field col-12 md:col-6">
+      <p-floatLabel class="w-full">
         <input pInputText id="v_typeContrat" [ngModel]="selectedItem.typeContrat" [disabled]="true" />
         <label for="v_typeContrat">{{ 'GLOBAL.TYPE_CONTRAT' | translate }}</label>
       </p-floatLabel>
@@ -140,47 +140,47 @@
   </ng-template>
 </p-dialog>
 
-<p-dialog styleClass="pdialogfon" [header]="'GESTION_PERSONNELLE.INITIALISATION_MATRICULES.DIALOG_EDIT_TITLE' | translate" [(visible)]="displayDialog" [modal]="true" [style]="{width: '550px'}">
+<p-dialog styleClass="pdialogfon matricule-dialog" [header]="'GESTION_PERSONNELLE.INITIALISATION_MATRICULES.DIALOG_EDIT_TITLE' | translate" [(visible)]="displayDialog" [modal]="true" [style]="{width: 'min(760px, 95vw)'}">
   <form #addForm="ngForm">
-  <div class="p-fluid mt-4 flex flex-column gap-4">
-    <div class="w-full">
-      <p-floatLabel>
-        <input pInputText id="matricule" name="matricule" [(ngModel)]="newItem.matricule" #matricule="ngModel" required [class.ng-dirty]="matricule.invalid && matricule.touched">
+  <div class="p-fluid matricule-form-grid mt-4">
+    <div class="field col-12 md:col-6">
+      <p-floatLabel class="w-full">
+        <input pInputText id="matricule" name="matricule" [(ngModel)]="newItem.matricule" #matricule="ngModel" required [class.ng-dirty]="matricule.invalid && matricule.touched" class="w-full">
         <label for="matricule">{{ 'GLOBAL.MATRICULE' | translate }} <span style="color: red;">*</span></label>
       </p-floatLabel>
       <small class="text-red-500 block mt-1" *ngIf="matricule.invalid && matricule.touched">{{ 'GESTION_PERSONNELLE.INITIALISATION_MATRICULES.ERR_MATRICULE' | translate }}</small>
     </div>
-    <div class="w-full">
-      <p-floatLabel>
-        <p-datepicker id="dateRecrutement" name="dateRecrutement" [(ngModel)]="newItem.dateRecrutement" #dateRecrutement="ngModel" required dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" [class.ng-dirty]="dateRecrutement.invalid && dateRecrutement.touched"></p-datepicker>
+    <div class="field col-12 md:col-6">
+      <p-floatLabel class="w-full">
+        <p-datepicker id="dateRecrutement" name="dateRecrutement" [(ngModel)]="newItem.dateRecrutement" #dateRecrutement="ngModel" required dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full" panelStyleClass="matricule-datepicker-panel" [class.ng-dirty]="dateRecrutement.invalid && dateRecrutement.touched"></p-datepicker>
         <label for="dateRecrutement">{{ 'GESTION_PERSONNELLE.INITIALISATION_MATRICULES.COL_DATE_RECRUTEMENT' | translate }} <span style="color: red;">*</span></label>
       </p-floatLabel>
       <small class="text-red-500 block mt-1" *ngIf="dateRecrutement.invalid && dateRecrutement.touched">{{ 'GESTION_PERSONNELLE.INITIALISATION_MATRICULES.ERR_DATE_RECRUTEMENT' | translate }}</small>
     </div>
-    <div class="w-full">
-      <p-floatLabel>
-        <input pInputText id="domaine" name="domaine" [(ngModel)]="newItem.domaine" #domaine="ngModel" required [class.ng-dirty]="domaine.invalid && domaine.touched">
+    <div class="field col-12 md:col-6">
+      <p-floatLabel class="w-full">
+        <input pInputText id="domaine" name="domaine" [(ngModel)]="newItem.domaine" #domaine="ngModel" required [class.ng-dirty]="domaine.invalid && domaine.touched" class="w-full">
         <label for="domaine">{{ 'GLOBAL.DOMAINE' | translate }} <span style="color: red;">*</span></label>
       </p-floatLabel>
       <small class="text-red-500 block mt-1" *ngIf="domaine.invalid && domaine.touched">{{ 'GESTION_PERSONNELLE.INITIALISATION_MATRICULES.ERR_DOMAINE' | translate }}</small>
     </div>
-    <div class="w-full">
-      <p-floatLabel>
-        <input pInputText id="sousDomaine" name="sousDomaine" [(ngModel)]="newItem.sousDomaine" #sousDomaine="ngModel" required [class.ng-dirty]="sousDomaine.invalid && sousDomaine.touched">
+    <div class="field col-12 md:col-6">
+      <p-floatLabel class="w-full">
+        <input pInputText id="sousDomaine" name="sousDomaine" [(ngModel)]="newItem.sousDomaine" #sousDomaine="ngModel" required [class.ng-dirty]="sousDomaine.invalid && sousDomaine.touched" class="w-full">
         <label for="sousDomaine">{{ 'GLOBAL.SOUS_DOMAINE' | translate }} <span style="color: red;">*</span></label>
       </p-floatLabel>
       <small class="text-red-500 block mt-1" *ngIf="sousDomaine.invalid && sousDomaine.touched">{{ 'GESTION_PERSONNELLE.INITIALISATION_MATRICULES.ERR_SOUS_DOMAINE' | translate }}</small>
     </div>
-    <div class="w-full">
-      <p-floatLabel>
-        <input pInputText id="categorie" name="categorie" [(ngModel)]="newItem.categorie" #categorie="ngModel" required [class.ng-dirty]="categorie.invalid && categorie.touched">
+    <div class="field col-12 md:col-6">
+      <p-floatLabel class="w-full">
+        <input pInputText id="categorie" name="categorie" [(ngModel)]="newItem.categorie" #categorie="ngModel" required [class.ng-dirty]="categorie.invalid && categorie.touched" class="w-full">
         <label for="categorie">{{ 'GLOBAL.CATEGORIE' | translate }} <span style="color: red;">*</span></label>
       </p-floatLabel>
       <small class="text-red-500 block mt-1" *ngIf="categorie.invalid && categorie.touched">{{ 'GESTION_PERSONNELLE.INITIALISATION_MATRICULES.ERR_CATEGORIE' | translate }}</small>
     </div>
-    <div class="w-full">
-      <p-floatLabel>
-        <input pInputText id="typeContrat" name="typeContrat" [(ngModel)]="newItem.typeContrat" #typeContrat="ngModel" required [class.ng-dirty]="typeContrat.invalid && typeContrat.touched">
+    <div class="field col-12 md:col-6">
+      <p-floatLabel class="w-full">
+        <input pInputText id="typeContrat" name="typeContrat" [(ngModel)]="newItem.typeContrat" #typeContrat="ngModel" required [class.ng-dirty]="typeContrat.invalid && typeContrat.touched" class="w-full">
         <label for="typeContrat">{{ 'GLOBAL.TYPE_CONTRAT' | translate }} <span style="color: red;">*</span></label>
       </p-floatLabel>
       <small class="text-red-500 block mt-1" *ngIf="typeContrat.invalid && typeContrat.touched">{{ 'GESTION_PERSONNELLE.INITIALISATION_MATRICULES.ERR_TYPE_CONTRAT' | translate }}</small>
@@ -189,7 +189,9 @@
 
   </form>
   <ng-template pTemplate="footer">
-    <p-button [label]="'GLOBAL.MODIFIER' | translate" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
-    <p-button [label]="'GLOBAL.ANNULER' | translate" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+    <div class="matricule-dialog-footer">
+      <p-button [label]="'GLOBAL.ANNULER' | translate" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayDialog=false"></p-button>
+      <p-button [label]="'GLOBAL.MODIFIER' | translate" icon="pi pi-check" severity="success" (onClick)="save()"></p-button>
+    </div>
   </ng-template>
 </p-dialog>

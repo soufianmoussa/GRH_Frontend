@@ -96,14 +96,14 @@ export class AgentDetailComponent implements OnInit {
   });
 
   readonly sexeOptions = [
-    { label: this.translate.instant('GESTION_PERSONNELLE.GLOBAL.MASCULIN'), value: 'M' },
-    { label: this.translate.instant('GESTION_PERSONNELLE.GLOBAL.FEMININ'), value: 'F' },
+    { label: this.translate.instant('GLOBAL.MASCULIN'), value: 'M' },
+    { label: this.translate.instant('GLOBAL.FEMININ'), value: 'F' },
   ];
   readonly situationOptions = [
-    { label: this.translate.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.VAL_CELIBATAIRE'), value: 'C' },
-    { label: this.translate.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.VAL_MARIE'), value: 'M' },
-    { label: this.translate.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.VAL_VEUF'), value: 'V' },
-    { label: this.translate.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.VAL_DIVORCE'), value: 'D' },
+    { label: this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.VAL_CELIBATAIRE'), value: 'C' },
+    { label: this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.VAL_MARIE'), value: 'M' },
+    { label: this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.VAL_VEUF'), value: 'V' },
+    { label: this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.VAL_DIVORCE'), value: 'D' },
   ];
 
   // ─────────────────────────────────────────────────────────────────────
@@ -257,7 +257,7 @@ export class AgentDetailComponent implements OnInit {
       error: (err) => {
         this.loading.set(false);
         console.error(err);
-        ToastHelper.showError(this.toast, this.translate.instant('GESTION_PERSONNELLE.AGENT_DETAIL.MSG_LOAD_ERROR'));
+        ToastHelper.showError(this.toast, this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.MSG_LOAD_ERROR'));
       },
     });
 
@@ -318,7 +318,7 @@ export class AgentDetailComponent implements OnInit {
 
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      ToastHelper.showWarn(this.toast, this.translate.instant('GESTION_PERSONNELLE.AGENT_DETAIL.MAX_SIZE'));
+      ToastHelper.showWarn(this.toast, this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.MAX_SIZE'));
       input.value = '';
       return;
     }
@@ -348,7 +348,7 @@ export class AgentDetailComponent implements OnInit {
       return;
     }
     if (f.issuedAt && f.expiresAt && f.expiresAt < f.issuedAt) {
-      ToastHelper.showWarn(this.toast, this.translate.instant('GESTION_PERSONNELLE.AGENT_DETAIL.DATE_EXPIRATION'));
+      ToastHelper.showWarn(this.toast, this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.DATE_EXPIRATION'));
       return;
     }
 
@@ -375,21 +375,21 @@ export class AgentDetailComponent implements OnInit {
               this.documentSaving.set(false);
               this.upsertDocument(withFile);
               this.closeDocumentDialog();
-              ToastHelper.showSuccess(this.toast, f.id ? this.translate.instant('GESTION_PERSONNELLE.AGENT_DETAIL.MSG_DOC_SUCCESS_EDIT') : this.translate.instant('GESTION_PERSONNELLE.AGENT_DETAIL.MSG_DOC_SUCCESS_ADD'));
+              ToastHelper.showSuccess(this.toast, f.id ? this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.MSG_DOC_SUCCESS_EDIT') : this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.MSG_DOC_SUCCESS_ADD'));
             },
             error: (err) => {
               this.documentSaving.set(false);
               console.error(err);
               this.upsertDocument(saved);
               this.closeDocumentDialog();
-              ToastHelper.showError(this.toast, err?.error?.message || this.translate.instant('GESTION_PERSONNELLE.AGENT_DETAIL.MSG_DOC_FILE_ERROR'));
+              ToastHelper.showError(this.toast, err?.error?.message || this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.MSG_DOC_FILE_ERROR'));
             },
           });
         } else {
           this.documentSaving.set(false);
           this.upsertDocument(saved);
           this.closeDocumentDialog();
-          ToastHelper.showSuccess(this.toast, f.id ? this.translate.instant('GESTION_PERSONNELLE.AGENT_DETAIL.MSG_DOC_SUCCESS_EDIT') : this.translate.instant('GESTION_PERSONNELLE.AGENT_DETAIL.MSG_DOC_SUCCESS_ADD'));
+          ToastHelper.showSuccess(this.toast, f.id ? this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.MSG_DOC_SUCCESS_EDIT') : this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.MSG_DOC_SUCCESS_ADD'));
         }
       },
       error: (err) => {
@@ -434,7 +434,7 @@ export class AgentDetailComponent implements OnInit {
     if (!file) return;
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
-      ToastHelper.showWarn(this.toast, this.translate.instant('GESTION_PERSONNELLE.AGENT_DETAIL.MAX_SIZE'));
+      ToastHelper.showWarn(this.toast, this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.MAX_SIZE'));
       input.value = '';
       return;
     }
@@ -444,12 +444,12 @@ export class AgentDetailComponent implements OnInit {
       next: (updated) => {
         this.upsertDocument(updated);
         this.documentUploading.set(null);
-        ToastHelper.showSuccess(this.toast, this.translate.instant('GESTION_PERSONNELLE.AGENT_DETAIL.MSG_DOC_SUCCESS_EDIT'));
+        ToastHelper.showSuccess(this.toast, this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.MSG_DOC_SUCCESS_EDIT'));
       },
       error: (err) => {
         this.documentUploading.set(null);
         console.error(err);
-        ToastHelper.showError(this.toast, err?.error?.message || this.translate.instant('GESTION_PERSONNELLE.AGENT_DETAIL.MSG_DOC_FILE_ERROR'));
+        ToastHelper.showError(this.toast, err?.error?.message || this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.MSG_DOC_FILE_ERROR'));
       },
     });
     input.value = '';
@@ -531,10 +531,10 @@ export class AgentDetailComponent implements OnInit {
   }
 
   readonly typeAdresseOptions: { label: string; value: TypeAdresse }[] = [
-    { label: this.translate.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP3.TYPE_PRINCIPALE'), value: 'PRINCIPALE' },
-    { label: this.translate.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP3.TYPE_SECONDAIRE'), value: 'SECONDAIRE' },
-    { label: this.translate.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP3.TYPE_TRAVAIL'), value: 'TRAVAIL' },
-    { label: this.translate.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP3.TYPE_AUTRE'), value: 'AUTRE' },
+    { label: this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP3.TYPE_PRINCIPALE'), value: 'PRINCIPALE' },
+    { label: this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP3.TYPE_SECONDAIRE'), value: 'SECONDAIRE' },
+    { label: this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP3.TYPE_TRAVAIL'), value: 'TRAVAIL' },
+    { label: this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP3.TYPE_AUTRE'), value: 'AUTRE' },
   ];
 
   typeAdresseLabel(value?: TypeAdresse): string {
@@ -621,7 +621,7 @@ export class AgentDetailComponent implements OnInit {
     if (!a || !d) return;
 
     if (d.situation === 'M' && !d.conjoint) {
-      ToastHelper.showWarn(this.toast, this.translate.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.SUBTITLE_CONJOINT'));
+      ToastHelper.showWarn(this.toast, this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.SUBTITLE_CONJOINT'));
       return;
     }
 
@@ -633,7 +633,7 @@ export class AgentDetailComponent implements OnInit {
         this.agent.set(updated);
         this.draft.set(this.toDraft(updated));
         this.editMode.set(false);
-        ToastHelper.showSuccess(this.toast, this.translate.instant('GESTION_PERSONNELLE.AGENT_WIZARD.MSG_UPDATED'));
+        ToastHelper.showSuccess(this.toast, this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.MSG_UPDATED'));
       },
       error: (err) => {
         this.saving.set(false);
@@ -663,7 +663,7 @@ export class AgentDetailComponent implements OnInit {
     this.service.canDelete(a.id).subscribe({
       next: (res) => {
         if (!res.canDelete) {
-          ToastHelper.showError(this.toast, this.translate.instant('GESTION_PERSONNELLE.AGENT_DETAIL.MSG_DELETE_IMPOSSIBLE'));
+          ToastHelper.showError(this.toast, this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.MSG_DELETE_IMPOSSIBLE'));
           return;
         }
         this.deleteConfirmInput.set('');
@@ -721,7 +721,7 @@ export class AgentDetailComponent implements OnInit {
 
     const maxSize = 5 * 1024 * 1024; // 5 MB
     if (file.size > maxSize) {
-      ToastHelper.showWarn(this.toast, this.translate.instant('GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP7.DRAG_DROP_HINT'));
+      ToastHelper.showWarn(this.toast, this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP7.DRAG_DROP_HINT'));
       input.value = '';
       return;
     }
@@ -734,11 +734,11 @@ export class AgentDetailComponent implements OnInit {
           next: (f) => this.photoUrl.set(f?.url ?? null),
           error: () => {},
         });
-        ToastHelper.showSuccess(this.toast, this.translate.instant('GESTION_PERSONNELLE.AGENT_DETAIL.MSG_PHOTO_SUCCESS'));
+        ToastHelper.showSuccess(this.toast, this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.MSG_PHOTO_SUCCESS'));
       },
       error: (err) => {
         console.error(err);
-        ToastHelper.showError(this.toast, this.translate.instant('GESTION_PERSONNELLE.AGENT_DETAIL.MSG_PHOTO_ERROR'));
+        ToastHelper.showError(this.toast, this.translate.instant('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.MSG_PHOTO_ERROR'));
       },
     });
 

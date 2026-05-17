@@ -1,16 +1,16 @@
 <div class="step-container">
   <div class="step-header">
-    <h3>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP7.TITLE' | translate }}</h3>
-    <p>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP7.SUBTITLE' | translate }}</p>
+    <h3>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP7.TITLE' | translate }}</h3>
+    <p>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP7.SUBTITLE' | translate }}</p>
   </div>
 
   <div class="photo-upload-zone" [class.readonly]="state.mode() === 'view'">
     <div class="photo-preview" *ngIf="state.photoPreview() as url; else noPhoto">
-      <img [src]="url" [alt]="'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP7.ALT_PREVIEW' | translate" />
+      <img [src]="url" [alt]="'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP7.ALT_PREVIEW' | translate" />
       <div class="photo-overlay" *ngIf="state.mode() !== 'view'">
-        <p-button icon="pi pi-pencil" [label]="'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP7.BTN_CHANGE' | translate"
+        <p-button icon="pi pi-pencil" [label]="'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP7.BTN_CHANGE' | translate"
                 size="small" (onClick)="fileInput.click()"></p-button>
-        <p-button icon="pi pi-trash" [label]="'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP7.BTN_REMOVE' | translate"
+        <p-button icon="pi pi-trash" [label]="'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP7.BTN_REMOVE' | translate"
                 size="small" severity="danger" (onClick)="removePhoto()"></p-button>
       </div>
     </div>
@@ -19,8 +19,8 @@
       <div class="drop-zone" (click)="state.mode() !== 'view' && fileInput.click()"
            (drop)="onDrop($event)" (dragover)="onDragOver($event)">
         <i class="pi pi-image"></i>
-        <p>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP7.DRAG_DROP_TEXT' | translate }}</p>
-        <span class="hint">{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP7.DRAG_DROP_HINT' | translate }}</span>
+        <p>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP7.DRAG_DROP_TEXT' | translate }}</p>
+        <span class="hint">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP7.DRAG_DROP_HINT' | translate }}</span>
       </div>
     </ng-template>
 
@@ -28,6 +28,6 @@
   </div>
 
   <div class="photo-info mt-4" *ngIf="state.mode() === 'create'">
-    <p [innerHTML]="'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP7.INFO_UPLOAD' | translate"></p>
+    <p [innerHTML]="'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP7.INFO_UPLOAD' | translate"></p>
   </div>
 </div>

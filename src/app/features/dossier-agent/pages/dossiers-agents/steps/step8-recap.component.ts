@@ -19,7 +19,7 @@ export class Step8RecapComponent {
 
   situationLabel(val?: string): string {
     if (!val) return '—';
-    const p = 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.VAL_';
+    const p = 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.VAL_';
     const map: Record<string, string> = {
       'C': p + 'CELIBATAIRE',
       'M': p + 'MARIE',

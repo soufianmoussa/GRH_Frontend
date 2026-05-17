@@ -11,14 +11,14 @@
     </div>
 
     <div class="right-section">
-
-      <!-- Language Toggle -->
-      <button class="lang-btn" (click)="$event.stopPropagation(); toggleLanguage()" title="Changer de langue">
+      <button
+        class="lang-btn"
+        (click)="$event.stopPropagation(); toggleLanguage()"
+        [title]="'LAYOUT.TOPBAR.CHANGE_LANGUAGE' | translate">
         <i class="pi pi-globe"></i>
         <span>{{ targetLanguage }}</span>
       </button>
 
-      <!-- Role Switcher Dropdown -->
       <div class="role-switcher" (click)="$event.stopPropagation()">
         <button class="role-btn" (click)="toggleDropdown()">
           <div class="role-btn-avatar">
@@ -28,16 +28,15 @@
             <span class="role-btn-username">{{ currentUser.username }}</span>
             <span class="role-btn-mode" *ngIf="activeRoleLabel">
               <i [class]="activeRoleLabel.icon"></i>
-              {{ activeRoleLabel.label }}
+              {{ activeRoleLabel.labelKey | translate }}
             </span>
           </div>
           <i class="pi pi-chevron-down role-btn-caret" [class.open]="dropdownOpen"></i>
         </button>
 
-        <!-- Dropdown Menu -->
         <div class="role-dropdown" *ngIf="dropdownOpen">
           <div class="role-dropdown-header">
-            <span class="dropdown-title">Changer de mode</span>
+            <span class="dropdown-title">{{ 'LAYOUT.TOPBAR.CHANGE_MODE' | translate }}</span>
           </div>
           <div class="role-dropdown-body">
             <button
@@ -46,21 +45,24 @@
               [class.active]="role.value === activeRole"
               (click)="switchRole(role.value)">
               <i [class]="role.icon"></i>
-              <span>{{ role.label }}</span>
+              <span>{{ role.labelKey | translate }}</span>
               <i class="pi pi-check check-icon" *ngIf="role.value === activeRole"></i>
             </button>
           </div>
           <div class="role-dropdown-footer">
             <button class="logout-option" (click)="logout()">
               <i class="pi pi-sign-out"></i>
-              <span>Déconnexion</span>
+              <span>{{ 'LAYOUT.TOPBAR.LOGOUT' | translate }}</span>
             </button>
           </div>
         </div>
       </div>
 
-      <!-- Standalone logout (fallback if no user) -->
-      <button class="logout-btn" *ngIf="!currentUser" (click)="logout()" title="Déconnexion">
+      <button
+        class="logout-btn"
+        *ngIf="!currentUser"
+        (click)="logout()"
+        [title]="'LAYOUT.TOPBAR.LOGOUT' | translate">
         <i class="pi pi-sign-out"></i>
       </button>
     </div>

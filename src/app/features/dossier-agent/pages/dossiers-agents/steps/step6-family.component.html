@@ -1,65 +1,65 @@
 <div class="step-container" *ngIf="state.draft() as d">
   <div class="step-header">
-    <h3>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.TITLE' | translate }}</h3>
-    <p>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.SUBTITLE' | translate }}</p>
+    <h3>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.TITLE' | translate }}</h3>
+    <p>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.SUBTITLE' | translate }}</p>
   </div>
 
   <div class="step-form grid">
     <!-- Situation familiale -->
     <div class="field col-12 md:col-6">
-      <label for="situation">{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.LBL_SITUATION' | translate }} <span class="required">*</span></label>
+      <label for="situation">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.LBL_SITUATION' | translate }} <span class="required">*</span></label>
       <p-select id="situation" [options]="situationOptions" [(ngModel)]="d.situation"
                 [disabled]="state.mode() === 'view'"
-                [placeholder]="'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.PH_SITUATION' | translate"
+                [placeholder]="'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.PH_SITUATION' | translate"
                 optionLabel="label" optionValue="value" appendTo="body" styleClass="w-full"></p-select>
     </div>
 
     <div class="field col-12 md:col-6">
-      <label>{{ 'GESTION_PERSONNELLE.AGENT_DETAIL.ENFANTS' | translate }}</label>
-      <input pInputText [value]="(d.enfants?.length || 0) + ' ' + ('GESTION_PERSONNELLE.AGENT_DETAIL.ENFANTS' | translate | lowercase)" disabled class="w-full" />
+      <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.ENFANTS' | translate }}</label>
+      <input pInputText [value]="(d.enfants?.length || 0) + ' ' + ('GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.ENFANTS' | translate | lowercase)" disabled class="w-full" />
     </div>
 
     <!-- Section Conjoint (si marié ou déjà saisi) -->
     <div class="col-12 mt-4" *ngIf="d.situation === 'M' || d.conjoint">
       <div class="section-divider">
-        <span class="divider-text">{{ 'GESTION_PERSONNELLE.AGENT_DETAIL.CONJOINT' | translate }}</span>
+        <span class="divider-text">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.CONJOINT' | translate }}</span>
       </div>
 
       <div class="spouse-info-box" *ngIf="d.situation === 'M'">
         <i class="pi pi-info-circle"></i>
-        <span>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.SUBTITLE_CONJOINT' | translate }}</span>
+        <span>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.SUBTITLE_CONJOINT' | translate }}</span>
       </div>
 
       <div class="grid mt-2" *ngIf="d.conjoint as c">
         <div class="field col-12 md:col-4">
-          <label>{{ 'GESTION_PERSONNELLE.GLOBAL.NOM' | translate }} <span class="required" *ngIf="d.situation === 'M'">*</span></label>
+          <label>{{ 'GLOBAL.NOM' | translate }} <span class="required" *ngIf="d.situation === 'M'">*</span></label>
           <input pInputText [(ngModel)]="c.nom" [disabled]="state.mode() === 'view'" class="w-full" />
         </div>
         <div class="field col-12 md:col-4">
-          <label>{{ 'GESTION_PERSONNELLE.GLOBAL.PRENOM' | translate }} <span class="required" *ngIf="d.situation === 'M'">*</span></label>
+          <label>{{ 'GLOBAL.PRENOM' | translate }} <span class="required" *ngIf="d.situation === 'M'">*</span></label>
           <input pInputText [(ngModel)]="c.prenom" [disabled]="state.mode() === 'view'" class="w-full" />
         </div>
         <div class="field col-12 md:col-4">
-          <label>{{ 'GESTION_PERSONNELLE.GLOBAL.CIN' | translate }} <span class="required" *ngIf="d.situation === 'M'">*</span></label>
+          <label>{{ 'GLOBAL.CIN' | translate }} <span class="required" *ngIf="d.situation === 'M'">*</span></label>
           <input pInputText [(ngModel)]="c.cin" [disabled]="state.mode() === 'view'" class="w-full" />
         </div>
         <div class="field col-12 md:col-4">
-          <label>{{ 'GESTION_PERSONNELLE.GLOBAL.DATE_NAISSANCE' | translate }}</label>
+          <label>{{ 'GLOBAL.DATE_NAISSANCE' | translate }}</label>
           <p-datepicker [(ngModel)]="c.dateNaissance" [disabled]="state.mode() === 'view'"
                         dateFormat="dd/mm/yy" appendTo="body" styleClass="w-full"></p-datepicker>
         </div>
         <div class="field col-12 md:col-4">
-          <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.LBL_PROFESSION' | translate }}</label>
+          <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.LBL_PROFESSION' | translate }}</label>
           <input pInputText [(ngModel)]="c.profession" [disabled]="state.mode() === 'view'" class="w-full" />
         </div>
         <div class="field col-12 md:col-4">
-          <label>{{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.LBL_NATIONALITE' | translate }}</label>
+          <label>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.LBL_NATIONALITE' | translate }}</label>
           <input pInputText [(ngModel)]="c.nationalite" [disabled]="state.mode() === 'view'" class="w-full" />
         </div>
       </div>
 
       <div class="mt-2 text-right" *ngIf="d.situation !== 'M' && state.mode() !== 'view'">
-        <p-button [label]="'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.BTN_CLEAR_CONJ' | translate" icon="pi pi-eraser" [text]="true"
+        <p-button [label]="'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.BTN_CLEAR_CONJ' | translate" icon="pi pi-eraser" [text]="true"
                   severity="secondary" size="small" (onClick)="clearConjoint()"></p-button>
       </div>
     </div>
@@ -67,9 +67,9 @@
     <!-- Section Enfants -->
     <div class="col-12 mt-4">
       <div class="section-divider flex justify-content-between align-items-center">
-        <span class="divider-text">{{ 'GESTION_PERSONNELLE.AGENT_DETAIL.ENFANTS' | translate }}</span>
+        <span class="divider-text">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.ENFANTS' | translate }}</span>
         <p-button *ngIf="state.mode() !== 'view'"
-                  [label]="'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.BTN_ADD_ENFANT' | translate" icon="pi pi-plus"
+                  [label]="'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.BTN_ADD_ENFANT' | translate" icon="pi pi-plus"
                   size="small" [outlined]="true" (onClick)="addEnfant()"></p-button>
       </div>
 
@@ -77,11 +77,11 @@
         <p-table [value]="d.enfants || []" styleClass="p-datatable-sm" [responsiveLayout]="'scroll'">
           <ng-template pTemplate="header">
             <tr>
-              <th>{{ 'GESTION_PERSONNELLE.GLOBAL.NOM' | translate }}</th>
-              <th>{{ 'GESTION_PERSONNELLE.GLOBAL.PRENOM' | translate }}</th>
-              <th>{{ 'GESTION_PERSONNELLE.GLOBAL.DATE_NAISSANCE' | translate }}</th>
-              <th>{{ 'GESTION_PERSONNELLE.GLOBAL.SEXE' | translate }}</th>
-              <th>{{ 'GESTION_PERSONNELLE.AGENT_DETAIL.NIVEAU_SCOLAIRE' | translate }}</th>
+              <th>{{ 'GLOBAL.NOM' | translate }}</th>
+              <th>{{ 'GLOBAL.PRENOM' | translate }}</th>
+              <th>{{ 'GLOBAL.DATE_NAISSANCE' | translate }}</th>
+              <th>{{ 'GLOBAL.SEXE' | translate }}</th>
+              <th>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.NIVEAU_SCOLAIRE' | translate }}</th>
               <th style="width: 4rem" *ngIf="state.mode() !== 'view'"></th>
             </tr>
           </ng-template>
@@ -100,7 +100,7 @@
           <ng-template pTemplate="emptymessage">
             <tr>
               <td colspan="6" class="text-center py-4 text-muted">
-                {{ 'GESTION_PERSONNELLE.AGENT_WIZARD.STEPS.STEP6.EMPTY_ENFANTS' | translate }}
+                {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.EMPTY_ENFANTS' | translate }}
               </td>
             </tr>
           </ng-template>

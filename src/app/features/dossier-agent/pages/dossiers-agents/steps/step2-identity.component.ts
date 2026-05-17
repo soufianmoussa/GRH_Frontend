@@ -19,8 +19,8 @@ export class Step2IdentityComponent {
 
   get sexeOptions() {
     return [
-      { label: this.translateService.instant('GESTION_PERSONNELLE.GLOBAL.MASCULIN') || 'Homme', value: 'M' },
-      { label: this.translateService.instant('GESTION_PERSONNELLE.GLOBAL.FEMININ') || 'Femme', value: 'F' },
+      { label: this.translateService.instant('GLOBAL.MASCULIN') || 'Homme', value: 'M' },
+      { label: this.translateService.instant('GLOBAL.FEMININ') || 'Femme', value: 'F' },
     ];
   }
 
