@@ -1,0 +1,61 @@
+<p-toast position="top-center"></p-toast>
+
+<div class="content agent-onboarding-dashboard">
+  <div class="page-header">
+    <div>
+      <h1 class="titleh1">Mon onboarding</h1>
+      <p>Suivez votre progression et completez les elements attendus par les RH.</p>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="card loading-card">Chargement de votre onboarding...</div>
+
+  <ng-container *ngIf="!loading && onboarding">
+    <div class="welcome-card">
+      <div>
+        <span>Bienvenue</span>
+        <h2>{{ onboarding.agent?.prenom || 'Agent' }} {{ onboarding.agent?.nom || '' }}</h2>
+        <p>Votre dossier est actuellement : {{ statusLabel(onboarding.status) }}.</p>
+      </div>
+      <p-tag [value]="statusLabel(onboarding.status)" [severity]="statusSeverity(onboarding.status)"></p-tag>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="card progress-card">
+        <h2>Progression</h2>
+        <p-progressBar [value]="progress()"></p-progressBar>
+        <p class="muted" *ngIf="onboarding.status === 'PENDING_VALIDATION'">Votre dossier est soumis et en attente de validation RH.</p>
+        <p class="muted" *ngIf="onboarding.status === 'REJECTED'">Votre dossier contient des elements rejetes a corriger.</p>
+        <a *ngIf="canContinue()" pButton routerLink="/agent/onboarding/complete" label="Continuer mon profil" icon="pi pi-arrow-right"></a>
+      </div>
+
+      <div class="card">
+        <h2>Elements a completer</h2>
+        <div *ngIf="!missingDocuments().length && !rejectedDocuments().length" class="empty-state">
+          Aucun element bloquant pour le moment.
+        </div>
+        <ul *ngIf="missingDocuments().length || rejectedDocuments().length" class="document-list">
+          <li *ngFor="let document of missingDocuments()">
+            <span>{{ document.label || document.name || document.type || document.code }}</span>
+            <p-tag value="Manquant" severity="warn"></p-tag>
+          </li>
+          <li *ngFor="let document of rejectedDocuments()">
+            <span>{{ document.label || document.name || document.type || document.code }}</span>
+            <p-tag [value]="documentStatusLabel(document.status)" severity="danger"></p-tag>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <h2>Documents en revue</h2>
+        <div *ngIf="!pendingDocuments().length" class="empty-state">Aucun document en revue.</div>
+        <ul *ngIf="pendingDocuments().length" class="document-list">
+          <li *ngFor="let document of pendingDocuments()">
+            <span>{{ document.label || document.name || document.type || document.code }}</span>
+            <p-tag [value]="documentStatusLabel(document.status)" severity="warn"></p-tag>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </ng-container>
+</div>
