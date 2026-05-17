@@ -1,0 +1,56 @@
+.admin-onboarding-documents {
+  .page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+
+    p {
+      margin: 0.25rem 0 0;
+      color: #64748b;
+    }
+  }
+
+  td strong,
+  td small {
+    display: block;
+  }
+
+  td small {
+    margin-top: 0.2rem;
+    color: #64748b;
+  }
+
+  .actions {
+    min-width: 120px;
+    white-space: nowrap;
+  }
+
+  .empty-state {
+    padding: 2rem;
+    text-align: center;
+    color: #64748b;
+  }
+}
+
+.reject-dialog {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.reject-dialog label {
+  color: #334155;
+  font-weight: 600;
+}
+
+.reject-dialog textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+@media (max-width: 760px) {
+  .admin-onboarding-documents .page-header {
+    flex-direction: column;
+  }
+}
