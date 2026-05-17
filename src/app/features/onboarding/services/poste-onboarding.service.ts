@@ -8,11 +8,11 @@ import { PosteOption } from '../../../models/onboarding.model';
   providedIn: 'root'
 })
 export class PosteOnboardingService {
-  private readonly baseUrl = `${environment.apiUrl}/gestion-organisationnelle/postes`;
+  private readonly baseUrl = `${environment.apiUrl}/gestion-organisationelle/postes`;
 
   constructor(private http: HttpClient) {}
 
   getAll(): Observable<PosteOption[]> {
-    return this.http.get<PosteOption[]>(this.baseUrl);
+    return this.http.get<PosteOption[]>(`${this.baseUrl}/all`);
   }
 }
