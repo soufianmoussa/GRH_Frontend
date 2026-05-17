@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { catchError, finalize, forkJoin, of } from 'rxjs';
+import { finalize } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -61,16 +61,10 @@ export class AdminOnboardingDetailComponent implements OnInit {
 
   load(): void {
     this.loading = true;
-    forkJoin({
-      detail: this.onboardingService.getById(this.onboardingId),
-      invitation: this.onboardingService.getInvitationStatus(this.onboardingId).pipe(catchError(() => of(undefined)))
-    })
+    this.onboardingService.getById(this.onboardingId)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
-        next: ({ detail, invitation }) => {
-          detail.invitation = invitation;
-          this.onboarding = detail;
-        },
+        next: (detail) => this.onboarding = detail,
         error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Erreur lors du chargement du dossier onboarding.')
       });
   }
