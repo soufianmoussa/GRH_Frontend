@@ -50,7 +50,7 @@
 
           <div class="field">
             <label for="posteId">Poste <span>*</span></label>
-            <p-dropdown id="posteId" formControlName="posteId" [options]="posteOptions" optionLabel="label" optionValue="value" [filter]="true" appendTo="body" styleClass="w-full" placeholder="Selectionner"></p-dropdown>
+            <p-select id="posteId" formControlName="posteId" [options]="posteOptions" optionLabel="label" optionValue="value" [filter]="true" appendTo="body" styleClass="w-full" placeholder="Selectionner"></p-select>
             <small *ngIf="isInvalid('posteId')" class="p-error">Le poste est obligatoire.</small>
           </div>
 
@@ -62,19 +62,19 @@
 
           <div class="field">
             <label for="gradeId">Grade <span>*</span></label>
-            <p-dropdown id="gradeId" formControlName="gradeId" [options]="gradeOptions" optionLabel="label" optionValue="value" [filter]="true" appendTo="body" styleClass="w-full" placeholder="Selectionner"></p-dropdown>
+            <p-select id="gradeId" formControlName="gradeId" [options]="gradeOptions" optionLabel="label" optionValue="value" [filter]="true" appendTo="body" styleClass="w-full" placeholder="Selectionner"></p-select>
             <small *ngIf="isInvalid('gradeId')" class="p-error">Le grade est obligatoire.</small>
           </div>
 
           <div class="field">
             <label for="echelleId">Echelle <span>*</span></label>
-            <p-dropdown id="echelleId" formControlName="echelleId" [options]="echelleOptions" optionLabel="label" optionValue="value" [filter]="true" appendTo="body" styleClass="w-full" placeholder="Selectionner"></p-dropdown>
+            <p-select id="echelleId" formControlName="echelleId" [options]="echelleOptions" optionLabel="label" optionValue="value" [filter]="true" appendTo="body" styleClass="w-full" placeholder="Selectionner"></p-select>
             <small *ngIf="isInvalid('echelleId')" class="p-error">L echelle est obligatoire.</small>
           </div>
 
           <div class="field">
             <label for="echelonId">Echelon <span>*</span></label>
-            <p-dropdown id="echelonId" formControlName="echelonId" [options]="echelonOptions" optionLabel="label" optionValue="value" [filter]="true" appendTo="body" styleClass="w-full" placeholder="Selectionner"></p-dropdown>
+            <p-select id="echelonId" formControlName="echelonId" [options]="echelonOptions" optionLabel="label" optionValue="value" [filter]="true" appendTo="body" styleClass="w-full" placeholder="Selectionner"></p-select>
             <small *ngIf="isInvalid('echelonId')" class="p-error">L echelon est obligatoire.</small>
           </div>
 

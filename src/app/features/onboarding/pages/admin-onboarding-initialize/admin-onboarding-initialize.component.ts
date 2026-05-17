@@ -5,10 +5,10 @@ import { Router, RouterLink } from '@angular/router';
 import { forkJoin, finalize } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
-import { DropdownModule } from 'primeng/dropdown';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageService } from 'primeng/api';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { Select } from 'primeng/select';
 import { Toast } from 'primeng/toast';
 import { AdminOnboardingService } from '../../services/admin-onboarding.service';
 import { EchelleService } from '../../services/echelle.service';
@@ -32,9 +32,9 @@ interface SelectOption {
     RouterLink,
     ButtonModule,
     DatePicker,
-    DropdownModule,
     InputTextModule,
     ProgressSpinnerModule,
+    Select,
     Toast
   ],
   templateUrl: './admin-onboarding-initialize.component.html',
