@@ -1,0 +1,119 @@
+<div class="onboarding-stepper" *ngIf="onboarding">
+  <div class="stepper-header">
+    <div>
+      <h2>{{ actor === 'admin' ? 'Completion assistee' : 'Completion du profil' }}</h2>
+      <app-onboarding-status-badge [status]="onboarding.status"></app-onboarding-status-badge>
+    </div>
+    <app-completion-progress-bar [onboarding]="onboarding"></app-completion-progress-bar>
+  </div>
+
+  <div class="step-tabs">
+    <button
+      *ngFor="let step of steps; let index = index"
+      type="button"
+      [class.active]="activeStep === index"
+      (click)="goTo(index)">
+      <span>{{ index + 1 }}</span>
+      {{ step }}
+    </button>
+  </div>
+
+  <form [formGroup]="form" novalidate>
+    <section *ngIf="activeStep === 0" class="step-panel">
+      <div class="form-grid">
+        <div class="field">
+          <label>Nom <span>*</span></label>
+          <input pInputText formControlName="nom" class="w-full" [readonly]="locked()" />
+          <small *ngIf="isInvalid('nom')" class="p-error">Le nom est obligatoire.</small>
+        </div>
+        <div class="field">
+          <label>Prenom <span>*</span></label>
+          <input pInputText formControlName="prenom" class="w-full" [readonly]="locked()" />
+          <small *ngIf="isInvalid('prenom')" class="p-error">Le prenom est obligatoire.</small>
+        </div>
+        <div class="field">
+          <label>CIN <span>*</span></label>
+          <input pInputText formControlName="cin" class="w-full" [readonly]="locked()" />
+          <small *ngIf="isInvalid('cin')" class="p-error">La CIN est obligatoire.</small>
+        </div>
+        <div class="field">
+          <label>Sexe</label>
+          <input pInputText formControlName="sexe" class="w-full" [readonly]="locked()" />
+        </div>
+        <div class="field">
+          <label>Situation familiale</label>
+          <input pInputText formControlName="situation" class="w-full" [readonly]="locked()" />
+        </div>
+        <div class="field">
+          <label>Date de naissance</label>
+          <input pInputText formControlName="dateNaissance" class="w-full" [readonly]="locked()" placeholder="AAAA-MM-JJ" />
+        </div>
+        <div class="field">
+          <label>Telephone</label>
+          <input pInputText formControlName="telephone" class="w-full" [readonly]="locked()" />
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input pInputText formControlName="email" class="w-full" [readonly]="locked()" />
+        </div>
+        <div class="field full">
+          <label>Adresse</label>
+          <input pInputText formControlName="adresse" class="w-full" [readonly]="locked()" />
+        </div>
+        <div class="field">
+          <label>Ville</label>
+          <input pInputText formControlName="ville" class="w-full" [readonly]="locked()" />
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="activeStep === 1" class="step-panel">
+      <div class="form-grid">
+        <div class="field">
+          <label>Diplome principal</label>
+          <input pInputText formControlName="diplome" class="w-full" [readonly]="locked()" />
+        </div>
+        <div class="field">
+          <label>Formation</label>
+          <input pInputText formControlName="formation" class="w-full" [readonly]="locked()" />
+        </div>
+        <div class="field full">
+          <label>Observations</label>
+          <input pInputText formControlName="observations" class="w-full" [readonly]="locked()" />
+        </div>
+      </div>
+    </section>
+
+    <section *ngIf="activeStep === 2" class="step-panel">
+      <div class="documents-grid" *ngIf="onboarding.documents?.length; else noDocuments">
+        <app-document-upload-card
+          *ngFor="let document of onboarding.documents"
+          [document]="document"
+          [readonly]="locked()"
+          (fileSelected)="upload($event)">
+        </app-document-upload-card>
+      </div>
+      <ng-template #noDocuments>
+        <div class="empty-state">Aucun document attendu pour le moment.</div>
+      </ng-template>
+    </section>
+
+    <section *ngIf="activeStep === 3" class="step-panel recap">
+      <h3>Recapitulatif</h3>
+      <p>Verifiez les informations saisies et les documents importes avant soumission.</p>
+      <div class="recap-grid">
+        <div><span>Nom</span><strong>{{ form.value.nom || '-' }}</strong></div>
+        <div><span>Prenom</span><strong>{{ form.value.prenom || '-' }}</strong></div>
+        <div><span>CIN</span><strong>{{ form.value.cin || '-' }}</strong></div>
+        <div><span>Documents</span><strong>{{ onboarding.documents?.length || 0 }}</strong></div>
+      </div>
+    </section>
+  </form>
+
+  <div class="stepper-actions">
+    <button pButton type="button" label="Precedent" icon="pi pi-arrow-left" class="p-button-text" (click)="previous()" [disabled]="activeStep === 0"></button>
+    <button pButton type="button" label="Enregistrer" icon="pi pi-save" class="p-button-outlined" (click)="saveProfile()" [disabled]="saving || locked()"></button>
+    <button *ngIf="activeStep < steps.length - 1" pButton type="button" label="Suivant" icon="pi pi-arrow-right" iconPos="right" (click)="next()"></button>
+    <button *ngIf="activeStep === steps.length - 1" pButton type="button" label="Soumettre le dossier" icon="pi pi-send" (click)="submit()" [disabled]="saving || locked()"></button>
+  </div>
+</div>

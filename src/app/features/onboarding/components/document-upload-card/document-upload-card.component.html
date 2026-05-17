@@ -1,0 +1,20 @@
+<div class="document-card" *ngIf="document">
+  <div class="document-main">
+    <div>
+      <strong>{{ document.label || document.name || document.type || document.code }}</strong>
+      <small *ngIf="document.required">Obligatoire</small>
+      <small *ngIf="document.fileName">{{ document.fileName }}</small>
+    </div>
+    <app-document-status-badge [status]="document.status"></app-document-status-badge>
+  </div>
+
+  <p *ngIf="document.rejectionReason || document.comment" class="rejection">
+    {{ document.rejectionReason || document.comment }}
+  </p>
+
+  <label class="upload-button" *ngIf="!readonly">
+    <i class="pi pi-upload"></i>
+    <span>Importer</span>
+    <input type="file" (change)="onFileChange($event)" />
+  </label>
+</div>
