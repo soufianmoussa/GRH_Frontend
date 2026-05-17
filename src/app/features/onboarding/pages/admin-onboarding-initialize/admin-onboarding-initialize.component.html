@@ -1,0 +1,121 @@
+<p-toast position="top-center"></p-toast>
+
+<div class="content onboarding-initialize">
+  <div class="page-header">
+    <div>
+      <h1 class="titleh1">Initialiser un agent</h1>
+      <p>Renseignez les informations administratives necessaires pour demarrer l onboarding.</p>
+    </div>
+    <a pButton routerLink="/admin/onboarding" label="Suivi onboarding" icon="pi pi-list" class="p-button-outlined"></a>
+  </div>
+
+  <div class="card form-card">
+    <div *ngIf="loadingReferentials" class="loading-state">
+      <p-progressSpinner ariaLabel="Chargement"></p-progressSpinner>
+      <span>Chargement des referentiels...</span>
+    </div>
+
+    <form *ngIf="!loadingReferentials" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+      <section>
+        <h2>Identification</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label for="matricule">Matricule <span>*</span></label>
+            <input pInputText id="matricule" formControlName="matricule" class="w-full" />
+            <small *ngIf="isInvalid('matricule')" class="p-error">Le matricule est obligatoire.</small>
+          </div>
+
+          <div class="field">
+            <label for="dateRecrutement">Date de recrutement <span>*</span></label>
+            <p-datepicker id="dateRecrutement" formControlName="dateRecrutement" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full"></p-datepicker>
+            <small *ngIf="isInvalid('dateRecrutement')" class="p-error">La date est obligatoire.</small>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Classification administrative</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label for="domaine">Domaine <span>*</span></label>
+            <input pInputText id="domaine" formControlName="domaine" class="w-full" />
+            <small *ngIf="isInvalid('domaine')" class="p-error">Le domaine est obligatoire.</small>
+          </div>
+
+          <div class="field">
+            <label for="sousDomaine">Sous-domaine <span>*</span></label>
+            <input pInputText id="sousDomaine" formControlName="sousDomaine" class="w-full" />
+            <small *ngIf="isInvalid('sousDomaine')" class="p-error">Le sous-domaine est obligatoire.</small>
+          </div>
+
+          <div class="field">
+            <label for="posteId">Poste <span>*</span></label>
+            <p-dropdown id="posteId" formControlName="posteId" [options]="posteOptions" optionLabel="label" optionValue="value" [filter]="true" appendTo="body" styleClass="w-full" placeholder="Selectionner"></p-dropdown>
+            <small *ngIf="isInvalid('posteId')" class="p-error">Le poste est obligatoire.</small>
+          </div>
+
+          <div class="field">
+            <label for="categorie">Categorie <span>*</span></label>
+            <input pInputText id="categorie" formControlName="categorie" class="w-full" />
+            <small *ngIf="isInvalid('categorie')" class="p-error">La categorie est obligatoire.</small>
+          </div>
+
+          <div class="field">
+            <label for="gradeId">Grade <span>*</span></label>
+            <p-dropdown id="gradeId" formControlName="gradeId" [options]="gradeOptions" optionLabel="label" optionValue="value" [filter]="true" appendTo="body" styleClass="w-full" placeholder="Selectionner"></p-dropdown>
+            <small *ngIf="isInvalid('gradeId')" class="p-error">Le grade est obligatoire.</small>
+          </div>
+
+          <div class="field">
+            <label for="echelleId">Echelle <span>*</span></label>
+            <p-dropdown id="echelleId" formControlName="echelleId" [options]="echelleOptions" optionLabel="label" optionValue="value" [filter]="true" appendTo="body" styleClass="w-full" placeholder="Selectionner"></p-dropdown>
+            <small *ngIf="isInvalid('echelleId')" class="p-error">L echelle est obligatoire.</small>
+          </div>
+
+          <div class="field">
+            <label for="echelonId">Echelon <span>*</span></label>
+            <p-dropdown id="echelonId" formControlName="echelonId" [options]="echelonOptions" optionLabel="label" optionValue="value" [filter]="true" appendTo="body" styleClass="w-full" placeholder="Selectionner"></p-dropdown>
+            <small *ngIf="isInvalid('echelonId')" class="p-error">L echelon est obligatoire.</small>
+          </div>
+
+          <div class="field">
+            <label for="typeContrat">Type de contrat <span>*</span></label>
+            <input pInputText id="typeContrat" formControlName="typeContrat" class="w-full" />
+            <small *ngIf="isInvalid('typeContrat')" class="p-error">Le type de contrat est obligatoire.</small>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Contact</h2>
+        <div class="form-grid">
+          <div class="field">
+            <label for="email">Email <span>*</span></label>
+            <input pInputText id="email" formControlName="email" type="email" class="w-full" />
+            <small *ngIf="isInvalid('email')" class="p-error">Un email valide est obligatoire.</small>
+          </div>
+
+          <div class="field">
+            <label for="telephone">Telephone <span>*</span></label>
+            <input pInputText id="telephone" formControlName="telephone" class="w-full" />
+            <small *ngIf="isInvalid('telephone')" class="p-error">Le telephone est obligatoire.</small>
+          </div>
+        </div>
+      </section>
+
+      <div class="form-actions">
+        <button pButton type="button" routerLink="/admin/onboarding" label="Annuler" icon="pi pi-times" class="p-button-text"></button>
+        <button pButton type="submit" [label]="submitting ? 'Initialisation...' : 'Initialiser et inviter'" icon="pi pi-send" [disabled]="submitting"></button>
+      </div>
+
+      <div *ngIf="createdOnboardingId" class="success-panel">
+        <i class="pi pi-check-circle"></i>
+        <div>
+          <strong>Onboarding cree avec succes.</strong>
+          <p>L invitation a ete preparee. Vous pouvez suivre le dossier depuis la fiche onboarding.</p>
+        </div>
+        <button pButton type="button" label="Voir le dossier" icon="pi pi-eye" class="p-button-sm" (click)="viewCreated()"></button>
+      </div>
+    </form>
+  </div>
+</div>
