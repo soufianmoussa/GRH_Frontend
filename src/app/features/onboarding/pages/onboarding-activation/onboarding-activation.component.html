@@ -1,0 +1,84 @@
+<div class="activation-page">
+  <div class="activation-card">
+    <img src="assets/MastechRh-Logo.png" class="activation-logo" alt="Mastech RH" />
+
+    <ng-container *ngIf="state === 'loading'">
+      <p-progressSpinner ariaLabel="Validation du lien"></p-progressSpinner>
+      <h1>Validation du lien</h1>
+      <p>Nous verifions votre invitation onboarding.</p>
+    </ng-container>
+
+    <ng-container *ngIf="state === 'invalid'">
+      <i class="pi pi-exclamation-triangle status-icon danger"></i>
+      <h1>Lien non valide</h1>
+      <p-message severity="error" [text]="message"></p-message>
+      <a pButton routerLink="/login" label="Retour a la connexion" icon="pi pi-arrow-left" class="mt-4"></a>
+    </ng-container>
+
+    <ng-container *ngIf="state === 'success'">
+      <i class="pi pi-check-circle status-icon success"></i>
+      <h1>Compte active</h1>
+      <p-message severity="success" [text]="message"></p-message>
+      <a pButton routerLink="/login" label="Se connecter" icon="pi pi-sign-in" class="mt-4"></a>
+    </ng-container>
+
+    <ng-container *ngIf="state === 'valid'">
+      <h1>Activation du compte</h1>
+      <p class="activation-subtitle">
+        Definissez votre mot de passe pour acceder a votre espace onboarding.
+      </p>
+
+      <div *ngIf="email" class="email-box">
+        <span>Email</span>
+        <strong>{{ email }}</strong>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="activate()" novalidate>
+        <div class="field">
+          <label for="password">Nouveau mot de passe</label>
+          <p-password
+            inputId="password"
+            formControlName="password"
+            [toggleMask]="true"
+            [feedback]="true"
+            autocomplete="new-password"
+            placeholder="Minimum 8 caracteres">
+          </p-password>
+          <small *ngIf="form.controls['password'].touched && form.controls['password'].invalid" class="p-error">
+            Le mot de passe doit contenir au moins 8 caracteres.
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="confirmPassword">Confirmer le mot de passe</label>
+          <p-password
+            inputId="confirmPassword"
+            formControlName="confirmPassword"
+            [toggleMask]="true"
+            [feedback]="false"
+            autocomplete="new-password"
+            placeholder="Confirmez le mot de passe">
+          </p-password>
+          <small *ngIf="form.controls['confirmPassword'].touched && !passwordsMatch()" class="p-error">
+            Les mots de passe ne correspondent pas.
+          </small>
+        </div>
+
+        <p-message *ngIf="message" severity="warn" [text]="message"></p-message>
+
+        <button
+          pButton
+          type="submit"
+          icon="pi pi-lock-open"
+          [label]="loading ? 'Activation...' : 'Activer mon compte'"
+          [disabled]="loading"
+          class="activation-button">
+        </button>
+      </form>
+
+      <p *ngIf="expiresAt" class="expiration">
+        Ce lien expire le {{ expiresAt | date:'dd/MM/yyyy HH:mm' }}.
+      </p>
+    </ng-container>
+  </div>
+</div>
