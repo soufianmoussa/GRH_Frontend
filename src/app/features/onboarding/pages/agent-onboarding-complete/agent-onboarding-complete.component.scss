@@ -1,0 +1,26 @@
+.agent-onboarding-complete {
+  .page-header {
+    margin-bottom: 1rem;
+
+    p {
+      margin: 0.25rem 0 0;
+      color: #64748b;
+    }
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-bottom: 0.5rem;
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .loading-card {
+    padding: 1.5rem;
+    color: #64748b;
+    text-align: center;
+  }
+}
