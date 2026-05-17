@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, of, map } from 'rxjs';
-import { environment } from '../../../../../environment.prod';
+import { environment } from '../../../../../environment';
 import { JourFerie } from '../../../models/jourFerie.model';
 
 export interface Holiday {

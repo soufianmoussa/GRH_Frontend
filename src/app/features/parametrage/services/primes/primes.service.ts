@@ -3,7 +3,7 @@ import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {Prime} from '../../../../models/primes.model';
 import {PageResponse} from '../../../../models/PageResponse.model';
-import {environment} from '../../../../../../environment.prod';
+import {environment} from '../../../../../../environment';
 
 
 @Injectable({

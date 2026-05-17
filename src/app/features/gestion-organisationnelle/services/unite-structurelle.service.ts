@@ -7,7 +7,7 @@ import { UniteStructurelle, UniteStructurelleCreateUpdateRequest } from '../../.
 import { TypeUniteStructurelle } from '../../../enums/type-unite-structurelle.enum';
 
 import { PageResponse } from '../../../models/PageResponse.model';
-import { environment } from '../../../../../environment.prod';
+import { environment } from '../../../../../environment';
 
 @Injectable({
   providedIn: 'root'

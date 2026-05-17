@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { PageResponse } from '../../../../models/PageResponse.model';
 import { SousFamille } from '../../../../models/famille-professionnelle.model';
-import { environment } from '../../../../../../environment.prod';
+import { environment } from '../../../../../../environment';
 
 @Injectable({
   providedIn: 'root'
@@ -11,7 +11,7 @@ import { environment } from '../../../../../../environment.prod';
 export class SousFamilleService {
 
 
-  private baseUrl = 'http://localhost:8080/api/sous-familles';
+  private baseUrl = `${environment.apiUrl}/sous-familles`;
 
   constructor(private http: HttpClient) {}
 

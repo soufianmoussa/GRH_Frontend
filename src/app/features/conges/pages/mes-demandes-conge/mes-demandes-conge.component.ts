@@ -18,6 +18,7 @@ import { InputText } from 'primeng/inputtext';
 import { InputTextarea } from 'primeng/inputtextarea';
 import { TooltipModule } from 'primeng/tooltip';
 import { AuthService } from '../../../../core/auth/auth.service';
+import { environment } from '../../../../../../environment';
 
 export interface StoredFileDto {
   id: number;
@@ -63,7 +64,7 @@ export class MesDemandesCongeComponent implements OnInit {
 
 
   private agentId: number | null = null;
-  private readonly API_BASE = 'http://localhost:8080/api';
+  private readonly API_BASE = `${environment.apiUrl}`;
 
   demandes: DemandeCongeDto[] = [];
   loading = true;

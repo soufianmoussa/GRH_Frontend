@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { from, Observable } from 'rxjs';
 import { JourFerie, JourFerieCreateUpdateRequest } from '../../../../models/jourFerie.model';
-import { environment } from '../../../../../../environment.prod';
+import { environment } from '../../../../../../environment';
 
 /** Public-holidays response from the Nager.Date open API. */
 export interface NagerPublicHoliday {

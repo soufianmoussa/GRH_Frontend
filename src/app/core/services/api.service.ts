@@ -3,13 +3,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { CongeAbsence } from '../../features/conges/pages/conge/conge.component';
 import { PosteDTO } from '../../features/gestion-organisationnelle/pages/gestion-organisationnelle/postes/postes.component';
+import { environment } from '../../../../environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ApiService {
 
-  private readonly BASE_URL = 'http://localhost:8080/api/accidents-maladie';
+  private readonly BASE_URL = `${environment.apiUrl}/accidents-maladie`;
 
   constructor(private http: HttpClient) { }
 
@@ -18,7 +19,7 @@ export class ApiService {
     const params = new HttpParams().set('page', page.toString()).set('size', size.toString());
     return this.http.post(`${this.BASE_URL}/search`, criteria, { params });
   }
-  private MATERNITE_URL = 'http://localhost:8080/api/conges-maternite';
+  private MATERNITE_URL = `${environment.apiUrl}/conges-maternite`;
 
 
 
@@ -37,7 +38,7 @@ export class ApiService {
 
 
 
-  private readonly CongeAbsence_URL = 'http://localhost:8080/api/conges-absence';
+  private readonly CongeAbsence_URL = `${environment.apiUrl}/conges-absence`;
 
 
 
@@ -67,7 +68,7 @@ export class ApiService {
   }
 
   private readonly API =
-    'http://localhost:8080/api/gestion-organisationnelle/unites-structurelles';
+    `${environment.apiUrl}/gestion-organisationnelle/unites-structurelles`;
 
 
   searchUnitesStructurelles(code: string): Observable<any> {
@@ -90,7 +91,7 @@ export class ApiService {
     return this.http.delete<void>(`${this.API}/${id}`);
   }
 
-  private readonly Poste_URL = 'http://localhost:8080/api/gestion-organisationnelle/postes';
+  private readonly Poste_URL = `${environment.apiUrl}/gestion-organisationnelle/postes`;
 
 
   getAllPoste(): Observable<PosteDTO[]> {
@@ -129,7 +130,7 @@ export class ApiService {
   }
 
 
-  private readonly FONCTION_URL = 'http://localhost:8080/api/gestion-organisationnelle/fonctions';
+  private readonly FONCTION_URL = `${environment.apiUrl}/gestion-organisationnelle/fonctions`;
 
   getAllFonctions() {
     return this.http.get<any[]>(this.FONCTION_URL);

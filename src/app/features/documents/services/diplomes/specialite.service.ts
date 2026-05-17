@@ -3,7 +3,7 @@ import { Observable } from 'rxjs';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Specialite, SpecialiteCreateUpdateRequest } from '../../models/diplomes/specialite.model';
 import { PageResponse } from '../../../../models/PageResponse.model';
-import { environment } from '../../../../../../environment.prod';
+import { environment } from '../../../../../../environment';
 
 @Injectable({
   providedIn: 'root'

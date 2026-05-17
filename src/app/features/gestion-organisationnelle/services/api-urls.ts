@@ -1,5 +1,5 @@
 
-import {environment} from '../../../../../environment.prod';
+import {environment} from '../../../../../environment';
 
 export const API_BASE = `${environment.apiUrl}`;
 

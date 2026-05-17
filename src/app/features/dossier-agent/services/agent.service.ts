@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { AgentModel } from '../../../models/Agent.model';
 import { StoredFileDto } from '../../../models/StoredFile.model';
-import { environment } from '../../../../../environment.prod';
+import { environment } from '../../../../../environment';
 
 @Injectable({
     providedIn: 'root'

@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { PageResponse } from '../../../../models/PageResponse.model';
 import { FamilleProfessionnelle } from '../../../../models/famille-professionnelle.model';
-import { environment } from '../../../../../../environment.prod';
+import { environment } from '../../../../../../environment';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +12,7 @@ import { environment } from '../../../../../../environment.prod';
 export class FamilleProfessionnelleService {
 
 
-  private baseUrl = 'http://localhost:8080/api/familles-professionnelles';
+  private baseUrl = `${environment.apiUrl}/familles-professionnelles`;
 
   constructor(private http: HttpClient) {}
 

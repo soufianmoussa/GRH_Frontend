@@ -19,6 +19,7 @@ import { ConfirmDialog } from 'primeng/confirmdialog';
 import { TagModule } from 'primeng/tag';
 import { TypeConge } from '../../../../models/typeConge.model';
 import { TypeCongeService } from '../../services/type-conge/type-conge.service';
+import { environment } from '../../../../../../environment';
 
 
 
@@ -85,7 +86,7 @@ export class CongeComponent implements OnInit {
 
 
   private agentId: number | null = null;
-  private readonly API_BASE = 'http://localhost:8080/api';
+  private readonly API_BASE = `${environment.apiUrl}`;
 
   currentAgent = {
     nom: 'Jean Dupont',

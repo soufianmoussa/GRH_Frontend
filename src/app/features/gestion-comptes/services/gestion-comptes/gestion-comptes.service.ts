@@ -18,7 +18,7 @@ import {
   providedIn: 'root'
 })
 export class GestionComptesService {
-  private readonly API_URL = `${environment.apiUrl}/api/admin/accounts`;
+  private readonly API_URL = `${environment.apiUrl}/admin/accounts`;
 
   constructor(private http: HttpClient) {}
 
@@ -57,7 +57,7 @@ export class GestionComptesService {
   }
 
   searchAuditLogs(params: AuthAuditSearchParams): Observable<PageResponse<AuthAuditLogDTO>> {
-    return this.http.get<PageResponse<AuthAuditLogDTO>>(`${environment.apiUrl}/api/admin/auth-audit`, {
+    return this.http.get<PageResponse<AuthAuditLogDTO>>(`${environment.apiUrl}/admin/auth-audit`, {
       params: this.toHttpParams(params)
     });
   }

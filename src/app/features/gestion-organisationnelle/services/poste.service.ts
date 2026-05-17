@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { PageResponse } from '../../../models/PageResponse.model';
 import { Poste } from '../../../models/gestionOrganisationelle/poste.model';
-import { environment } from '../../../../../environment.prod';
+import { environment } from '../../../../../environment';
 
 @Injectable({
   providedIn: 'root'

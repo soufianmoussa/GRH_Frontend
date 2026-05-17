@@ -3,7 +3,7 @@ import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {PageResponse} from '../../../../models/PageResponse.model';
 import {Emploi} from '../../../../models/fammile-et-emploi.model';
-import {environment} from '../../../../../../environment.prod';
+import {environment} from '../../../../../../environment';
 
 
 @Injectable({
@@ -14,7 +14,7 @@ export class EmploiService {
 
 
 
-  private baseUrl = 'http://localhost:8080/api/emplois';
+  private baseUrl = `${environment.apiUrl}/emplois`;
 
   constructor(private http: HttpClient) {}
 

@@ -3,7 +3,7 @@ import {HttpClient, HttpParams} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {FamilleEmploi} from '../../../../models/fammile-et-emploi.model';
 import {PageResponse} from '../../../../models/PageResponse.model';
-import {environment} from '../../../../../../environment.prod';
+import {environment} from '../../../../../../environment';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +12,7 @@ export class FamilleEmploiService {
 
 
 
-  private baseUrl = 'http://localhost:8080/api/familles-emploi';
+  private baseUrl = `${environment.apiUrl}/familles-emploi`;
 
   constructor(private http: HttpClient) {}
 

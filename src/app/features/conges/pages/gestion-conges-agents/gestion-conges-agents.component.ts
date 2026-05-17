@@ -16,7 +16,7 @@ import { TagModule } from 'primeng/tag';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { MessageService, ConfirmationService, PrimeTemplate } from 'primeng/api';
 
-import { environment } from '../../../../../../environment.prod';
+import { environment } from '../../../../../../environment';
 import { SoldeCongeService } from '../../services/solde-conge/solde-conge.service';
 import { UniteStructurelleService } from '../../../gestion-organisationnelle/services/unite-structurelle.service';
 import { UniteStructurelle } from '../../../../models/gestionOrganisationelle/unite-structurelle.model';

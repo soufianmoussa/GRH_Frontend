@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ActiviteDTO, ActiviteCreateUpdateRequest, PosteTravailDTO } from '../../../../models/postesActivites.model';
-import { environment } from '../../../../../../environment.prod';
+import { environment } from '../../../../../../environment';
 import { PageResponse } from '../../../../models/PageResponse.model';
 
 @Injectable({

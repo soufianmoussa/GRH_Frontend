@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import {DistinctionHonorifique} from '../../../../models/DistinctionHonorifique.model';
 import {Observable} from 'rxjs';
 import {HttpClient, HttpParams} from '@angular/common/http';
-import {environment} from '../../../../../../environment.prod';
+import {environment} from '../../../../../../environment';
 
 @Injectable({
   providedIn: 'root'

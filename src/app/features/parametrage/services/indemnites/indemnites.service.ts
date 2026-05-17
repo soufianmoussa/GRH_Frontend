@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import {HttpClient} from '@angular/common/http';
 import {Observable} from 'rxjs';
 import {IndemniteComplementaire, IndemnitePermanente} from '../../../../models/indemnitesModel.model';
-import {environment} from '../../../../../../environment.prod';
+import {environment} from '../../../../../../environment';
 
 @Injectable({
   providedIn: 'root'
