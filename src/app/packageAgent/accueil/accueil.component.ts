@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
 import {TestService} from '../../services/test.service';
-import {AuthService} from '../../auth/auth.service';
+import {AuthService} from '../../core/auth/auth.service';
 
 @Component({
   selector: 'app-accueil',

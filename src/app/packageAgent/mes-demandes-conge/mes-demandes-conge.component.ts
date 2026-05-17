@@ -17,7 +17,7 @@ import { ConfirmationService } from 'primeng/api';
 import { InputText } from 'primeng/inputtext';
 import { InputTextarea } from 'primeng/inputtextarea';
 import { TooltipModule } from 'primeng/tooltip';
-import { AuthService } from '../../auth/auth.service';
+import { AuthService } from '../../core/auth/auth.service';
 
 export interface StoredFileDto {
   id: number;

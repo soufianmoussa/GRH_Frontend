@@ -4,7 +4,7 @@ import { AgentService } from '../../services/AdminService/agent.service';
 import { DossiersAgentsService } from '../../services/AdminService/DossiersAgents/dossiers-agents.service';
 import { AgentModel } from '../../models/Agent.model';
 import { AgentFullDto } from '../../models/agent-full.model';
-import { AuthService } from '../../auth/auth.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageModule } from 'primeng/message';
 import { TagModule } from 'primeng/tag';

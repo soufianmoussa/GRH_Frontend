@@ -18,7 +18,7 @@ import { MouvementService } from '../../../services/AdminService/mouvement/mouve
 import { AgentService } from '../../../services/AdminService/agent.service';
 import { AgentModel } from '../../../models/Agent.model';
 import { TypeActe } from '../../../enums/TypeActe';
-import { AuthService } from '../../../auth/auth.service';
+import { AuthService } from '../../../core/auth/auth.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({

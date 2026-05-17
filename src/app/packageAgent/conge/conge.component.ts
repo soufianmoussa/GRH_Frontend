@@ -10,7 +10,7 @@ import { InputTextarea } from "primeng/inputtextarea";
 import { Stepper, StepList, StepPanels, StepPanel, Step, StepperSeparator } from 'primeng/stepper';
 import { HttpClient } from '@angular/common/http';
 import { HolidayService } from '../../services/holiday.service';
-import { AuthService } from '../../auth/auth.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { Toast } from 'primeng/toast';
 import { ToastHelper } from '../../shared/toast-helper';

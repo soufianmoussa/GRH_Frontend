@@ -6,7 +6,7 @@ import {providePrimeNG} from 'primeng/config';
 import Aura from '@primeng/themes/aura';
 import {provideAnimationsAsync} from '@angular/platform-browser/animations/async';
 import {provideHttpClient, withInterceptors, HttpClient} from '@angular/common/http';
-import {authInterceptor} from './auth/auth.interceptor';
+import {authInterceptor} from './core/interceptors/auth.interceptor';
 import { provideTranslateService } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 

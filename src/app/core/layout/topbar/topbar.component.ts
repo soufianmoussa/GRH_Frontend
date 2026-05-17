@@ -1,8 +1,8 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { AuthService } from '../auth/auth.service';
-import { UserInfo } from '../auth/auth.models';
+import { AuthService } from '../../auth/auth.service';
+import { UserInfo } from '../../auth/auth.models';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 interface RoleOption {

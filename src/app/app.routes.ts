@@ -77,8 +77,8 @@ import { JoursFeriesComponent } from './packageAdmin/jours-feries/jours-feries.c
 import { TypesCongeComponent } from './packageAdmin/types-conge/types-conge.component';
 import { ApprobationModificationsComponent } from './packageAdmin/gestion-personnelle/approbation-modifications/approbation-modifications.component';
 
-import { authGuard } from './auth/auth.guard';
-import { roleGuard } from './auth/role.guard';
+import { authGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
 
 export const routes: Routes = [
   // --- Public routes ---

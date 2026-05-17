@@ -20,7 +20,7 @@ import { ToastHelper } from '../../../shared/toast-helper';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'primeng/tabs';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { AccountDTO, AccountSearchParams, AuthAuditLogDTO } from '../../../auth/auth.models';
+import { AccountDTO, AccountSearchParams, AuthAuditLogDTO } from '../../../core/auth/auth.models';
 import { Menu } from 'primeng/menu';
 import { Drawer } from 'primeng/drawer';
 

@@ -12,7 +12,7 @@ import {
   AccountSearchParams,
   AuthAuditLogDTO,
   AuthAuditSearchParams
-} from '../../../auth/auth.models';
+} from '../../../core/auth/auth.models';
 
 @Injectable({
   providedIn: 'root'

@@ -1,6 +1,6 @@
 import { HttpInterceptorFn, HttpRequest, HttpHandlerFn, HttpEvent, HttpErrorResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { AuthService } from './auth.service';
+import { AuthService } from '../auth/auth.service';
 import { catchError, throwError, switchMap, BehaviorSubject, filter, take, Observable } from 'rxjs';
 
 let isRefreshing = false;

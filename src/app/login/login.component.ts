@@ -6,7 +6,7 @@ import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { NgIf } from '@angular/common';
-import { AuthService } from '../auth/auth.service';
+import { AuthService } from '../core/auth/auth.service';
 import { ToastHelper } from '../shared/toast-helper';
 
 @Component({

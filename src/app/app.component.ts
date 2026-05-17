@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import {Router, RouterOutlet} from '@angular/router';
-import {TopbarComponent} from './topbar/topbar.component';
-import {SidebarComponent} from './sidebar/sidebar.component';
+import {TopbarComponent} from './core/layout/topbar/topbar.component';
+import {SidebarComponent} from './core/layout/sidebar/sidebar.component';
 import {NgIf} from '@angular/common';
-import {AuthService} from './auth/auth.service';
+import {AuthService} from './core/auth/auth.service';
 
 @Component({
   selector: 'app-root',

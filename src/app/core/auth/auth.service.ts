@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
 import { AuthResponse, ChangePasswordRequest, LoginRequest, UserInfo } from './auth.models';
-import { environment } from '../../../environment';
+import { environment } from '../../../../environment';
 
 @Injectable({
   providedIn: 'root'
