@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { AdminOnboardingAssistedCompleteComponent } from 'app/features/onboarding/pages/admin-onboarding-assisted-complete/admin-onboarding-assisted-complete.component';
 import { AdminOnboardingInitializeComponent } from 'app/features/onboarding/pages/admin-onboarding-initialize/admin-onboarding-initialize.component';
 import { AdminOnboardingDetailComponent } from 'app/features/onboarding/pages/admin-onboarding-detail/admin-onboarding-detail.component';
 import { AdminOnboardingListComponent } from 'app/features/onboarding/pages/admin-onboarding-list/admin-onboarding-list.component';
@@ -12,6 +13,7 @@ export const ONBOARDING_ROUTES: Routes = [
   { path: 'onboarding/activate', component: OnboardingActivationComponent },
   { path: 'admin/onboarding', component: AdminOnboardingListComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
   { path: 'admin/onboarding/initialiser', component: AdminOnboardingInitializeComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
+  { path: 'admin/onboarding/:id/complete', component: AdminOnboardingAssistedCompleteComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
   { path: 'admin/onboarding/:id', component: AdminOnboardingDetailComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
   { path: 'agent/onboarding', component: AgentOnboardingDashboardComponent, canActivate: [roleGuard], data: { roles: ['AGENT'] } },
   { path: 'agent/onboarding/complete', component: AgentOnboardingCompleteComponent, canActivate: [roleGuard], data: { roles: ['AGENT'] } },

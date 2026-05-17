@@ -1,0 +1,24 @@
+<p-toast position="top-center"></p-toast>
+
+<div class="content admin-assisted-complete">
+  <div class="page-header">
+    <div>
+      <a [routerLink]="['/admin/onboarding', onboardingId]" class="back-link"><i class="pi pi-arrow-left"></i> Retour au detail</a>
+      <h1 class="titleh1">Completer profil agent</h1>
+      <p>Completion assistee RH/Admin sur le meme workflow onboarding.</p>
+    </div>
+  </div>
+
+  <div *ngIf="loading" class="card loading-card">Preparation du mode assiste...</div>
+
+  <div class="card" *ngIf="!loading && onboarding">
+    <app-onboarding-stepper
+      [onboarding]="onboarding"
+      actor="admin"
+      [saving]="saving"
+      (profileSave)="saveProfile($event)"
+      (documentUpload)="uploadDocument($event)"
+      (dossierSubmit)="submitDossier()">
+    </app-onboarding-stepper>
+  </div>
+</div>
