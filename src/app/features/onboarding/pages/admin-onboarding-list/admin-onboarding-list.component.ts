@@ -1,8 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
-import { forkJoin, of } from 'rxjs';
-import { catchError, finalize } from 'rxjs/operators';
+import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -15,7 +14,6 @@ import {
   AGENT_STATUS_LABELS,
   COMPLETION_MODE_LABELS,
   INVITATION_STATUS_LABELS,
-  InvitationStatusDto,
   OnboardingDetail,
   ONBOARDING_STATUS_LABELS
 } from '../../../../models/onboarding.model';
@@ -73,7 +71,6 @@ export class AdminOnboardingListComponent implements OnInit {
         next: (response) => {
           this.onboardings = response.content ?? [];
           this.totalRecords = response.totalElements ?? this.onboardings.length;
-          this.loadInvitationStatuses();
         },
         error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Erreur lors du chargement des onboardings.')
       });
@@ -210,25 +207,5 @@ export class AdminOnboardingListComponent implements OnInit {
 
   invitationStatusLabel(status?: string): string {
     return this.invitationLabels[status as keyof typeof this.invitationLabels] || status || 'Non creee';
-  }
-
-  private loadInvitationStatuses(): void {
-    if (!this.onboardings.length) {
-      return;
-    }
-
-    const requests = this.onboardings.map(onboarding =>
-      this.onboardingService.getInvitationStatus(onboarding.id).pipe(
-        catchError(() => of(undefined as InvitationStatusDto | undefined))
-      )
-    );
-
-    forkJoin(requests).subscribe(statuses => {
-      statuses.forEach((status, index) => {
-        if (status) {
-          this.onboardings[index].invitation = status;
-        }
-      });
-    });
   }
 }

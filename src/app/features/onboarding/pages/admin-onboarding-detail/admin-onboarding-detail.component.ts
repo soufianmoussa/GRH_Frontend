@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { finalize, forkJoin } from 'rxjs';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MessageService } from 'primeng/api';
@@ -63,7 +63,7 @@ export class AdminOnboardingDetailComponent implements OnInit {
     this.loading = true;
     forkJoin({
       detail: this.onboardingService.getById(this.onboardingId),
-      invitation: this.onboardingService.getInvitationStatus(this.onboardingId)
+      invitation: this.onboardingService.getInvitationStatus(this.onboardingId).pipe(catchError(() => of(undefined)))
     })
       .pipe(finalize(() => this.loading = false))
       .subscribe({
