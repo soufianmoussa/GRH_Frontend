@@ -11,7 +11,7 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ToastHelper } from '../../../shared/toast-helper';
+import { ToastHelper } from '../../../shared/utils/toast-helper';
 import { Etablissement, EtablissementCreateUpdateRequest } from '../../../models/diplomes/etablissement.model';
 import { EtablissementService } from '../../../services/AdminService/Diplomes/etablissement.service';
 import { TypeEtablissementService } from '../../../services/AdminService/Diplomes/type-etablissement.service';

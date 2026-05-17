@@ -14,7 +14,7 @@ import { Toast } from 'primeng/toast';
 import { ConfirmationService, MessageService, PrimeTemplate } from 'primeng/api';
 import { FloatLabelModule } from 'primeng/floatlabel';
 
-import { ToastHelper } from '../../../shared/toast-helper';
+import { ToastHelper } from '../../../shared/utils/toast-helper';
 import { FonctionService } from '../../../services/AdminService/GestionOrganisationelle/fonction.service';
 import { Fonction } from '../../../models/gestionOrganisationelle/fonction.model';
 import { PageResponse } from '../../../models/PageResponse.model';

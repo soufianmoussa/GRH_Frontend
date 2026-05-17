@@ -13,7 +13,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
-import { ToastHelper } from '../../shared/toast-helper';
+import { ToastHelper } from '../../shared/utils/toast-helper';
 import { AgentService } from '../../services/AdminService/agent.service';
 import { AgentModel } from '../../models/Agent.model';
 

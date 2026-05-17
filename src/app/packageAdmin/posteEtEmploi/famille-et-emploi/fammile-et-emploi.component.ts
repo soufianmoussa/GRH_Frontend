@@ -14,7 +14,7 @@ import { ConfirmationService, MessageService, PrimeTemplate } from 'primeng/api'
 import { Textarea } from 'primeng/textarea';
 import { FloatLabelModule } from 'primeng/floatlabel';
 
-import { ToastHelper } from '../../../shared/toast-helper';
+import { ToastHelper } from '../../../shared/utils/toast-helper';
 import { Emploi, FamilleEmploi } from '../../../models/fammile-et-emploi.model';
 import { EmploiService } from '../../../services/AdminService/FamilleEmploi/emploi.service';
 import { FamilleEmploiService } from '../../../services/AdminService/FamilleEmploi/famille-emploi.service';

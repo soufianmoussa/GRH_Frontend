@@ -12,7 +12,7 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ToastHelper } from '../../../shared/toast-helper';
+import { ToastHelper } from '../../../shared/utils/toast-helper';
 
 import { Specialite, SpecialiteCreateUpdateRequest } from '../../../models/diplomes/specialite.model';
 import { SpecialiteService } from '../../../services/AdminService/Diplomes/specialite.service';

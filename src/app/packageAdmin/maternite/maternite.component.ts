@@ -18,7 +18,7 @@ import { Toast } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { TooltipModule } from 'primeng/tooltip';
-import { ToastHelper } from '../../shared/toast-helper';
+import { ToastHelper } from '../../shared/utils/toast-helper';
 
 type CongeMaterniteForm = {
   id?: number;

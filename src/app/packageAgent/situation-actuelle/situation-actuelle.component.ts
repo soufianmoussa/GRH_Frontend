@@ -1,6 +1,6 @@
 import { Component, OnInit, ChangeDetectorRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AgentcardComponent } from '../agentcard/agentcard.component';
+import { AgentcardComponent } from '../../shared/components/agent-card/agent-card.component';
 import { Table, TableModule } from 'primeng/table';
 import { Button, ButtonDirective } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
@@ -14,7 +14,7 @@ import { DatePicker } from 'primeng/datepicker';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ToastHelper } from '../../shared/toast-helper';
+import { ToastHelper } from '../../shared/utils/toast-helper';
 import { TextareaModule } from 'primeng/textarea';
 
 import { SituationActuelleService } from '../../services/AdminService/SituationActuelle/situation-actuelle.service';

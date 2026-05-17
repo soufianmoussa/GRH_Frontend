@@ -9,11 +9,11 @@ import { InputText } from 'primeng/inputtext';
 import { Table, TableModule } from 'primeng/table';
 import { Toast } from 'primeng/toast';
 import { Tooltip } from 'primeng/tooltip';
-import { AgentcardComponent } from '../agentcard/agentcard.component';
+import { AgentcardComponent } from '../../shared/components/agent-card/agent-card.component';
 import { Avancement } from '../../models/avancements.model';
 import { PageResponse } from '../../models/PageResponse.model';
 import { AvancementsService } from '../../services/AdminService/avancements/avancements.service';
-import { ToastHelper } from '../../shared/toast-helper';
+import { ToastHelper } from '../../shared/utils/toast-helper';
 
 type SituationFonctionnelle = {
   id: number;

@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule, NgIf } from '@angular/common';
-import { AgentcardComponent } from '../../../packageAgent/agentcard/agentcard.component';
+import { AgentcardComponent } from '../../../shared/components/agent-card/agent-card.component';
 import { Button, ButtonDirective } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';

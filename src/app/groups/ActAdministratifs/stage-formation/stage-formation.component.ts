@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { CommonModule, NgIf } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
-import { AgentcardComponent } from '../../../packageAgent/agentcard/agentcard.component';
+import { AgentcardComponent } from '../../../shared/components/agent-card/agent-card.component';
 
 import { TableModule, Table } from 'primeng/table';
 import { Dialog } from 'primeng/dialog';

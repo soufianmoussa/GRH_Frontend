@@ -12,7 +12,7 @@ import { Select } from 'primeng/select';
 import { Dialog } from 'primeng/dialog';
 import { DatePicker } from 'primeng/datepicker';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { AgentcardComponent } from '../agentcard/agentcard.component';
+import { AgentcardComponent } from '../../shared/components/agent-card/agent-card.component';
 import {
   AgentFullDto, AdresseDto, CoordonneesProfessionnellesDto,
   CoordonneesBancairesDto, EnfantDto, TypeAdresse

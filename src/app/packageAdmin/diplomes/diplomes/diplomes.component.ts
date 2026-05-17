@@ -26,7 +26,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { FloatLabelModule } from 'primeng/floatlabel';
-import { ToastHelper } from '../../../shared/toast-helper';
+import { ToastHelper } from '../../../shared/utils/toast-helper';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'primeng/tabs';
 import { TooltipModule } from 'primeng/tooltip';
 

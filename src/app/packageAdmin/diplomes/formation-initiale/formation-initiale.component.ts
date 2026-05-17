@@ -10,7 +10,7 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ToastHelper } from '../../../shared/toast-helper';
+import { ToastHelper } from '../../../shared/utils/toast-helper';
 import { FormationInitiale, FormationInitialeCreateUpdateRequest } from '../../../models/diplomes/formation-initiale.model';
 import { FormationInitialeService } from '../../../services/AdminService/Diplomes/formation-initiale.service';
 import { PageResponse } from '../../../models/PageResponse.model';

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import {AgentcardComponent} from '../agentcard/agentcard.component';
+import { AgentcardComponent } from '../../shared/components/agent-card/agent-card.component';
 import {Dialog} from 'primeng/dialog';
 import {NgIf} from '@angular/common';
 import {FormsModule, ReactiveFormsModule} from '@angular/forms';

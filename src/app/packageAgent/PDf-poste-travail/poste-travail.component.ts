@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DropdownModule } from 'primeng/dropdown';
 import { ButtonModule } from 'primeng/button';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'primeng/tabs';
-import { AgentcardComponent } from '../agentcard/agentcard.component';
+import { AgentcardComponent } from '../../shared/components/agent-card/agent-card.component';
 
 @Component({
   selector: 'app-PDf-poste-travail',

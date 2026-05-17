@@ -27,7 +27,7 @@ import { AgentService } from '../../../../services/AdminService/agent.service';
 import { GestionUtilisateursService } from '../../../../services/AdminService/gestionUtilisateurs/gestion-utilisateurs.service';
 import { DiplomesService } from '../../../../services/AdminService/Diplomes/diplomes.service';
 import { FormationService } from '../../../../services/AdminService/Formation/formation.service';
-import { ToastHelper } from '../../../../shared/toast-helper';
+import { ToastHelper } from '../../../../shared/utils/toast-helper';
 import { AdresseDto, AgentCreateRequest, AgentFullDto, AgentTravailDto, EnfantDto, TypeAdresse } from '../../../../models/agent-full.model';
 import { Diplome } from '../../../../models/diplomes/diplome.model';
 import { Formation } from '../../../../models/formation.model';

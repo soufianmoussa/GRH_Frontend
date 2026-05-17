@@ -16,7 +16,7 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { TooltipModule } from 'primeng/tooltip';
 import { Matricule } from '../../../models/initialisation-matricules.model';
 import { InitialisationMatriculesService } from '../../../services/AdminService/InitialisationMatricules/initialisation-matricules.service';
-import { ToastHelper } from '../../../shared/toast-helper';
+import { ToastHelper } from '../../../shared/utils/toast-helper';
 import { Router } from '@angular/router';
 import { TagModule } from 'primeng/tag';
 import { TranslateModule } from '@ngx-translate/core';

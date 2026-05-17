@@ -9,12 +9,12 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { NgIf } from '@angular/common';
 import { PrimeTemplate, ConfirmationService, MessageService } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { AgentcardComponent } from '../agentcard/agentcard.component';
+import { AgentcardComponent } from '../../shared/components/agent-card/agent-card.component';
 import { TooltipModule } from 'primeng/tooltip';
 import { DatePicker } from 'primeng/datepicker';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { Toast } from 'primeng/toast';
-import { ToastHelper } from '../../shared/toast-helper';
+import { ToastHelper } from '../../shared/utils/toast-helper';
 import { Formation } from '../../models/formation.model';
 import { FormationService } from '../../services/AdminService/Formation/formation.service';
 

@@ -14,7 +14,7 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { EvaluationCompetenceService, CompetenceNotation } from '../../services/AdminService/evaluation-competence/evaluation-competence.service';
 import { AgentModel } from '../../models/Agent.model';
 import { Competence } from '../../models/ReferentielCompetences.model';
-import { ToastHelper } from '../../shared/toast-helper';
+import { ToastHelper } from '../../shared/utils/toast-helper';
 
 @Component({
   selector: 'app-evaluation-competence',

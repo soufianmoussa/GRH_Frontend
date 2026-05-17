@@ -28,7 +28,7 @@ import {
   SoldeConge,
   TypeOperationSoldeConge
 } from '../../models/soldeConge.model';
-import { ToastHelper } from '../../shared/toast-helper';
+import { ToastHelper } from '../../shared/utils/toast-helper';
 import { TypeConge } from '../../models/typeConge.model';
 import { TypeCongeService } from '../../services/AdminService/TypeConge/type-conge.service';
 

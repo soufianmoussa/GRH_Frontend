@@ -11,7 +11,7 @@ import { MessageService } from 'primeng/api';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
-import { ToastHelper } from '../../../shared/toast-helper';
+import { ToastHelper } from '../../../shared/utils/toast-helper';
 import { TypeUniteStructurelle } from '../../../enums/type-unite-structurelle.enum';
 import { OrganigrammeService } from '../../../services/AdminService/GestionOrganisationelle/organigramme.service';
 import {

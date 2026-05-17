@@ -1,10 +1,10 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
 import { NgIf, DatePipe } from '@angular/common';
-import { AgentService } from '../../services/AdminService/agent.service';
-import { DossiersAgentsService } from '../../services/AdminService/DossiersAgents/dossiers-agents.service';
-import { AgentModel } from '../../models/Agent.model';
-import { AgentFullDto } from '../../models/agent-full.model';
-import { AuthService } from '../../core/auth/auth.service';
+import { AgentService } from '../../../services/AdminService/agent.service';
+import { DossiersAgentsService } from '../../../services/AdminService/DossiersAgents/dossiers-agents.service';
+import { AgentModel } from '../../../models/Agent.model';
+import { AgentFullDto } from '../../../models/agent-full.model';
+import { AuthService } from '../../../core/auth/auth.service';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { MessageModule } from 'primeng/message';
 import { TagModule } from 'primeng/tag';
@@ -13,8 +13,8 @@ import { TagModule } from 'primeng/tag';
   selector: 'app-agentcard',
   standalone: true,
   imports: [NgIf, DatePipe, ProgressSpinnerModule, MessageModule, TagModule],
-  templateUrl: './agentcard.component.html',
-  styleUrl: './agentcard.component.scss'
+  templateUrl: './agent-card.component.html',
+  styleUrl: './agent-card.component.scss'
 })
 export class AgentcardComponent implements OnInit {
 

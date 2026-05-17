@@ -10,7 +10,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { GestionUtilisateursService } from '../../../services/AdminService/gestionUtilisateurs/gestion-utilisateurs.service';
 import { MessageService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
-import { ToastHelper } from '../../../shared/toast-helper';
+import { ToastHelper } from '../../../shared/utils/toast-helper';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';

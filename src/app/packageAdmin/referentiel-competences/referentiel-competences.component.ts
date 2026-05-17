@@ -17,7 +17,7 @@ import {CompetenceService} from '../../services/AdminService/ReferentielCompeten
 import {GroupeCompetenceService} from '../../services/AdminService/ReferentielCompetences/groupe-competence.service';
 import {Competence, GroupeCompetence} from '../../models/ReferentielCompetences.model';
 import {PageResponse} from '../../models/PageResponse.model';
-import {ToastHelper} from '../../shared/toast-helper';
+import { ToastHelper } from '../../shared/utils/toast-helper';
 
 @Component({
   selector: 'app-referentiel-competences',

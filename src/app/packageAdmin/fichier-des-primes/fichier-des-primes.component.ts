@@ -14,7 +14,7 @@ import {DatePicker} from 'primeng/datepicker';
 import {Toast} from 'primeng/toast';
 import {ConfirmDialogModule} from 'primeng/confirmdialog';
 import {FloatLabelModule} from 'primeng/floatlabel';
-import {ToastHelper} from '../../shared/toast-helper';
+import { ToastHelper } from '../../shared/utils/toast-helper';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { DropdownModule } from 'primeng/dropdown';
 import { AgentService } from '../../services/AdminService/agent.service';

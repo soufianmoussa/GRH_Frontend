@@ -17,7 +17,7 @@ import { MessageService, ConfirmationService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 
-import { ToastHelper } from '../../../shared/toast-helper';
+import { ToastHelper } from '../../../shared/utils/toast-helper';
 import { PostesactivitesService } from '../../../services/AdminService/postesActivites/postesactivites.service';
 import { ActiviteDTO, ActiviteCreateUpdateRequest, PosteTravailDTO } from '../../../models/postesActivites.model';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';

@@ -10,7 +10,7 @@ import { DialogModule } from 'primeng/dialog';
 import { DropdownModule } from 'primeng/dropdown';
 import { Calendar } from 'primeng/calendar';
 import { Toast } from 'primeng/toast';
-import { ToastHelper } from '../../shared/toast-helper';
+import { ToastHelper } from '../../shared/utils/toast-helper';
 import { DemandeCongeDto, DemandeCongeRequest } from '../conge/conge.component';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService } from 'primeng/api';

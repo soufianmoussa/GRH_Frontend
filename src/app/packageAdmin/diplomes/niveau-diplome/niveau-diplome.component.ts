@@ -11,7 +11,7 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { Toast } from 'primeng/toast';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ToastHelper } from '../../../shared/toast-helper';
+import { ToastHelper } from '../../../shared/utils/toast-helper';
 import { NiveauDiplome, NiveauDiplomeCreateUpdateRequest } from '../../../models/diplomes/niveau-diplome.model';
 import { NiveauDiplomeService } from '../../../services/AdminService/Diplomes/niveau-diplome.service';
 import { PageResponse } from '../../../models/PageResponse.model';

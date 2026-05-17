@@ -13,7 +13,7 @@ import { HolidayService } from '../../services/holiday.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { Toast } from 'primeng/toast';
-import { ToastHelper } from '../../shared/toast-helper';
+import { ToastHelper } from '../../shared/utils/toast-helper';
 import { ProgressSpinner } from 'primeng/progressspinner';
 import { ConfirmDialog } from 'primeng/confirmdialog';
 import { TagModule } from 'primeng/tag';

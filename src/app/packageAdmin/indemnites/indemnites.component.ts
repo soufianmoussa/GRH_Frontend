@@ -16,7 +16,7 @@ import {Select} from 'primeng/select';
 import {IndemnitesService} from '../../services/AdminService/indemnites/indemnites.service';
 import {AgentService} from '../../services/AdminService/agent.service';
 import {IndemnitePermanente} from '../../models/indemnitesModel.model';
-import {ToastHelper} from '../../shared/toast-helper';
+import { ToastHelper } from '../../shared/utils/toast-helper';
 
 @Component({
   selector: 'app-indemnites',

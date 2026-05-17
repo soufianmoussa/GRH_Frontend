@@ -19,7 +19,7 @@ import { Competence, GroupeCompetence } from '../../models/ReferentielCompetence
 import { GroupeCompetenceService } from '../../services/AdminService/ReferentielCompetences/groupe-competence.service';
 import { CompetenceService } from '../../services/AdminService/ReferentielCompetences/competence.service';
 import { PageResponse } from '../../models/PageResponse.model';
-import { ToastHelper } from '../../shared/toast-helper';
+import { ToastHelper } from '../../shared/utils/toast-helper';
 
 @Component({
   selector: 'app-referentiel-des-groupes-de-competences',

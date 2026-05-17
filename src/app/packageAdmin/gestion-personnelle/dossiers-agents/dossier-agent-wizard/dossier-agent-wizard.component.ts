@@ -15,7 +15,7 @@ import { AgentWizardState } from '../agent-wizard.state';
 import { buildAgentPayload } from '../agent-wizard-payload';
 import { validateStep, validateAll } from '../agent-wizard-validation';
 import { DossiersAgentsService } from '../../../../services/AdminService/DossiersAgents/dossiers-agents.service';
-import { ToastHelper } from '../../../../shared/toast-helper';
+import { ToastHelper } from '../../../../shared/utils/toast-helper';
 
 import { Step1MatriculeComponent } from '../steps/step1-matricule.component';
 import { Step2IdentityComponent } from '../steps/step2-identity.component';
