@@ -12,12 +12,12 @@ import { roleGuard } from 'app/core/guards/role.guard';
 
 export const ONBOARDING_ROUTES: Routes = [
   { path: 'onboarding/activate', component: OnboardingActivationComponent },
-  { path: 'admin/onboarding', component: AdminOnboardingListComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
   { path: 'admin/onboarding/initialiser', component: AdminOnboardingInitializeComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
   { path: 'admin/onboarding/documents', component: AdminOnboardingDocumentsComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
   { path: 'admin/onboarding/:id/complete', component: AdminOnboardingAssistedCompleteComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
   { path: 'admin/onboarding/:id', component: AdminOnboardingDetailComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
-  { path: 'agent/onboarding', component: AgentOnboardingDashboardComponent, canActivate: [roleGuard], data: { roles: ['AGENT'] } },
+  { path: 'admin/onboarding', component: AdminOnboardingListComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
   { path: 'agent/onboarding/complete', component: AgentOnboardingCompleteComponent, canActivate: [roleGuard], data: { roles: ['AGENT'] } },
+  { path: 'agent/onboarding', component: AgentOnboardingDashboardComponent, canActivate: [roleGuard], data: { roles: ['AGENT'] } },
   { path: 'InitialisationMatricules', component: InitialisationMatriculesComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
 ];
