@@ -4,7 +4,8 @@ import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ConfirmationService, MessageService } from 'primeng/api';
+import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
+import { MenuModule } from 'primeng/menu';
 import { ProgressBarModule } from 'primeng/progressbar';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
@@ -28,6 +29,7 @@ import { ToastHelper } from '../../../../shared/utils/toast-helper';
     RouterLink,
     ButtonModule,
     ConfirmDialogModule,
+    MenuModule,
     ProgressBarModule,
     TableModule,
     TagModule,
@@ -126,6 +128,29 @@ export class AdminOnboardingListComponent implements OnInit {
       },
       error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Rejet impossible.')
     });
+  }
+
+  moreActions(onboarding: OnboardingDetail): MenuItem[] {
+    return [
+      {
+        label: 'Activer le mode assiste',
+        icon: 'pi pi-user-edit',
+        disabled: onboarding.completionMode === 'ASSISTED',
+        command: () => this.startAssisted(onboarding)
+      },
+      {
+        label: 'Valider le dossier',
+        icon: 'pi pi-check',
+        disabled: onboarding.status !== 'PENDING_VALIDATION',
+        command: () => this.validateDossier(onboarding)
+      },
+      {
+        label: 'Rejeter le dossier',
+        icon: 'pi pi-times',
+        disabled: onboarding.status !== 'PENDING_VALIDATION',
+        command: () => this.rejectDossier(onboarding)
+      }
+    ];
   }
 
   progress(onboarding: OnboardingDetail): number {

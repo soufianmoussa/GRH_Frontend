@@ -2,86 +2,73 @@
 <p-confirmDialog [style]="{ width: '450px' }"></p-confirmDialog>
 
 <div class="content admin-onboarding-list">
-  <div class="page-header">
-    <div>
-      <h1 class="titleh1">Suivi onboarding</h1>
-      <p>Suivez les invitations, la progression et la validation des dossiers agents.</p>
+  <div class="page-shell">
+    <div class="page-header">
+      <div>
+        <h1 class="titleh1">Suivi onboarding</h1>
+        <p>Suivez les invitations, la progression et la validation des dossiers agents.</p>
+      </div>
+      <a pButton routerLink="/admin/onboarding/initialiser" label="Initialiser un agent" icon="pi pi-plus"></a>
     </div>
-    <a pButton routerLink="/admin/onboarding/initialiser" label="Initialiser un agent" icon="pi pi-plus"></a>
-  </div>
 
-  <div class="card">
-    <p-table
-      [value]="onboardings"
-      [lazy]="true"
-      [loading]="loading"
-      [paginator]="true"
-      [rows]="rows"
-      [totalRecords]="totalRecords"
-      [rowsPerPageOptions]="[10, 20, 50]"
-      [responsiveLayout]="'scroll'"
-      (onLazyLoad)="load($event)">
+    <div class="card table-card">
+      <p-table
+        [value]="onboardings"
+        [lazy]="true"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="rows"
+        [totalRecords]="totalRecords"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        [responsiveLayout]="'scroll'"
+        styleClass="compact-onboarding-table"
+        (onLazyLoad)="load($event)">
 
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Agent</th>
-          <th>Matricule</th>
-          <th>Email</th>
-          <th>Grade</th>
-          <th>Echelle</th>
-          <th>Echelon</th>
-          <th>Mode</th>
-          <th>Status</th>
-          <th>Progression</th>
-          <th>Invitation</th>
-          <th>Date creation</th>
-          <th>Actions</th>
-        </tr>
-      </ng-template>
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="agent-col">Agent</th>
+            <th class="matricule-col">Matricule</th>
+            <th class="grade-col">Grade</th>
+            <th class="status-col">Statut</th>
+            <th class="progress-col">Progression</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </ng-template>
 
-      <ng-template pTemplate="body" let-onboarding>
-        <tr>
-          <td>
-            <strong>{{ agentName(onboarding) }}</strong>
-            <small>{{ agentStatusLabel(onboarding.agent?.status) }}</small>
-          </td>
-          <td>{{ matricule(onboarding) }}</td>
-          <td>{{ email(onboarding) }}</td>
-          <td>{{ grade(onboarding) }}</td>
-          <td>{{ echelle(onboarding) }}</td>
-          <td>{{ echelon(onboarding) }}</td>
-          <td>
-            <p-tag [value]="modeLabel(onboarding.completionMode)" [severity]="onboarding.completionMode === 'ASSISTED' ? 'warn' : 'info'"></p-tag>
-          </td>
-          <td>
-            <p-tag [value]="onboardingStatusLabel(onboarding.status)" [severity]="tagSeverity(onboarding.status)"></p-tag>
-          </td>
-          <td class="progress-cell">
-            <p-progressBar [value]="progress(onboarding)" [showValue]="true"></p-progressBar>
-          </td>
-          <td>
-            <p-tag
-              [value]="invitationStatusLabel(onboarding.invitation?.status)"
-              [severity]="tagSeverity(onboarding.invitation?.status)">
-            </p-tag>
-          </td>
-          <td>{{ onboarding.createdAt | date:'dd/MM/yyyy HH:mm' }}</td>
-          <td class="actions">
-            <a pButton icon="pi pi-eye" class="p-button-rounded p-button-text" [routerLink]="['/admin/onboarding', onboarding.id]" pTooltip="Voir"></a>
-            <button pButton icon="pi pi-send" class="p-button-rounded p-button-text" pTooltip="Renvoyer invitation" (click)="resendInvitation(onboarding)"></button>
-            <button pButton icon="pi pi-user-edit" class="p-button-rounded p-button-text" pTooltip="Mode assiste" (click)="startAssisted(onboarding)" [disabled]="onboarding.completionMode === 'ASSISTED'"></button>
-            <a pButton icon="pi pi-pencil" class="p-button-rounded p-button-text" [routerLink]="['/admin/onboarding', onboarding.id, 'complete']" pTooltip="Completer"></a>
-            <button pButton icon="pi pi-check" class="p-button-rounded p-button-text p-button-success" pTooltip="Valider dossier" (click)="validateDossier(onboarding)" [disabled]="onboarding.status !== 'PENDING_VALIDATION'"></button>
-            <button pButton icon="pi pi-times" class="p-button-rounded p-button-text p-button-danger" pTooltip="Rejeter dossier" (click)="rejectDossier(onboarding)" [disabled]="onboarding.status !== 'PENDING_VALIDATION'"></button>
-          </td>
-        </tr>
-      </ng-template>
+        <ng-template pTemplate="body" let-onboarding>
+          <tr>
+            <td class="agent-cell">
+              <strong>{{ agentName(onboarding) }}</strong>
+              <small>{{ email(onboarding) }}</small>
+              <small class="agent-meta">{{ agentStatusLabel(onboarding.agent?.status) }} · {{ modeLabel(onboarding.completionMode) }}</small>
+            </td>
+            <td class="matricule-cell">{{ matricule(onboarding) }}</td>
+            <td class="grade-cell">
+              <span>{{ grade(onboarding) }}</span>
+              <small>{{ echelle(onboarding) }} · {{ echelon(onboarding) }}</small>
+            </td>
+            <td>
+              <p-tag [value]="onboardingStatusLabel(onboarding.status)" [severity]="tagSeverity(onboarding.status)"></p-tag>
+            </td>
+            <td class="progress-cell">
+              <p-progressBar [value]="progress(onboarding)" [showValue]="true"></p-progressBar>
+            </td>
+            <td class="actions">
+              <a pButton icon="pi pi-eye" class="p-button-rounded p-button-text" [routerLink]="['/admin/onboarding', onboarding.id]" pTooltip="Voir detail"></a>
+              <button pButton icon="pi pi-send" class="p-button-rounded p-button-text" pTooltip="Renvoyer invitation" (click)="resendInvitation(onboarding)"></button>
+              <a pButton icon="pi pi-pencil" class="p-button-rounded p-button-text" [routerLink]="['/admin/onboarding', onboarding.id, 'complete']" pTooltip="Modifier"></a>
+              <p-menu #moreMenu [model]="moreActions(onboarding)" [popup]="true" appendTo="body"></p-menu>
+              <button pButton icon="pi pi-ellipsis-v" class="p-button-rounded p-button-text" pTooltip="Autres actions" (click)="moreMenu.toggle($event)"></button>
+            </td>
+          </tr>
+        </ng-template>
 
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="12" class="empty-state">Aucun onboarding trouve.</td>
-        </tr>
-      </ng-template>
-    </p-table>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6" class="empty-state">Aucun onboarding trouve.</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
   </div>
 </div>
