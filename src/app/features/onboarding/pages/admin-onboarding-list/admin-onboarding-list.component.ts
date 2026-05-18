@@ -6,7 +6,6 @@ import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { MenuModule } from 'primeng/menu';
-import { ProgressBarModule } from 'primeng/progressbar';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { Toast } from 'primeng/toast';
@@ -30,7 +29,6 @@ import { ToastHelper } from '../../../../shared/utils/toast-helper';
     ButtonModule,
     ConfirmDialogModule,
     MenuModule,
-    ProgressBarModule,
     TableModule,
     TagModule,
     Toast,

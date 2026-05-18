@@ -6,69 +6,73 @@
     <div class="page-header">
       <div>
         <h1 class="titleh1">Suivi onboarding</h1>
-        <p>Suivez les invitations, la progression et la validation des dossiers agents.</p>
+        <p>Suivez les invitations et la validation des dossiers agents.</p>
       </div>
       <a pButton routerLink="/admin/onboarding/initialiser" label="Initialiser un agent" icon="pi pi-plus"></a>
     </div>
 
-    <div class="card table-card">
-      <p-table
-        [value]="onboardings"
-        [lazy]="true"
-        [loading]="loading"
-        [paginator]="true"
-        [rows]="rows"
-        [totalRecords]="totalRecords"
-        [rowsPerPageOptions]="[10, 20, 50]"
-        [responsiveLayout]="'scroll'"
-        styleClass="compact-onboarding-table"
-        (onLazyLoad)="load($event)">
+    <div class="card">
+      <div class="container primTable table-container">
+        <div class="flex justify-content-between align-items-center mb-3">
+          <h3>
+            <i class="pi pi-users" style="font-size: 30px; margin-right: 5px;"></i>
+            Liste des onboardings
+          </h3>
+        </div>
 
-        <ng-template pTemplate="header">
-          <tr>
-            <th class="agent-col">Agent</th>
-            <th class="matricule-col">Matricule</th>
-            <th class="grade-col">Grade</th>
-            <th class="status-col">Statut</th>
-            <th class="progress-col">Progression</th>
-            <th class="actions-col">Actions</th>
-          </tr>
-        </ng-template>
+        <p-table
+          [value]="onboardings"
+          [lazy]="true"
+          [loading]="loading"
+          [paginator]="true"
+          [rows]="rows"
+          [totalRecords]="totalRecords"
+          [rowsPerPageOptions]="[10, 20, 50]"
+          [responsiveLayout]="'scroll'"
+          (onLazyLoad)="load($event)">
 
-        <ng-template pTemplate="body" let-onboarding>
-          <tr>
-            <td class="agent-cell">
-              <strong>{{ agentName(onboarding) }}</strong>
-              <small>{{ email(onboarding) }}</small>
-              <small class="agent-meta">{{ agentStatusLabel(onboarding.agent?.status) }} · {{ modeLabel(onboarding.completionMode) }}</small>
-            </td>
-            <td class="matricule-cell">{{ matricule(onboarding) }}</td>
-            <td class="grade-cell">
-              <span>{{ grade(onboarding) }}</span>
-              <small>{{ echelle(onboarding) }} · {{ echelon(onboarding) }}</small>
-            </td>
-            <td>
-              <p-tag [value]="onboardingStatusLabel(onboarding.status)" [severity]="tagSeverity(onboarding.status)"></p-tag>
-            </td>
-            <td class="progress-cell">
-              <p-progressBar [value]="progress(onboarding)" [showValue]="true"></p-progressBar>
-            </td>
-            <td class="actions">
-              <a pButton icon="pi pi-eye" class="p-button-rounded p-button-text" [routerLink]="['/admin/onboarding', onboarding.id]" pTooltip="Voir detail"></a>
-              <button pButton icon="pi pi-send" class="p-button-rounded p-button-text" pTooltip="Renvoyer invitation" (click)="resendInvitation(onboarding)"></button>
-              <a pButton icon="pi pi-pencil" class="p-button-rounded p-button-text" [routerLink]="['/admin/onboarding', onboarding.id, 'complete']" pTooltip="Modifier"></a>
-              <p-menu #moreMenu [model]="moreActions(onboarding)" [popup]="true" appendTo="body"></p-menu>
-              <button pButton icon="pi pi-ellipsis-v" class="p-button-rounded p-button-text" pTooltip="Autres actions" (click)="moreMenu.toggle($event)"></button>
-            </td>
-          </tr>
-        </ng-template>
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="agent-col">Agent</th>
+              <th>Matricule</th>
+              <th class="grade-col">Grade</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </ng-template>
 
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="6" class="empty-state">Aucun onboarding trouve.</td>
-          </tr>
-        </ng-template>
-      </p-table>
+          <ng-template pTemplate="body" let-onboarding>
+            <tr>
+              <td class="agent-cell">
+                <strong>{{ agentName(onboarding) }}</strong>
+                <small>{{ email(onboarding) }}</small>
+                <small class="agent-meta">{{ agentStatusLabel(onboarding.agent?.status) }} - {{ modeLabel(onboarding.completionMode) }}</small>
+              </td>
+              <td><strong>{{ matricule(onboarding) }}</strong></td>
+              <td class="grade-cell">
+                <span>{{ grade(onboarding) }}</span>
+                <small>{{ echelle(onboarding) }} - {{ echelon(onboarding) }}</small>
+              </td>
+              <td>
+                <p-tag [value]="onboardingStatusLabel(onboarding.status)" [severity]="tagSeverity(onboarding.status)"></p-tag>
+              </td>
+              <td class="actions-cell">
+                <a pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" [routerLink]="['/admin/onboarding', onboarding.id]" pTooltip="Voir detail"></a>
+                <button pButton icon="pi pi-send" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Renvoyer invitation" (click)="resendInvitation(onboarding)"></button>
+                <a pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" [routerLink]="['/admin/onboarding', onboarding.id, 'complete']" pTooltip="Modifier"></a>
+                <p-menu #moreMenu [model]="moreActions(onboarding)" [popup]="true" appendTo="body"></p-menu>
+                <button pButton icon="pi pi-ellipsis-v" class="p-button-rounded p-button-text" pTooltip="Autres actions" (click)="moreMenu.toggle($event)"></button>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="text-center">Aucun onboarding trouve.</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
     </div>
   </div>
 </div>
