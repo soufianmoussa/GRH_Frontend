@@ -1,0 +1,316 @@
+@use "../../../../shared/styles/_shared-style";
+
+.account-summary-cards {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.account-kpi {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+
+  span {
+    color: #64748b;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  strong {
+    color: #0a3d62;
+    font-size: 1.35rem;
+    line-height: 1;
+  }
+
+  &.success strong {
+    color: #16a34a;
+  }
+
+  &.danger strong {
+    color: #dc2626;
+  }
+
+  &.warning strong {
+    color: #d97706;
+  }
+}
+
+.section-icon {
+  font-size: 1.5rem;
+  margin-right: 0.4rem;
+}
+
+.account-filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  padding: 0.15rem 0;
+}
+
+.account-filter-bar > * {
+  flex: 0 0 auto;
+}
+
+.account-filter-bar .account-search {
+  flex: 1 1 320px;
+  min-width: 240px;
+}
+
+.account-filter-bar p-dropdown {
+  flex: 0 0 170px;
+}
+
+.account-filter-bar p-button {
+  flex: 0 0 auto;
+}
+
+.account-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  input {
+    width: 100%;
+    height: 42px;
+    border-radius: 8px;
+    border-color: #cbd5e1;
+    padding-left: 2.35rem;
+    font-size: 0.92rem;
+  }
+
+  i {
+    position: absolute;
+    left: 0.85rem;
+    color: #64748b;
+    font-size: 0.9rem;
+    pointer-events: none;
+    z-index: 1;
+  }
+}
+
+.col-user {
+  width: 18rem;
+}
+
+.col-actions {
+  width: 5rem;
+  text-align: center;
+}
+
+.actions-cell {
+  text-align: center;
+}
+
+.account-link {
+  border: 0;
+  background: transparent;
+  color: #0a3d62;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  padding: 0;
+
+  &:hover {
+    color: #237ad2;
+    text-decoration: underline;
+  }
+}
+
+:host ::ng-deep {
+  .account-filter-select {
+    width: 100%;
+    height: 42px;
+    border-radius: 8px !important;
+
+    .p-dropdown-label,
+    .p-select-label {
+      display: flex;
+      align-items: center;
+      font-size: 0.92rem;
+      padding-top: 0;
+      padding-bottom: 0;
+    }
+  }
+
+  .account-clear-button {
+    height: 42px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 1200px) {
+  .account-summary-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .account-filter-bar .account-search {
+    flex-basis: 100%;
+  }
+
+  .account-filter-bar p-dropdown {
+    flex: 1 1 180px;
+  }
+}
+
+@media (max-width: 700px) {
+  .account-summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .account-filter-bar {
+    align-items: stretch;
+  }
+
+  .account-filter-bar .account-search,
+  .account-filter-bar p-dropdown,
+  .account-filter-bar p-button {
+    flex-basis: 100%;
+  }
+}
+
+:host ::ng-deep .account-details-drawer {
+  .p-drawer-header {
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .p-drawer-content {
+    padding-top: 1rem;
+  }
+}
+
+.drawer-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+
+  strong {
+    color: #0a3d62;
+    font-size: 1.1rem;
+  }
+}
+
+.drawer-kicker,
+.summary-label,
+.detail-row span {
+  color: #64748b;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.drawer-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+
+  > div {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 0.75rem;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+}
+
+.drawer-tabs {
+  display: block;
+}
+
+.detail-grid {
+  display: grid;
+  gap: 0.65rem;
+  padding-top: 0.75rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid #edf2f7;
+  padding: 0.7rem 0;
+
+  strong {
+    color: #1f2937;
+    text-align: right;
+  }
+}
+
+.detail-row-stack {
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.empty-panel {
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  color: #64748b;
+  text-align: center;
+
+  i {
+    color: #237ad2;
+    font-size: 1.6rem;
+  }
+}
+
+.empty-panel.compact {
+  min-height: 90px;
+}
+
+.history-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0 0.5rem;
+
+  span {
+    color: #334155;
+    font-weight: 700;
+  }
+}
+
+:host ::ng-deep .audit-table {
+  .p-datatable-thead > tr > th {
+    font-size: 0.78rem;
+    color: #64748b;
+    background: #f8fafc;
+    padding: 0.65rem;
+  }
+
+  .p-datatable-tbody > tr > td {
+    padding: 0.7rem 0.65rem;
+    vertical-align: top;
+  }
+
+  td strong,
+  td small {
+    display: block;
+  }
+
+  td small {
+    color: #64748b;
+    margin-top: 0.2rem;
+  }
+}

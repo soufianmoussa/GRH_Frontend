@@ -1,0 +1,34 @@
+<div class="step-container" *ngIf="state.draft() as d">
+  <div class="step-header">
+    <h3>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP4.TITLE' | translate }}</h3>
+    <p>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP4.SUBTITLE' | translate }}</p>
+  </div>
+
+  <div class="step-form grid" *ngIf="d.coordonneesProfessionnelles as cp">
+    <div class="field col-12 md:col-6">
+      <label for="email">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP4.LBL_EMAIL' | translate }}</label>
+      <input pInputText id="email" [(ngModel)]="cp.emailPro" [disabled]="state.mode() === 'view'" class="w-full" />
+    </div>
+
+    <div class="field col-12 md:col-6">
+      <label for="fixe">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP4.LBL_TEL_FIXE' | translate }}</label>
+      <input pInputText id="fixe" [(ngModel)]="cp.telFixe" [disabled]="state.mode() === 'view'" class="w-full" />
+    </div>
+
+    <div class="field col-12 md:col-6">
+      <label for="port">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP4.LBL_TEL_PORT' | translate }}</label>
+      <input pInputText id="port" [(ngModel)]="cp.telPortable" [disabled]="state.mode() === 'view'" class="w-full" />
+    </div>
+
+    <div class="field col-12 md:col-6">
+      <label for="bureau">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP4.LBL_BUREAU' | translate }}</label>
+      <input pInputText id="bureau" [(ngModel)]="cp.bureau" [disabled]="state.mode() === 'view'" class="w-full" />
+    </div>
+
+    <div class="field col-12 md:col-6">
+      <label for="dateTutorat">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP4.LBL_DATE_TUTORAT' | translate }}</label>
+      <p-datepicker id="dateTutorat" [(ngModel)]="d.dateTutorat" [disabled]="state.mode() === 'view'"
+                    dateFormat="dd/mm/yy" appendTo="body" styleClass="w-full"></p-datepicker>
+    </div>
+  </div>
+</div>

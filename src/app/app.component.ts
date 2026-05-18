@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import {Router, RouterOutlet} from '@angular/router';
-import {TopbarComponent} from './topbar/topbar.component';
-import {SidebarComponent} from './sidebar/sidebar.component';
+import {TopbarComponent} from './core/layout/topbar/topbar.component';
+import {SidebarComponent} from './core/layout/sidebar/sidebar.component';
 import {NgIf} from '@angular/common';
-import {AuthService} from './auth/auth.service';
+import {AuthService} from './core/auth/auth.service';
+import { LanguageService } from './core/services/language.service';
 
 @Component({
   selector: 'app-root',
@@ -15,9 +16,11 @@ export class AppComponent implements OnInit {
   title = 'ghrfe';
   sidebarOpened = true;
 
-  constructor(private router: Router, private authService: AuthService) {}
+  constructor(private router: Router, private authService: AuthService, private languageService: LanguageService) {}
 
   ngOnInit() {
+    this.languageService.init();
+
     if (this.authService.isAuthenticated()) {
       this.authService.fetchMe().subscribe({
         error: () => {

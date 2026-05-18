@@ -1,0 +1,116 @@
+<div class="step-container" *ngIf="state.draft() as d">
+  <div class="step-header">
+    <h3>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP8.TITLE' | translate }}</h3>
+    <p>{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP8.SUBTITLE' | translate }}</p>
+  </div>
+
+  <div class="recap-content grid">
+    <!-- Matricule & Recrutement -->
+    <div class="col-12 recap-section">
+      <h4 class="recap-section-title"><i class="pi pi-id-card"></i> {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP8.SEC_MATRICULE' | translate }}</h4>
+      <div class="grid">
+        <div class="col-12 md:col-3 recap-item">
+          <span class="label">{{ 'GLOBAL.MATRICULE' | translate }}</span>
+          <span class="value">{{ d.matricule || '—' }}</span>
+        </div>
+        <div class="col-12 md:col-3 recap-item">
+          <span class="label">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP1.LBL_DATE_RECRUTEMENT' | translate }}</span>
+          <span class="value">{{ (d.dateRecrutement | date:'dd/MM/yyyy') || '—' }}</span>
+        </div>
+        <div class="col-12 md:col-3 recap-item">
+          <span class="label">{{ 'GLOBAL.DOMAINE' | translate }}</span>
+          <span class="value">{{ d.domaine || '—' }}</span>
+        </div>
+        <div class="col-12 md:col-3 recap-item">
+          <span class="label">{{ 'GLOBAL.CATEGORIE' | translate }}</span>
+          <span class="value">{{ d.categorie || '—' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Identité -->
+    <div class="col-12 recap-section mt-4">
+      <h4 class="recap-section-title"><i class="pi pi-user"></i> {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP8.SEC_IDENTITE' | translate }}</h4>
+      <div class="grid">
+        <div class="col-12 md:col-4 recap-item">
+          <span class="label">{{ 'GLOBAL.NOM' | translate }} / {{ 'GLOBAL.PRENOM' | translate }}</span>
+          <span class="value">{{ d.prenom }} {{ d.nom }}</span>
+        </div>
+        <div class="col-12 md:col-4 recap-item">
+          <span class="label">{{ 'GLOBAL.CIN' | translate }}</span>
+          <span class="value">{{ d.cin || '—' }}</span>
+        </div>
+        <div class="col-12 md:col-4 recap-item">
+          <span class="label">{{ 'GLOBAL.SEXE' | translate }} / {{ 'GLOBAL.DATE_NAISSANCE' | translate }}</span>
+          <span class="value">{{ d.sexe === 'M' ? ('GLOBAL.MASCULIN' | translate) : ('GLOBAL.FEMININ' | translate) }} ({{ (d.dateNaissance | date:'dd/MM/yyyy') || '—' }})</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Adresses -->
+    <div class="col-12 recap-section mt-4">
+      <h4 class="recap-section-title"><i class="pi pi-map-marker"></i> {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP8.SEC_ADRESSES' | translate }}</h4>
+      <p *ngIf="!d.adresses?.length" class="empty-msg">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP3.EMPTY_HINT' | translate }}</p>
+      <div class="grid" *ngFor="let a of d.adresses">
+        <div class="col-12 md:col-12 recap-item mb-2">
+          <p-tag [value]="a.type || 'ADRESSE'" severity="info" class="mr-2"></p-tag>
+          <span class="value">{{ a.adresse }}, {{ a.codePostal }} {{ a.ville }} ({{ a.pays }})</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Professionnel -->
+    <div class="col-12 recap-section mt-4">
+      <h4 class="recap-section-title"><i class="pi pi-briefcase"></i> {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP8.SEC_PRO' | translate }}</h4>
+      <div class="grid" *ngIf="d.coordonneesProfessionnelles as cp">
+        <div class="col-12 md:col-4 recap-item">
+          <span class="label">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP4.LBL_EMAIL' | translate }}</span>
+          <span class="value">{{ cp.emailPro || '—' }}</span>
+        </div>
+        <div class="col-12 md:col-4 recap-item">
+          <span class="label">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP4.LBL_TEL_PORT' | translate }}</span>
+          <span class="value">{{ cp.telPortable || '—' }}</span>
+        </div>
+        <div class="col-12 md:col-4 recap-item">
+          <span class="label">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP4.LBL_BUREAU' | translate }}</span>
+          <span class="value">{{ cp.bureau || '—' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bancaire -->
+    <div class="col-12 recap-section mt-4">
+      <h4 class="recap-section-title"><i class="pi pi-wallet"></i> {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP8.SEC_BANQUE' | translate }}</h4>
+      <div class="grid" *ngIf="d.coordonneesBancaires as cb">
+        <div class="col-12 md:col-4 recap-item">
+          <span class="label">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP5.LBL_BANQUE' | translate }}</span>
+          <span class="value">{{ cb.banque || '—' }}</span>
+        </div>
+        <div class="col-12 md:col-8 recap-item">
+          <span class="label">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP5.LBL_RIB' | translate }} / {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP5.LBL_IBAN' | translate }}</span>
+          <span class="value font-monospace">{{ cb.rib || '—' }} / {{ cb.iban || '—' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Famille -->
+    <div class="col-12 recap-section mt-4 mb-4">
+      <h4 class="recap-section-title"><i class="pi pi-heart"></i> {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP8.SEC_FAMILLE' | translate }}</h4>
+      <div class="grid">
+        <div class="col-12 md:col-4 recap-item">
+          <span class="label">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP6.LBL_SITUATION' | translate }}</span>
+          <span class="value">{{ situationLabel(d.situation) }}</span>
+        </div>
+        <div class="col-12 md:col-4 recap-item">
+          <span class="label">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.CONJOINT' | translate }}</span>
+          <span class="value" *ngIf="d.conjoint">{{ d.conjoint.prenom }} {{ d.conjoint.nom }} ({{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP8.LBL_CIN_CONJOINT' | translate }} : {{ d.conjoint.cin || '—' }})</span>
+          <span class="value text-muted" *ngIf="!d.conjoint">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP8.EMPTY_CONJOINT' | translate }}</span>
+        </div>
+        <div class="col-12 md:col-4 recap-item">
+          <span class="label">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.STEPS.STEP8.LBL_ENFANTS' | translate }}</span>
+          <span class="value">{{ d.enfants?.length || 0 }} {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_DETAIL.ENFANTS' | translate | lowercase }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

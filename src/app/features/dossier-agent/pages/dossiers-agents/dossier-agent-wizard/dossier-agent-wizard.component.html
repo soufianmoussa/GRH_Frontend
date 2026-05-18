@@ -1,0 +1,135 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="content">
+  <div class="stepper-card">
+    <h2 class="wizard-title">
+      <i class="pi pi-folder-open"></i>
+      <ng-container [ngSwitch]="state.mode()">
+        <span *ngSwitchCase="'create'">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.TITLE_CREATE' | translate }}</span>
+        <span *ngSwitchCase="'edit'">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.TITLE_EDIT' | translate }}</span>
+        <span *ngSwitchCase="'view'">{{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.TITLE_VIEW' | translate }}</span>
+      </ng-container>
+    </h2>
+    <p class="wizard-subtitle" *ngIf="state.draft().matricule as m">
+      {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.LBL_MATRICULE' | translate }} <strong>{{ m }}</strong>
+    </p>
+
+    <div *ngIf="loading" class="loading">
+      <i class="pi pi-spin pi-spinner"></i>
+      {{ 'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.LOADING' | translate }}
+    </div>
+
+    <p-stepper [value]="state.activeStep()" *ngIf="!loading">
+      <p-step-list>
+        <p-step *ngFor="let s of steps; let last = last" [value]="s.index">
+          {{ s.label }}
+        </p-step>
+      </p-step-list>
+
+      <p-step-panels>
+        <p-step-panel [value]="1">
+          <ng-template #content let-activateCallback="activateCallback">
+            <app-step1-matricule />
+            <div class="step-actions">
+              <span></span>
+              <p-button [label]="'GLOBAL.SUIVANT' | translate" icon="pi pi-arrow-right" iconPos="right"
+                (onClick)="tryGoTo(2, activateCallback)"></p-button>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <p-step-panel [value]="2">
+          <ng-template #content let-activateCallback="activateCallback">
+            <app-step2-identity />
+            <div class="step-actions">
+              <p-button [label]="'GLOBAL.PRECEDENT' | translate" icon="pi pi-arrow-left" severity="secondary"
+                (onClick)="activateCallback(1)"></p-button>
+              <p-button [label]="'GLOBAL.SUIVANT' | translate" icon="pi pi-arrow-right" iconPos="right"
+                (onClick)="tryGoTo(3, activateCallback)"></p-button>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <p-step-panel [value]="3">
+          <ng-template #content let-activateCallback="activateCallback">
+            <app-step3-address />
+            <div class="step-actions">
+              <p-button [label]="'GLOBAL.PRECEDENT' | translate" icon="pi pi-arrow-left" severity="secondary"
+                (onClick)="activateCallback(2)"></p-button>
+              <p-button [label]="'GLOBAL.SUIVANT' | translate" icon="pi pi-arrow-right" iconPos="right"
+                (onClick)="tryGoTo(4, activateCallback)"></p-button>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <p-step-panel [value]="4">
+          <ng-template #content let-activateCallback="activateCallback">
+            <app-step4-pro />
+            <div class="step-actions">
+              <p-button [label]="'GLOBAL.PRECEDENT' | translate" icon="pi pi-arrow-left" severity="secondary"
+                (onClick)="activateCallback(3)"></p-button>
+              <p-button [label]="'GLOBAL.SUIVANT' | translate" icon="pi pi-arrow-right" iconPos="right"
+                (onClick)="tryGoTo(5, activateCallback)"></p-button>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <p-step-panel [value]="5">
+          <ng-template #content let-activateCallback="activateCallback">
+            <app-step5-bank />
+            <div class="step-actions">
+              <p-button [label]="'GLOBAL.PRECEDENT' | translate" icon="pi pi-arrow-left" severity="secondary"
+                (onClick)="activateCallback(4)"></p-button>
+              <p-button [label]="'GLOBAL.SUIVANT' | translate" icon="pi pi-arrow-right" iconPos="right"
+                (onClick)="tryGoTo(6, activateCallback)"></p-button>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <p-step-panel [value]="6">
+          <ng-template #content let-activateCallback="activateCallback">
+            <app-step6-family />
+            <div class="step-actions">
+              <p-button [label]="'GLOBAL.PRECEDENT' | translate" icon="pi pi-arrow-left" severity="secondary"
+                (onClick)="activateCallback(5)"></p-button>
+              <p-button [label]="'GLOBAL.SUIVANT' | translate" icon="pi pi-arrow-right" iconPos="right"
+                (onClick)="tryGoTo(7, activateCallback)"></p-button>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <p-step-panel [value]="7">
+          <ng-template #content let-activateCallback="activateCallback">
+            <app-step7-photo />
+            <div class="step-actions">
+              <p-button [label]="'GLOBAL.PRECEDENT' | translate" icon="pi pi-arrow-left" severity="secondary"
+                (onClick)="activateCallback(6)"></p-button>
+              <p-button [label]="'GLOBAL.SUIVANT' | translate" icon="pi pi-arrow-right" iconPos="right"
+                (onClick)="tryGoTo(8, activateCallback)"></p-button>
+            </div>
+          </ng-template>
+        </p-step-panel>
+
+        <p-step-panel [value]="8">
+          <ng-template #content let-activateCallback="activateCallback">
+            <app-step8-recap />
+            <div class="step-actions">
+              <p-button [label]="'GLOBAL.PRECEDENT' | translate" icon="pi pi-arrow-left" severity="secondary"
+                (onClick)="activateCallback(7)"></p-button>
+              <p-button *ngIf="state.mode() !== 'view'"
+                [label]="'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.BTN_CONFIRMER' | translate" icon="pi pi-check" severity="success"
+                [loading]="saving" [disabled]="!state.canSubmit()"
+                (onClick)="submit()"></p-button>
+            </div>
+          </ng-template>
+        </p-step-panel>
+      </p-step-panels>
+    </p-stepper>
+
+    <div class="cancel-bar" *ngIf="!loading">
+      <p-button [label]="'GESTION_PERSONNELLE.DOSSIERS_AGENTS.AGENT_WIZARD.BTN_ANNULER' | translate" icon="pi pi-times" severity="secondary" [text]="true"
+        (onClick)="cancel()"></p-button>
+    </div>
+  </div>
+</div>
