@@ -1,4 +1,5 @@
 import type { AgentFullDto } from './agent-full.model';
+import type { AuthResponse } from '../core/auth/auth.models';
 import { Matricule } from './initialisation-matricules.model';
 import { PageResponse } from './PageResponse.model';
 
@@ -164,7 +165,9 @@ export interface InvitationActivationRequest {
 
 export interface InvitationActivationResponse {
   success: boolean;
+  activated?: boolean;
   message?: string;
+  auth?: AuthResponse;
 }
 
 export type OnboardingPage = PageResponse<OnboardingDetail>;

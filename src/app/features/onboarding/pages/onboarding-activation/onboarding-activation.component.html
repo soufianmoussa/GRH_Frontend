@@ -21,8 +21,8 @@
       <i class="pi pi-check-circle status-icon success"></i>
       <h1>Compte active</h1>
       <p-message severity="success" [text]="message"></p-message>
-      <p class="redirect-note">Redirection vers la page de connexion...</p>
-      <a pButton routerLink="/login" label="Se connecter" icon="pi pi-sign-in" class="mt-4 activation-link-button"></a>
+      <p class="redirect-note">Redirection vers le formulaire de completion du profil...</p>
+      <a pButton routerLink="/onboarding/complete-profile" label="Completer mon profil" icon="pi pi-arrow-right" class="mt-4 activation-link-button"></a>
     </ng-container>
 
     <ng-container *ngIf="state === 'valid'">
@@ -47,10 +47,10 @@
             styleClass="activation-password"
             inputStyleClass="activation-password-input"
             autocomplete="new-password"
-            placeholder="Minimum 8 caracteres">
+            placeholder="Minimum 12 caracteres">
           </p-password>
           <small *ngIf="form.controls['password'].touched && form.controls['password'].invalid" class="p-error">
-            Le mot de passe doit contenir au moins 8 caracteres.
+            Le mot de passe doit contenir au moins 12 caracteres.
           </small>
         </div>
 

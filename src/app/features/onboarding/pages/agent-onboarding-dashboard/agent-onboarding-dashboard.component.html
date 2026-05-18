@@ -4,7 +4,7 @@
   <div class="page-header">
     <div>
       <h1 class="titleh1">Mon onboarding</h1>
-      <p>Suivez votre progression et completez les elements attendus par les RH.</p>
+      <p>Suivez votre dossier onboarding et les elements attendus par l administration.</p>
     </div>
   </div>
 
@@ -24,7 +24,7 @@
       <div class="card progress-card">
         <h2>Progression</h2>
         <p-progressBar [value]="progress()"></p-progressBar>
-        <p class="muted" *ngIf="onboarding.status === 'PENDING_VALIDATION'">Votre dossier est soumis et en attente de validation RH.</p>
+        <p class="muted" *ngIf="onboarding.status === 'PENDING_VALIDATION'">Votre profil a ete soumis avec succes. Il est en attente de validation par l administration.</p>
         <p class="muted" *ngIf="onboarding.status === 'REJECTED'">Votre dossier contient des elements rejetes a corriger.</p>
         <a *ngIf="canContinue()" pButton routerLink="/agent/onboarding/complete" label="Continuer mon profil" icon="pi pi-arrow-right"></a>
       </div>

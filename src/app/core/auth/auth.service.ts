@@ -26,24 +26,27 @@ export class AuthService {
 
   login(request: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.API_URL}/login`, request).pipe(
-      tap(response => {
-        localStorage.setItem(this.TOKEN_KEY, response.token);
-        if (response.refreshToken) {
-          localStorage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
-        }
-
-        const user: UserInfo = {
-          id: 0,
-          username: response.username,
-          roles: response.roles,
-          matricule: response.matricule,
-          agentId: response.agentId ?? null
-        };
-        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-        this.currentUserSubject.next(user);
-        this.setDefaultActiveRole(response.roles);
-      })
+      tap(response => this.storeAuthResponse(response))
     );
+  }
+
+  storeAuthResponse(response: AuthResponse): void {
+    localStorage.setItem(this.TOKEN_KEY, response.token);
+    if (response.refreshToken) {
+      localStorage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
+    }
+
+    const user: UserInfo = {
+      id: 0,
+      username: response.username,
+      roles: response.roles,
+      matricule: response.matricule,
+      agentId: response.agentId ?? null,
+      onboardingStatus: response.onboardingStatus ?? null
+    };
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    this.currentUserSubject.next(user);
+    this.setDefaultActiveRole(response.roles);
   }
 
   logout(): void {
@@ -178,7 +181,8 @@ export class AuthService {
              username: payload.sub,
              roles: payload.roles || [],
              matricule: payload.matricule,
-             agentId: payload.agentId ?? null
+             agentId: payload.agentId ?? null,
+             onboardingStatus: null
            };
         }
       } catch {}

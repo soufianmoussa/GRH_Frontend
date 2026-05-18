@@ -10,6 +10,7 @@ export interface AuthResponse {
   roles: string[];
   matricule: string | null;
   agentId: number | null;
+  onboardingStatus?: string | null;
 }
 
 export interface UserInfo {
@@ -18,6 +19,7 @@ export interface UserInfo {
   roles: string[];
   matricule: string | null;
   agentId: number | null;
+  onboardingStatus?: string | null;
 }
 
 export interface ChangePasswordRequest {

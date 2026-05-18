@@ -10,6 +10,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { finalize, Subject, takeUntil } from 'rxjs';
 import { OnboardingInvitationService } from '../../services/onboarding-invitation.service';
 import { ToastHelper } from '../../../../shared/utils/toast-helper';
+import { AuthService } from '../../../../core/auth/auth.service';
 
 type ActivationState = 'loading' | 'valid' | 'invalid' | 'success';
 
@@ -45,10 +46,11 @@ export class OnboardingActivationComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private router: Router,
     private fb: FormBuilder,
-    private invitationService: OnboardingInvitationService
+    private invitationService: OnboardingInvitationService,
+    private authService: AuthService
   ) {
     this.form = this.fb.group({
-      password: ['', [Validators.required, Validators.minLength(8)]],
+      password: ['', [Validators.required, Validators.minLength(12)]],
       confirmPassword: ['', [Validators.required]]
     });
   }
@@ -92,12 +94,15 @@ export class OnboardingActivationComponent implements OnInit, OnDestroy {
         takeUntil(this.destroy$)
       )
       .subscribe({
-        next: () => {
+        next: (response) => {
+          if (response.auth) {
+            this.authService.storeAuthResponse(response.auth);
+          }
           this.token = '';
           this.form.reset();
           this.state = 'success';
-          this.message = 'Votre compte est active. Vous pouvez maintenant vous connecter.';
-          setTimeout(() => this.router.navigate(['/login']), 1800);
+          this.message = 'Votre compte est active. Vous allez completer votre profil onboarding.';
+          setTimeout(() => this.router.navigate(['/onboarding/complete-profile']), 1200);
         },
         error: (error) => {
           this.message = ToastHelper.extractErrorMessage(error, 'Activation impossible. Le lien est peut-etre expire ou deja utilise.');

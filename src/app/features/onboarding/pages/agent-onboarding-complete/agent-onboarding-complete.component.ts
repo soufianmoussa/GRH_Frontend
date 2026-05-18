@@ -82,7 +82,7 @@ export class AgentOnboardingCompleteComponent implements OnInit {
         next: (onboarding) => {
           this.onboarding = onboarding;
           ToastHelper.showSuccess(this.messageService, 'Dossier soumis pour validation.');
-          this.router.navigate(['/agent/onboarding']);
+          this.router.navigate(['/onboarding/waiting']);
         },
         error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Soumission impossible.')
       });

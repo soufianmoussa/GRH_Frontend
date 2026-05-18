@@ -17,6 +17,8 @@ export const ONBOARDING_ROUTES: Routes = [
   { path: 'admin/onboarding/:id/complete', component: AdminOnboardingAssistedCompleteComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
   { path: 'admin/onboarding/:id', component: AdminOnboardingDetailComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
   { path: 'admin/onboarding', component: AdminOnboardingListComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
+  { path: 'onboarding/complete-profile', component: AgentOnboardingCompleteComponent, canActivate: [roleGuard], data: { roles: ['AGENT'] } },
+  { path: 'onboarding/waiting', component: AgentOnboardingDashboardComponent, canActivate: [roleGuard], data: { roles: ['AGENT'] } },
   { path: 'agent/onboarding/complete', component: AgentOnboardingCompleteComponent, canActivate: [roleGuard], data: { roles: ['AGENT'] } },
   { path: 'agent/onboarding', component: AgentOnboardingDashboardComponent, canActivate: [roleGuard], data: { roles: ['AGENT'] } },
   { path: 'InitialisationMatricules', component: InitialisationMatriculesComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
