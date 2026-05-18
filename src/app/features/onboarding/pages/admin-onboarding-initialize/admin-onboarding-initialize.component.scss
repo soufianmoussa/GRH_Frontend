@@ -1,24 +1,45 @@
 .onboarding-initialize {
+  padding: 0.5rem 0.5rem 2rem;
+
+  .page-shell {
+    width: min(100%, 1200px);
+    margin: 0 auto;
+  }
+
   .page-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 1rem;
-    margin-bottom: 1rem;
+    gap: 1.5rem;
+    margin-bottom: 1.25rem;
+    padding: 0.25rem 0;
 
     p {
       margin: 0.25rem 0 0;
       color: #64748b;
+      max-width: 640px;
+      line-height: 1.5;
     }
   }
 
   .form-card {
-    max-width: 980px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.75rem 2rem 2rem;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
   }
 
   section {
-    padding: 1rem 0;
+    padding: 1.35rem 0;
     border-bottom: 1px solid #e5e7eb;
+  }
+
+  section:first-of-type {
+    padding-top: 0;
   }
 
   section:last-of-type {
@@ -26,21 +47,37 @@
   }
 
   h2 {
-    margin: 0 0 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin: 0 0 1.1rem;
     color: #1f2937;
     font-size: 1.05rem;
     font-weight: 700;
   }
 
+  h2::before {
+    content: '';
+    width: 4px;
+    height: 1.2rem;
+    border-radius: 999px;
+    background: #2563eb;
+  }
+
   .form-grid {
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(2, minmax(260px, 1fr));
+    column-gap: 1.5rem;
+    row-gap: 1.1rem;
+  }
+
+  .field {
+    min-width: 0;
   }
 
   .field label {
     display: block;
-    margin-bottom: 0.4rem;
+    margin-bottom: 0.45rem;
     color: #334155;
     font-weight: 600;
   }
@@ -63,7 +100,9 @@
     display: flex;
     justify-content: flex-end;
     gap: 0.75rem;
-    margin-top: 1.5rem;
+    margin-top: 1.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #f1f5f9;
   }
 
   .success-panel {
@@ -95,6 +134,12 @@
 
 @media (max-width: 760px) {
   .onboarding-initialize {
+    padding: 0 0 1rem;
+
+    .form-card {
+      padding: 1.25rem;
+    }
+
     .page-header,
     .form-actions,
     .success-panel {
