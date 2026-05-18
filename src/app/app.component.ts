@@ -31,11 +31,10 @@ export class AppComponent implements OnInit {
     }
   }
 
-  isLoginPage(): boolean {
-    return this.router.url === '/login';
-  }
-
-  isRegisterPage(): boolean {
-    return this.router.url === '/register';
+  isPublicLayoutPage(): boolean {
+    const path = this.router.url.split('?')[0].split('#')[0];
+    return path === '/login'
+      || path === '/register'
+      || path === '/onboarding/activate';
   }
 }

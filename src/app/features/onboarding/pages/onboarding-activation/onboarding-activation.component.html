@@ -1,9 +1,11 @@
 <div class="activation-page">
   <div class="activation-card">
-    <img src="assets/MastechRh-Logo.png" class="activation-logo" alt="Mastech RH" />
+    <div class="brand-block">
+      <img src="assets/MastechRh-Logo.png" class="activation-logo" alt="Mastech RH" />
+    </div>
 
     <ng-container *ngIf="state === 'loading'">
-      <p-progressSpinner ariaLabel="Validation du lien"></p-progressSpinner>
+      <p-progressSpinner ariaLabel="Validation du lien" styleClass="activation-spinner"></p-progressSpinner>
       <h1>Validation du lien</h1>
       <p>Nous verifions votre invitation onboarding.</p>
     </ng-container>
@@ -19,21 +21,22 @@
       <i class="pi pi-check-circle status-icon success"></i>
       <h1>Compte active</h1>
       <p-message severity="success" [text]="message"></p-message>
-      <a pButton routerLink="/login" label="Se connecter" icon="pi pi-sign-in" class="mt-4"></a>
+      <p class="redirect-note">Redirection vers la page de connexion...</p>
+      <a pButton routerLink="/login" label="Se connecter" icon="pi pi-sign-in" class="mt-4 activation-link-button"></a>
     </ng-container>
 
     <ng-container *ngIf="state === 'valid'">
       <h1>Activation du compte</h1>
       <p class="activation-subtitle">
-        Definissez votre mot de passe pour acceder a votre espace onboarding.
+        Definissez votre mot de passe pour finaliser l activation et acceder a votre espace onboarding.
       </p>
 
-      <div *ngIf="email" class="email-box">
-        <span>Email</span>
-        <strong>{{ email }}</strong>
-      </div>
-
       <form [formGroup]="form" (ngSubmit)="activate()" novalidate>
+        <div *ngIf="email" class="field">
+          <label for="activationEmail">Email</label>
+          <input id="activationEmail" pInputText [value]="email" readonly class="readonly-input" />
+        </div>
+
         <div class="field">
           <label for="password">Nouveau mot de passe</label>
           <p-password
@@ -41,6 +44,8 @@
             formControlName="password"
             [toggleMask]="true"
             [feedback]="true"
+            styleClass="activation-password"
+            inputStyleClass="activation-password-input"
             autocomplete="new-password"
             placeholder="Minimum 8 caracteres">
           </p-password>
@@ -56,6 +61,8 @@
             formControlName="confirmPassword"
             [toggleMask]="true"
             [feedback]="false"
+            styleClass="activation-password"
+            inputStyleClass="activation-password-input"
             autocomplete="new-password"
             placeholder="Confirmez le mot de passe">
           </p-password>
@@ -71,7 +78,8 @@
           type="submit"
           icon="pi pi-lock-open"
           [label]="loading ? 'Activation...' : 'Activer mon compte'"
-          [disabled]="loading"
+          [loading]="loading"
+          [disabled]="loading || form.invalid || !passwordsMatch()"
           class="activation-button">
         </button>
       </form>

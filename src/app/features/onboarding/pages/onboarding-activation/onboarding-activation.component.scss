@@ -4,21 +4,28 @@
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: linear-gradient(135deg, #eef4f8 0%, #f8fafc 48%, #e7f2ee 100%);
+  background:
+    radial-gradient(circle at top left, rgba(35, 122, 210, 0.12), transparent 32rem),
+    linear-gradient(135deg, #f7fbff 0%, #eef4f8 52%, #f8fafc 100%);
 }
 
 .activation-card {
-  width: min(100%, 440px);
+  width: min(100%, 460px);
   padding: 2rem;
-  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
   background: #ffffff;
   box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
   text-align: center;
 }
 
+.brand-block {
+  margin-bottom: 1.5rem;
+}
+
 .activation-logo {
   width: 150px;
-  margin-bottom: 1.5rem;
+  max-width: 70%;
 }
 
 h1 {
@@ -29,49 +36,58 @@ h1 {
 }
 
 .activation-subtitle,
-.expiration {
+.expiration,
+.redirect-note {
   margin: 0 0 1.5rem;
   color: #64748b;
   line-height: 1.5;
 }
 
-.email-box {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.85rem 1rem;
-  margin-bottom: 1.25rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #f8fafc;
-  text-align: left;
+.redirect-note {
+  margin-top: 1rem;
+  margin-bottom: 0;
 }
 
-.email-box span {
-  color: #64748b;
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
 }
 
 .field {
-  margin-bottom: 1rem;
   text-align: left;
 }
 
 .field label {
   display: block;
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.45rem;
   color: #334155;
   font-weight: 600;
 }
 
-:host ::ng-deep .p-password,
-:host ::ng-deep .p-password-input,
-:host ::ng-deep input {
-  width: 100%;
+.readonly-input {
+  color: #334155;
+  background: #f8fafc;
+  cursor: default;
 }
 
-.activation-button {
+.p-error {
+  display: block;
+  margin-top: 0.35rem;
+  line-height: 1.35;
+}
+
+.activation-button,
+.activation-link-button {
   width: 100%;
-  margin-top: 1rem;
+  margin-top: 0.25rem;
+}
+
+.expiration {
+  margin-top: 1.25rem;
+  margin-bottom: 0;
+  font-size: 0.9rem;
 }
 
 .status-icon {
@@ -86,6 +102,40 @@ h1 {
 
 .status-icon.danger {
   color: #dc2626;
+}
+
+:host ::ng-deep {
+  .activation-spinner {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 1rem;
+  }
+
+  .p-inputtext,
+  .p-password,
+  .p-password-input {
+    width: 100%;
+  }
+
+  .activation-password {
+    display: block;
+    width: 100%;
+  }
+
+  .activation-password .p-password-input {
+    min-height: 46px;
+    padding-right: 3rem;
+  }
+
+  .activation-password .p-password-toggle-mask {
+    right: 0.85rem;
+    color: #64748b;
+  }
+
+  .p-message {
+    width: 100%;
+    text-align: left;
+  }
 }
 
 @media (max-width: 560px) {
