@@ -139,6 +139,50 @@
   width: 100%;
 }
 
+:host ::ng-deep .classification-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  color: #1f2937;
+
+  span,
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    color: #64748b;
+  }
+}
+
+:host ::ng-deep .select-group-label {
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+:host ::ng-deep .onboarding-neutral-select-panel {
+  .p-select-option {
+    color: #1f2937;
+  }
+
+  .p-select-option:not(.p-select-option-selected):not(.p-disabled).p-focus,
+  .p-select-option:not(.p-select-option-selected):not(.p-disabled):hover {
+    background: #f8fafc;
+    color: #1f2937;
+  }
+
+  .p-select-option-selected,
+  .p-select-option-selected.p-focus {
+    background: #eef2ff;
+    color: #1f2937;
+  }
+}
+
 @media (max-width: 760px) {
   .onboarding-initialize {
     padding: 0 0 1rem;

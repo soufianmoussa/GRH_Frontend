@@ -63,13 +63,23 @@
 
             <div class="field">
               <label for="gradeId">Grade <span>*</span></label>
-              <p-select id="gradeId" formControlName="gradeId" [options]="gradeOptions" optionLabel="label" optionValue="value" optionDisabled="disabled" [filter]="true" appendTo="body" styleClass="w-full" placeholder="Selectionner un grade"></p-select>
+              <p-select id="gradeId" formControlName="gradeId" [options]="gradeGroups" [group]="true" optionLabel="label" optionValue="value" optionGroupLabel="label" optionGroupChildren="items" [filter]="true" appendTo="body" styleClass="w-full" panelStyleClass="onboarding-neutral-select-panel" placeholder="Selectionner un grade">
+                <ng-template #group let-group>
+                  <span class="select-group-label">{{ group.label }}</span>
+                </ng-template>
+                <ng-template #item let-option>
+                  <div class="classification-option">
+                    <span>{{ option.label }}</span>
+                    <small>{{ option.echelleLabel }}</small>
+                  </div>
+                </ng-template>
+              </p-select>
               <small *ngIf="isInvalid('gradeId')" class="p-error">Le grade est obligatoire.</small>
             </div>
 
             <div class="field">
               <label for="echelleId">Echelle <span>*</span></label>
-              <p-select id="echelleId" formControlName="echelleId" [options]="echelleOptions" optionLabel="label" optionValue="value" optionDisabled="disabled" [filter]="true" appendTo="body" styleClass="w-full" placeholder="Selectionner une echelle"></p-select>
+              <p-select id="echelleId" formControlName="echelleId" [options]="echelleOptions" optionLabel="label" optionValue="value" [filter]="true" appendTo="body" styleClass="w-full" panelStyleClass="onboarding-neutral-select-panel" placeholder="Selectionner une echelle"></p-select>
               <small *ngIf="selectedGrade?.echelleKeys?.length === 1" class="field-hint">L echelle est renseignee automatiquement selon le grade.</small>
               <small *ngIf="selectedGrade && selectedGrade.echelleKeys.length > 1" class="field-hint">Ce grade autorise plusieurs echelles. Selectionnez l echelle exacte.</small>
               <small *ngIf="isInvalid('echelleId')" class="p-error">L echelle est obligatoire.</small>
@@ -77,7 +87,7 @@
 
             <div class="field">
               <label for="echelonId">Echelon <span>*</span></label>
-              <p-select id="echelonId" formControlName="echelonId" [options]="echelonOptions" optionLabel="label" optionValue="value" optionDisabled="disabled" [filter]="true" appendTo="body" styleClass="w-full" placeholder="Selectionner un echelon"></p-select>
+              <p-select id="echelonId" formControlName="echelonId" [options]="echelonOptions" optionLabel="label" optionValue="value" [filter]="true" appendTo="body" styleClass="w-full" panelStyleClass="onboarding-neutral-select-panel" placeholder="Selectionner un echelon"></p-select>
               <small *ngIf="isInvalid('echelonId')" class="p-error">L echelon est obligatoire.</small>
             </div>
 

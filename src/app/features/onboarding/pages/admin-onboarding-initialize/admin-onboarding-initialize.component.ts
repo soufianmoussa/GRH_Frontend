@@ -27,19 +27,27 @@ import {
 
 interface SelectOption {
   label: string;
-  value: number | null;
-  disabled?: boolean;
+  value: number;
 }
 
 interface GradeSelectOption extends SelectOption {
-  value: number | null;
   group: string;
   echelleKeys: EchelleBusinessKey[];
+  echelleLabel: string;
 }
 
 interface EchelleSelectOption extends SelectOption {
-  value: number | null;
   key: EchelleBusinessKey;
+}
+
+interface EchelonSelectOption extends SelectOption {
+  key: string;
+  echelleId: number;
+}
+
+interface GradeOptionGroup {
+  label: string;
+  items: GradeSelectOption[];
 }
 
 @Component({
@@ -65,13 +73,15 @@ export class AdminOnboardingInitializeComponent implements OnInit {
   submitting = false;
   createdOnboardingId?: number;
 
+  gradeGroups: GradeOptionGroup[] = [];
   gradeOptions: GradeSelectOption[] = [];
   echelleOptions: EchelleSelectOption[] = [];
-  echelonOptions: SelectOption[] = [];
+  echelonOptions: EchelonSelectOption[] = [];
   posteOptions: SelectOption[] = [];
   selectedGrade?: GradeSelectOption;
 
   private allEchelleOptions: EchelleSelectOption[] = [];
+  private allEchelonOptions: EchelonSelectOption[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -101,6 +111,7 @@ export class AdminOnboardingInitializeComponent implements OnInit {
 
   ngOnInit(): void {
     this.form.get('gradeId')?.valueChanges.subscribe(gradeId => this.applyGradeEchelleRule(gradeId));
+    this.form.get('echelleId')?.valueChanges.subscribe(echelleId => this.applyEchelonFilter(echelleId));
     this.loadReferentials();
   }
 
@@ -123,6 +134,7 @@ export class AdminOnboardingInitializeComponent implements OnInit {
           this.form.reset();
           this.selectedGrade = undefined;
           this.echelleOptions = [...this.allEchelleOptions];
+          this.echelonOptions = [];
         },
         error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Initialisation impossible.')
       });
@@ -151,9 +163,11 @@ export class AdminOnboardingInitializeComponent implements OnInit {
       .subscribe({
         next: ({ grades, echelles, echelons, postes }) => {
           this.gradeOptions = this.buildGradeOptions(grades);
+          this.gradeGroups = this.buildGradeGroups(this.gradeOptions);
           this.allEchelleOptions = this.buildEchelleOptions(echelles);
           this.echelleOptions = [...this.allEchelleOptions];
-          this.echelonOptions = this.buildEchelonOptions(echelons);
+          this.allEchelonOptions = this.buildEchelonOptions(echelons);
+          this.echelonOptions = [];
           this.posteOptions = postes.map(poste => ({
             label: poste.libelleDuPoste || poste.libelle || poste.codeCourt || String(poste.id),
             value: poste.id
@@ -164,66 +178,119 @@ export class AdminOnboardingInitializeComponent implements OnInit {
   }
 
   private buildGradeOptions(grades: Grade[]): GradeSelectOption[] {
-    return BUSINESS_GRADES.map(businessGrade => {
-      const grade = this.findBackendGrade(businessGrade, grades);
-      return {
-        label: `${businessGrade.group} - ${businessGrade.label} (${this.formatEchelleRange(businessGrade.echelleKeys)})${grade ? '' : ' - grade non configure'}`,
-        value: grade?.id ?? null,
-        disabled: !grade,
-        group: businessGrade.group,
-        echelleKeys: businessGrade.echelleKeys
-      };
-    });
+    return BUSINESS_GRADES
+      .map(businessGrade => {
+        const grade = this.findBackendGrade(businessGrade, grades);
+        if (!grade) {
+          return undefined;
+        }
+
+        return {
+          label: businessGrade.label,
+          value: grade.id,
+          group: businessGrade.group,
+          echelleKeys: businessGrade.echelleKeys,
+          echelleLabel: this.formatEchelleRange(businessGrade.echelleKeys)
+        };
+      })
+      .filter((option): option is GradeSelectOption => !!option);
+  }
+
+  private buildGradeGroups(options: GradeSelectOption[]): GradeOptionGroup[] {
+    return BUSINESS_GRADES
+      .map(grade => grade.group)
+      .filter((group, index, groups) => groups.indexOf(group) === index)
+      .map(group => ({
+        label: group,
+        items: options.filter(option => option.group === group)
+      }))
+      .filter(group => group.items.length > 0);
   }
 
   private buildEchelleOptions(echelles: EchelleReferential[]): EchelleSelectOption[] {
-    return BUSINESS_ECHELLES.map(businessEchelle => {
-      const echelle = echelles.find(item => this.extractEchelleKey(item) === businessEchelle.key);
-      return {
-        label: `${businessEchelle.label}${echelle ? '' : ' - non configuree'}`,
-        value: echelle?.id ?? null,
-        key: businessEchelle.key,
-        disabled: !echelle
-      };
-    });
+    return BUSINESS_ECHELLES
+      .map(businessEchelle => {
+        const echelle = echelles.find(item => this.extractEchelleKey(item) === businessEchelle.key);
+        if (!echelle) {
+          return undefined;
+        }
+
+        return {
+          label: businessEchelle.label,
+          value: echelle.id,
+          key: businessEchelle.key
+        };
+      })
+      .filter((option): option is EchelleSelectOption => !!option);
   }
 
-  private buildEchelonOptions(echelons: EchelonReferential[]): SelectOption[] {
-    return BUSINESS_ECHELONS.map(businessEchelon => {
-      const echelon = echelons.find(item => this.extractEchelonKey(item) === businessEchelon.key);
-      return {
-        label: `${businessEchelon.label}${echelon ? '' : ' - non configure'}`,
-        value: echelon?.id ?? null,
-        disabled: !echelon
-      };
-    });
+  private buildEchelonOptions(echelons: EchelonReferential[]): EchelonSelectOption[] {
+    return echelons
+      .map((echelon): EchelonSelectOption | undefined => {
+        const key = this.extractEchelonKey(echelon);
+        const businessEchelon = BUSINESS_ECHELONS.find(option => option.key === key);
+        if (!key || !businessEchelon || !echelon.echelle?.id) {
+          return undefined;
+        }
+
+        return {
+          label: businessEchelon.label,
+          value: echelon.id,
+          key,
+          echelleId: echelon.echelle?.id
+        };
+      })
+      .filter((option): option is EchelonSelectOption => !!option);
   }
 
   private applyGradeEchelleRule(gradeId: number | null): void {
     this.selectedGrade = this.gradeOptions.find(option => option.value === gradeId) ?? undefined;
+    const echelleControl = this.form.get('echelleId');
 
     if (!this.selectedGrade) {
       this.echelleOptions = [...this.allEchelleOptions];
+      echelleControl?.setValue(null, { emitEvent: true });
       return;
     }
 
     this.echelleOptions = this.allEchelleOptions.filter(option => this.selectedGrade?.echelleKeys.includes(option.key));
 
     if (this.selectedGrade.echelleKeys.length === 1) {
-      const echelle = this.echelleOptions.find(option => !option.disabled);
-      this.form.get('echelleId')?.setValue(echelle?.value ?? null, { emitEvent: false });
+      const echelle = this.echelleOptions[0];
+      echelleControl?.setValue(echelle?.value ?? null, { emitEvent: true });
       return;
     }
 
-    const currentEchelleId = this.form.get('echelleId')?.value;
-    const currentStillAllowed = this.echelleOptions.some(option => option.value === currentEchelleId && !option.disabled);
+    const currentEchelleId = echelleControl?.value;
+    const currentStillAllowed = this.echelleOptions.some(option => option.value === currentEchelleId);
 
     if (!currentStillAllowed) {
-      this.form.get('echelleId')?.setValue(null, { emitEvent: false });
+      echelleControl?.setValue(null, { emitEvent: true });
+    }
+  }
+
+  private applyEchelonFilter(echelleId: number | null): void {
+    this.echelonOptions = echelleId
+      ? BUSINESS_ECHELONS
+          .map(businessEchelon => this.allEchelonOptions.find(option => option.key === businessEchelon.key && option.echelleId === echelleId))
+          .filter((option): option is EchelonSelectOption => !!option)
+      : [];
+
+    const echelonControl = this.form.get('echelonId');
+    const currentEchelonId = echelonControl?.value;
+    const currentStillAllowed = this.echelonOptions.some(option => option.value === currentEchelonId);
+
+    if (!currentStillAllowed) {
+      echelonControl?.setValue(null, { emitEvent: false });
     }
   }
 
   private findBackendGrade(businessGrade: BusinessGradeOption, grades: Grade[]): Grade | undefined {
+    const byCode = grades.find(grade => this.normalizeText(grade.code) === this.normalizeText(businessGrade.code));
+    if (byCode) {
+      return byCode;
+    }
+
     const target = this.normalizeText(businessGrade.label);
     return grades.find(grade => {
       const candidates = [
@@ -241,7 +308,7 @@ export class AdminOnboardingInitializeComponent implements OnInit {
 
   private extractEchelleKey(echelle: EchelleReferential): EchelleBusinessKey | undefined {
     const text = this.normalizeText(`${echelle.echelle ?? ''} ${echelle.libelle ?? ''} ${echelle.description ?? ''}`);
-    if (text.includes('hors echelle')) {
+    if (text.includes('hors echelle') || text.includes('hors')) {
       return 'HORS_ECHELLE';
     }
 
