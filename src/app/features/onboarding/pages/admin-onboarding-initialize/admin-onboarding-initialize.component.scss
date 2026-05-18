@@ -86,6 +86,13 @@
     color: #dc2626;
   }
 
+  .field-hint {
+    display: block;
+    margin-top: 0.35rem;
+    color: #64748b;
+    line-height: 1.35;
+  }
+
   .loading-state {
     min-height: 260px;
     display: flex;

@@ -15,12 +15,31 @@ import { EchelleService } from '../../services/echelle.service';
 import { EchelonService } from '../../services/echelon.service';
 import { GradeService } from '../../services/grade.service';
 import { PosteOnboardingService } from '../../services/poste-onboarding.service';
-import { OnboardingInitializeRequest } from '../../../../models/onboarding.model';
+import { EchelleReferential, EchelonReferential, Grade, OnboardingInitializeRequest } from '../../../../models/onboarding.model';
 import { ToastHelper } from '../../../../shared/utils/toast-helper';
+import {
+  BUSINESS_ECHELLES,
+  BUSINESS_ECHELONS,
+  BUSINESS_GRADES,
+  BusinessGradeOption,
+  EchelleBusinessKey
+} from '../../constants/public-administration-classification.constants';
 
 interface SelectOption {
   label: string;
-  value: number;
+  value: number | null;
+  disabled?: boolean;
+}
+
+interface GradeSelectOption extends SelectOption {
+  value: number | null;
+  group: string;
+  echelleKeys: EchelleBusinessKey[];
+}
+
+interface EchelleSelectOption extends SelectOption {
+  value: number | null;
+  key: EchelleBusinessKey;
 }
 
 @Component({
@@ -46,10 +65,13 @@ export class AdminOnboardingInitializeComponent implements OnInit {
   submitting = false;
   createdOnboardingId?: number;
 
-  gradeOptions: SelectOption[] = [];
-  echelleOptions: SelectOption[] = [];
+  gradeOptions: GradeSelectOption[] = [];
+  echelleOptions: EchelleSelectOption[] = [];
   echelonOptions: SelectOption[] = [];
   posteOptions: SelectOption[] = [];
+  selectedGrade?: GradeSelectOption;
+
+  private allEchelleOptions: EchelleSelectOption[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -78,6 +100,7 @@ export class AdminOnboardingInitializeComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.form.get('gradeId')?.valueChanges.subscribe(gradeId => this.applyGradeEchelleRule(gradeId));
     this.loadReferentials();
   }
 
@@ -98,6 +121,8 @@ export class AdminOnboardingInitializeComponent implements OnInit {
           this.createdOnboardingId = onboarding.id;
           ToastHelper.showSuccess(this.messageService, 'Onboarding cree et invitation preparee.');
           this.form.reset();
+          this.selectedGrade = undefined;
+          this.echelleOptions = [...this.allEchelleOptions];
         },
         error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Initialisation impossible.')
       });
@@ -125,18 +150,10 @@ export class AdminOnboardingInitializeComponent implements OnInit {
       .pipe(finalize(() => this.loadingReferentials = false))
       .subscribe({
         next: ({ grades, echelles, echelons, postes }) => {
-          this.gradeOptions = grades.map(grade => ({
-            label: `${grade.code}${grade.libelle ? ' - ' + grade.libelle : ''}`,
-            value: grade.id
-          }));
-          this.echelleOptions = echelles.map(echelle => ({
-            label: echelle.echelle || echelle.libelle || String(echelle.id),
-            value: echelle.id
-          }));
-          this.echelonOptions = echelons.map(echelon => ({
-            label: echelon.echelon || echelon.libelle || String(echelon.id),
-            value: echelon.id
-          }));
+          this.gradeOptions = this.buildGradeOptions(grades);
+          this.allEchelleOptions = this.buildEchelleOptions(echelles);
+          this.echelleOptions = [...this.allEchelleOptions];
+          this.echelonOptions = this.buildEchelonOptions(echelons);
           this.posteOptions = postes.map(poste => ({
             label: poste.libelleDuPoste || poste.libelle || poste.codeCourt || String(poste.id),
             value: poste.id
@@ -144,6 +161,123 @@ export class AdminOnboardingInitializeComponent implements OnInit {
         },
         error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Erreur lors du chargement des referentiels.')
       });
+  }
+
+  private buildGradeOptions(grades: Grade[]): GradeSelectOption[] {
+    return BUSINESS_GRADES.map(businessGrade => {
+      const grade = this.findBackendGrade(businessGrade, grades);
+      return {
+        label: `${businessGrade.group} - ${businessGrade.label} (${this.formatEchelleRange(businessGrade.echelleKeys)})${grade ? '' : ' - grade non configure'}`,
+        value: grade?.id ?? null,
+        disabled: !grade,
+        group: businessGrade.group,
+        echelleKeys: businessGrade.echelleKeys
+      };
+    });
+  }
+
+  private buildEchelleOptions(echelles: EchelleReferential[]): EchelleSelectOption[] {
+    return BUSINESS_ECHELLES.map(businessEchelle => {
+      const echelle = echelles.find(item => this.extractEchelleKey(item) === businessEchelle.key);
+      return {
+        label: `${businessEchelle.label}${echelle ? '' : ' - non configuree'}`,
+        value: echelle?.id ?? null,
+        key: businessEchelle.key,
+        disabled: !echelle
+      };
+    });
+  }
+
+  private buildEchelonOptions(echelons: EchelonReferential[]): SelectOption[] {
+    return BUSINESS_ECHELONS.map(businessEchelon => {
+      const echelon = echelons.find(item => this.extractEchelonKey(item) === businessEchelon.key);
+      return {
+        label: `${businessEchelon.label}${echelon ? '' : ' - non configure'}`,
+        value: echelon?.id ?? null,
+        disabled: !echelon
+      };
+    });
+  }
+
+  private applyGradeEchelleRule(gradeId: number | null): void {
+    this.selectedGrade = this.gradeOptions.find(option => option.value === gradeId) ?? undefined;
+
+    if (!this.selectedGrade) {
+      this.echelleOptions = [...this.allEchelleOptions];
+      return;
+    }
+
+    this.echelleOptions = this.allEchelleOptions.filter(option => this.selectedGrade?.echelleKeys.includes(option.key));
+
+    if (this.selectedGrade.echelleKeys.length === 1) {
+      const echelle = this.echelleOptions.find(option => !option.disabled);
+      this.form.get('echelleId')?.setValue(echelle?.value ?? null, { emitEvent: false });
+      return;
+    }
+
+    const currentEchelleId = this.form.get('echelleId')?.value;
+    const currentStillAllowed = this.echelleOptions.some(option => option.value === currentEchelleId && !option.disabled);
+
+    if (!currentStillAllowed) {
+      this.form.get('echelleId')?.setValue(null, { emitEvent: false });
+    }
+  }
+
+  private findBackendGrade(businessGrade: BusinessGradeOption, grades: Grade[]): Grade | undefined {
+    const target = this.normalizeText(businessGrade.label);
+    return grades.find(grade => {
+      const candidates = [
+        grade.code,
+        grade.libelle,
+        grade.description,
+        `${grade.code ?? ''} ${grade.libelle ?? ''}`
+      ]
+        .filter(Boolean)
+        .map(value => this.normalizeText(value));
+
+      return candidates.some(candidate => candidate === target || candidate.includes(target));
+    });
+  }
+
+  private extractEchelleKey(echelle: EchelleReferential): EchelleBusinessKey | undefined {
+    const text = this.normalizeText(`${echelle.echelle ?? ''} ${echelle.libelle ?? ''} ${echelle.description ?? ''}`);
+    if (text.includes('hors echelle')) {
+      return 'HORS_ECHELLE';
+    }
+
+    const match = text.match(/\b(6|7|8|9|10|11)\b/);
+    return match?.[1] as EchelleBusinessKey | undefined;
+  }
+
+  private extractEchelonKey(echelon: EchelonReferential): string | undefined {
+    const text = this.normalizeText(`${echelon.echelon ?? ''} ${echelon.libelle ?? ''} ${echelon.description ?? ''}`);
+    if (text.includes('exceptionnel')) {
+      return 'EXCEPTIONNEL';
+    }
+
+    const match = text.match(/\b(1|2|3|4|5|6|7|8|9|10|11)\b/);
+    return match?.[1];
+  }
+
+  private formatEchelleRange(keys: EchelleBusinessKey[]): string {
+    if (keys.length === 1) {
+      return keys[0] === 'HORS_ECHELLE' ? 'Hors Echelle' : `Echelle ${keys[0]}`;
+    }
+
+    const numericKeys = keys.filter(key => key !== 'HORS_ECHELLE').map(Number);
+    const first = Math.min(...numericKeys);
+    const last = Math.max(...numericKeys);
+    return `Echelle ${first} a ${last}`;
+  }
+
+  private normalizeText(value?: string): string {
+    return (value ?? '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[’']/g, ' ')
+      .replace(/[^a-zA-Z0-9]+/g, ' ')
+      .trim()
+      .toLowerCase();
   }
 
   private toPayload(): OnboardingInitializeRequest {
