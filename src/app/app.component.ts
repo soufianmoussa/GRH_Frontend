@@ -35,8 +35,8 @@ export class AppComponent implements OnInit {
     const path = this.router.url.split('?')[0].split('#')[0];
     return path === '/login'
       || path === '/register'
-      || path === '/onboarding/activate'
-      || path === '/onboarding/complete-profile'
-      || path === '/onboarding/waiting';
+      || path === '/activation'
+      || path === '/mon-onboarding'
+      || path.startsWith('/mon-onboarding/');
   }
 }

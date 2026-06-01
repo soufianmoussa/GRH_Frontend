@@ -1,126 +1,543 @@
 <p-toast position="top-center"></p-toast>
 <p-confirmDialog [style]="{ width: '450px' }"></p-confirmDialog>
+<app-rejection-reason-dialog
+  header="Motif du rejet"
+  subject="Indiquez precisement la raison du rejet pour l'agent."
+  (confirm)="confirmRejection($event)">
+</app-rejection-reason-dialog>
 
 <div class="content onboarding-detail">
-  <div class="page-header">
-    <div>
-      <a routerLink="/admin/onboarding" class="back-link"><i class="pi pi-arrow-left"></i> Retour au suivi</a>
-      <h1 class="titleh1">Detail onboarding</h1>
-      <p *ngIf="onboarding">{{ agentName() }} - {{ onboarding.matricule?.matricule || onboarding.agent?.matricule?.matricule || '-' }}</p>
-    </div>
-    <div class="header-actions" *ngIf="onboarding">
-      <button pButton label="Renvoyer invitation" icon="pi pi-send" class="p-button-outlined" (click)="resendInvitation()"></button>
-      <button pButton label="Mode assiste" icon="pi pi-user-edit" class="p-button-outlined" (click)="startAssisted()" [disabled]="onboarding.completionMode === 'ASSISTED'"></button>
-      <a pButton [routerLink]="['/admin/onboarding', onboarding.id, 'complete']" label="Completer" icon="pi pi-pencil"></a>
-    </div>
+  <!-- Back link -->
+  <a routerLink="/admin/onboarding" class="back-link">
+    <i class="pi pi-arrow-left"></i>
+    <span>Retour au tableau de bord</span>
+  </a>
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="card loading-card">
+    <i class="pi pi-spin pi-spinner"></i>
+    <span>Chargement du dossier onboarding...</span>
   </div>
 
-  <div *ngIf="loading" class="card loading-card">Chargement du dossier onboarding...</div>
-
   <ng-container *ngIf="!loading && onboarding">
+    <!-- Hero header -->
+    <div class="hero-card">
+      <div class="hero-main">
+        <div class="agent-avatar">
+          {{ agentInitials() }}
+        </div>
+        <div class="agent-identity">
+          <h1 class="agent-name">{{ agentName() }}</h1>
+          <div class="agent-meta">
+            <span class="meta-chip">
+              <i class="pi pi-id-card"></i>
+              {{ matricule() }}
+            </span>
+            <span class="meta-chip">
+              <i class="pi pi-envelope"></i>
+              {{ agentEmail() }}
+            </span>
+            <span class="meta-chip">
+              <i class="pi pi-phone"></i>
+              {{ agentPhone() }}
+            </span>
+          </div>
+          <div class="agent-tags">
+            <p-tag
+              [value]="onboardingStatusLabel(onboarding.status)"
+              [severity]="statusSeverity(onboarding.status)">
+            </p-tag>
+            <p-tag
+              [value]="modeLabel(onboarding.completionMode)"
+              [severity]="onboarding.completionMode === 'ASSISTED' ? 'warn' : 'info'">
+            </p-tag>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-actions">
+        <button pButton
+                label="Renvoyer invitation"
+                icon="pi pi-send"
+                class="p-button-outlined hero-btn"
+                (click)="resendInvitation()">
+        </button>
+        <button pButton
+                label="Mode assiste"
+                icon="pi pi-user-edit"
+                class="p-button-outlined hero-btn"
+                (click)="startAssisted()"
+                [disabled]="onboarding.completionMode === 'ASSISTED'"
+                pTooltip="Bascule le dossier pour que vous saisissiez a la place de l'agent">
+        </button>
+        <a *ngIf="onboarding.completionMode === 'ASSISTED'"
+           pButton
+           [routerLink]="['/admin/onboarding', onboarding.id, 'complete']"
+           label="Completer le dossier"
+           icon="pi pi-pencil"
+           class="hero-btn primary-gradient">
+        </a>
+        <p-menu #headerMenuRef [model]="headerMenu()" [popup]="true" appendTo="body"></p-menu>
+        <button pButton
+                icon="pi pi-ellipsis-v"
+                class="p-button-outlined hero-btn icon-only"
+                pTooltip="Autres actions"
+                (click)="headerMenuRef.toggle($event)">
+        </button>
+      </div>
+    </div>
+
+    <!-- Summary KPI cards -->
     <div class="summary-grid">
-      <div class="card summary-card">
-        <span>Agent</span>
-        <strong>{{ agentName() }}</strong>
-        <p-tag [value]="agentStatusLabel(onboarding.agent?.status)" [severity]="statusSeverity(onboarding.agent?.status)"></p-tag>
+      <div class="summary-card kpi-progress">
+        <div class="kpi-icon"><i class="pi pi-chart-line"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Progression</span>
+          <span class="kpi-value">{{ progress }}%</span>
+          <p-progressBar [value]="progress" [showValue]="false"></p-progressBar>
+        </div>
       </div>
 
-      <div class="card summary-card">
-        <span>Onboarding</span>
-        <strong>{{ onboardingStatusLabel(onboarding.status) }}</strong>
-        <p-tag [value]="modeLabel(onboarding.completionMode)" [severity]="onboarding.completionMode === 'ASSISTED' ? 'warn' : 'info'"></p-tag>
+      <div class="summary-card kpi-steps">
+        <div class="kpi-icon"><i class="pi pi-flag"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Etapes</span>
+          <span class="kpi-value">{{ completedStepsCount() }} / {{ totalStepsCount() }}</span>
+          <small class="kpi-hint">terminees</small>
+        </div>
       </div>
 
-      <div class="card summary-card">
-        <span>Progression</span>
-        <p-progressBar [value]="progress()"></p-progressBar>
+      <div class="summary-card kpi-docs">
+        <div class="kpi-icon"><i class="pi pi-file-check"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Documents</span>
+          <span class="kpi-value">{{ totalValidatedCount() }} / {{ totalDocumentsCount() }}</span>
+          <small class="kpi-hint">avec piece jointe</small>
+        </div>
       </div>
 
-      <div class="card summary-card">
-        <span>Invitation</span>
-        <strong>{{ invitationStatusLabel(onboarding.invitation?.status) }}</strong>
-        <small *ngIf="onboarding.invitation?.expiresAt">Expire le {{ onboarding.invitation?.expiresAt | date:'dd/MM/yyyy HH:mm' }}</small>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Informations administratives</h2>
-      <div class="info-grid">
-        <div><span>Matricule</span><strong>{{ onboarding.matricule?.matricule || onboarding.agent?.matricule?.matricule || '-' }}</strong></div>
-        <div><span>Email</span><strong>{{ onboarding.agent?.email || onboarding.invitation?.email || '-' }}</strong></div>
-        <div><span>Grade</span><strong>{{ onboarding.agent?.grade?.code || '-' }} {{ onboarding.agent?.grade?.libelle || '' }}</strong></div>
-        <div><span>Echelle</span><strong>{{ onboarding.agent?.echelle?.echelle || onboarding.agent?.echelle?.libelle || '-' }}</strong></div>
-        <div><span>Echelon</span><strong>{{ onboarding.agent?.echelon?.echelon || onboarding.agent?.echelon?.libelle || '-' }}</strong></div>
-        <div><span>Date creation</span><strong>{{ onboarding.createdAt | date:'dd/MM/yyyy HH:mm' }}</strong></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Etapes</h2>
-      <p-table [value]="onboarding.steps || []" [responsiveLayout]="'scroll'">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Etape</th>
-            <th>Status</th>
-            <th>Completee par</th>
-            <th>Date</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-step>
-          <tr>
-            <td>{{ step.label || step.title || step.code }}</td>
-            <td>{{ step.status || '-' }}</td>
-            <td>{{ step.completedBy || '-' }}</td>
-            <td>{{ step.completedAt | date:'dd/MM/yyyy HH:mm' }}</td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr><td colspan="4" class="empty-state">Aucune etape exposee.</td></tr>
-        </ng-template>
-      </p-table>
-    </div>
-
-    <div class="card">
-      <h2>Documents</h2>
-      <p-table [value]="onboarding.documents || []" [responsiveLayout]="'scroll'">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Document</th>
-            <th>Obligatoire</th>
-            <th>Status</th>
-            <th>Fichier</th>
-            <th>Commentaire</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-document>
-          <tr>
-            <td>{{ document.label || document.name || document.type || document.code }}</td>
-            <td>{{ document.required ? 'Oui' : 'Non' }}</td>
-            <td><p-tag [value]="documentStatusLabel(document.status)" [severity]="statusSeverity(document.status)"></p-tag></td>
-            <td>{{ document.fileName || '-' }}</td>
-            <td>{{ document.rejectionReason || document.comment || '-' }}</td>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="emptymessage">
-          <tr><td colspan="5" class="empty-state">Aucun document attendu.</td></tr>
-        </ng-template>
-      </p-table>
-    </div>
-
-    <div class="card" *ngIf="onboarding.logs?.length">
-      <h2>Historique</h2>
-      <div class="log-list">
-        <div *ngFor="let log of onboarding.logs" class="log-item">
-          <strong>{{ log.action }}</strong>
-          <span>{{ log.actor || '-' }} - {{ log.createdAt | date:'dd/MM/yyyy HH:mm' }}</span>
-          <p *ngIf="log.comment">{{ log.comment }}</p>
+      <div class="summary-card kpi-invitation">
+        <div class="kpi-icon"><i class="pi pi-envelope"></i></div>
+        <div class="kpi-body">
+          <span class="kpi-label">Invitation</span>
+          <span class="kpi-value sm">{{ invitationStatusLabel(onboarding.invitation?.status) }}</span>
+          <small class="kpi-hint" *ngIf="onboarding.invitation?.expiresAt">
+            Expire le {{ onboarding.invitation?.expiresAt | date:'dd/MM/yyyy HH:mm' }}
+          </small>
+          <small class="kpi-hint" *ngIf="!onboarding.invitation?.expiresAt">Aucune invitation active</small>
         </div>
       </div>
     </div>
 
-    <div class="detail-actions">
-      <button pButton label="Valider le dossier" icon="pi pi-check" class="p-button-success" (click)="validateDossier()" [disabled]="onboarding.status !== 'PENDING_VALIDATION'"></button>
-      <button pButton label="Rejeter le dossier" icon="pi pi-times" class="p-button-danger" (click)="rejectDossier()" [disabled]="onboarding.status !== 'PENDING_VALIDATION'"></button>
+    <!-- Rejection banner (when applicable) -->
+    <div *ngIf="onboarding.status === 'REJECTED' && onboarding.rejectionReason" class="rejection-banner">
+      <i class="pi pi-exclamation-triangle"></i>
+      <div>
+        <strong>Dossier rejete</strong>
+        <p>{{ onboarding.rejectionReason }}</p>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="card tabs-card">
+      <p-tabView>
+        <!-- ====== Vue d'ensemble ====== -->
+        <p-tabPanel>
+          <ng-template pTemplate="header">
+            <i class="pi pi-info-circle"></i>
+            <span>Vue d'ensemble</span>
+          </ng-template>
+
+          <div class="section">
+            <h3 class="section-title">
+              <i class="pi pi-briefcase"></i>
+              Informations administratives
+            </h3>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="info-label">Matricule</span>
+                <strong class="info-value mono">{{ matricule() }}</strong>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Email</span>
+                <strong class="info-value">{{ agentEmail() }}</strong>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Telephone</span>
+                <strong class="info-value">{{ agentPhone() }}</strong>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Grade</span>
+                <strong class="info-value">{{ onboarding.agent?.grade?.code || '-' }} {{ onboarding.agent?.grade?.libelle || '' }}</strong>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Echelle</span>
+                <strong class="info-value">{{ onboarding.agent?.echelle?.echelle || onboarding.agent?.echelle?.libelle || '-' }}</strong>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Echelon</span>
+                <strong class="info-value">{{ onboarding.agent?.echelon?.echelon || onboarding.agent?.echelon?.libelle || '-' }}</strong>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Date creation</span>
+                <strong class="info-value">{{ onboarding.createdAt | date:'dd/MM/yyyy HH:mm' }}</strong>
+              </div>
+              <div class="info-item">
+                <span class="info-label">Soumis le</span>
+                <strong class="info-value">{{ (onboarding.submittedAt | date:'dd/MM/yyyy HH:mm') || '-' }}</strong>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3 class="section-title">
+              <i class="pi pi-sitemap"></i>
+              Etapes du dossier
+            </h3>
+            <ul class="timeline">
+              <li *ngFor="let step of onboarding.steps; let last = last"
+                  [class.done]="step.status === 'COMPLETED'"
+                  [class.active]="step.status === 'IN_PROGRESS'"
+                  [class.last]="last">
+                <div class="timeline-dot">
+                  <i class="pi" [ngClass]="stepStateIcon(step)"></i>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-row">
+                    <strong>
+                      <i class="pi step-icon" [ngClass]="stepIcon(step)"></i>
+                      {{ stepLabel(step) }}
+                    </strong>
+                    <span class="timeline-state" [attr.data-state]="step.status">
+                      {{ stepStateLabel(step) }}
+                    </span>
+                  </div>
+                  <small class="muted" *ngIf="step.completedAt">
+                    Termine le {{ step.completedAt | date:'dd/MM/yyyy HH:mm' }}
+                  </small>
+                </div>
+              </li>
+              <li *ngIf="!onboarding.steps?.length" class="empty-state">Aucune etape enregistree.</li>
+            </ul>
+          </div>
+        </p-tabPanel>
+
+        <!-- ====== Profil agent ====== -->
+        <p-tabPanel>
+          <ng-template pTemplate="header">
+            <i class="pi pi-user"></i>
+            <span>Profil agent</span>
+          </ng-template>
+
+          <div class="section">
+            <h3 class="section-title">
+              <i class="pi pi-id-card"></i>
+              Identite
+            </h3>
+            <div class="info-grid">
+              <div class="info-item"><span class="info-label">Nom</span><strong class="info-value">{{ onboarding.agent?.nom || '-' }}</strong></div>
+              <div class="info-item"><span class="info-label">Prenom</span><strong class="info-value">{{ onboarding.agent?.prenom || '-' }}</strong></div>
+              <div class="info-item"><span class="info-label">CIN</span><strong class="info-value mono">{{ onboarding.agent?.cin || '-' }}</strong></div>
+              <div class="info-item"><span class="info-label">Sexe</span><strong class="info-value">{{ onboarding.agent?.sexe || '-' }}</strong></div>
+              <div class="info-item"><span class="info-label">Date de naissance</span><strong class="info-value">{{ onboarding.agent?.dateNaissance || '-' }}</strong></div>
+              <div class="info-item"><span class="info-label">Situation</span><strong class="info-value">{{ onboarding.agent?.situation || '-' }}</strong></div>
+            </div>
+          </div>
+
+          <div class="section">
+            <h3 class="section-title">
+              <i class="pi pi-map-marker"></i>
+              Adresse et contact
+            </h3>
+            <div class="info-grid">
+              <div class="info-item"><span class="info-label">Adresse</span><strong class="info-value">{{ principalAdresse() }}</strong></div>
+              <div class="info-item"><span class="info-label">Ville</span><strong class="info-value">{{ principalVille() }}</strong></div>
+              <div class="info-item"><span class="info-label">Email pro</span><strong class="info-value">{{ agentEmail() }}</strong></div>
+              <div class="info-item"><span class="info-label">Telephone</span><strong class="info-value">{{ agentPhone() }}</strong></div>
+            </div>
+          </div>
+
+          <div class="form-actions" *ngIf="onboarding.completionMode === 'ASSISTED'">
+            <a pButton
+               [routerLink]="['/admin/onboarding', onboarding.id, 'complete']"
+               label="Editer en mode assiste"
+               icon="pi pi-pencil"
+               class="primary-gradient">
+            </a>
+          </div>
+        </p-tabPanel>
+
+        <!-- ====== Documents ====== -->
+        <p-tabPanel>
+          <ng-template pTemplate="header">
+            <i class="pi pi-file"></i>
+            <span>Documents</span>
+            <span class="tab-badge" *ngIf="totalDocumentsCount()">
+              {{ totalValidatedCount() }}/{{ totalDocumentsCount() }}
+            </span>
+          </ng-template>
+
+          <div *ngIf="!isPendingValidation()" class="info-banner">
+            <i class="pi pi-info-circle"></i>
+            <span>La validation des documents est disponible quand le dossier est en attente de validation.</span>
+          </div>
+
+          <div class="container primTable docs-table">
+            <p-table [value]="onboarding.documents || []" [responsiveLayout]="'scroll'">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th class="doc-name-col">Document</th>
+                  <th>Obligatoire</th>
+                  <th>Statut</th>
+                  <th>Fichier</th>
+                  <th>Commentaire</th>
+                  <th class="actions-col">Actions</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-document>
+                <tr>
+                  <td class="doc-name-cell">
+                    <i class="pi pi-file-pdf doc-icon"></i>
+                    <strong>{{ document.title || document.label || document.name || document.type || document.code }}</strong>
+                  </td>
+                  <td>
+                    <span class="required-badge" [class.is-required]="document.required">
+                      <i class="pi" [ngClass]="document.required ? 'pi-asterisk' : 'pi-minus'"></i>
+                      {{ document.required ? 'Obligatoire' : 'Optionnel' }}
+                    </span>
+                  </td>
+                  <td>
+                    <p-tag
+                      [value]="documentStatusLabel(document.status)"
+                      [severity]="statusSeverity(document.status)">
+                    </p-tag>
+                  </td>
+                  <td>
+                    <a *ngIf="document.fileUrl"
+                       [href]="document.fileUrl"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="doc-link">
+                      <i class="pi pi-download"></i>
+                      {{ document.fileName || 'Telecharger' }}
+                    </a>
+                    <span *ngIf="!document.fileUrl" class="muted">
+                      <i class="pi pi-clock"></i>
+                      {{ document.fileName || 'En attente' }}
+                    </span>
+                  </td>
+                  <td class="comment-cell">
+                    <span *ngIf="document.rejectionReason || document.comment"
+                          [class.rejection-comment]="document.rejectionReason">
+                      {{ document.rejectionReason || document.comment }}
+                    </span>
+                    <span *ngIf="!document.rejectionReason && !document.comment" class="muted">-</span>
+                  </td>
+                  <td>
+                    <div class="actions-cell">
+                      <button pButton
+                              icon="pi pi-check"
+                              class="p-button-rounded p-button-text p-button-success"
+                              pTooltip="Valider le document"
+                              tooltipPosition="top"
+                              [disabled]="!isPendingValidation() || !document.fileName || document.status === 'VALIDATED'"
+                              (click)="validateDocument(document)">
+                      </button>
+                      <button pButton
+                              icon="pi pi-times"
+                              class="p-button-rounded p-button-text p-button-danger"
+                              pTooltip="Rejeter le document"
+                              tooltipPosition="top"
+                              [disabled]="!isPendingValidation() || !document.fileName"
+                              (click)="askRejectDocument(document)">
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="6">
+                    <div class="empty-state">
+                      <i class="pi pi-inbox"></i>
+                      <span>Aucun document attendu.</span>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+
+          <!-- ====== Diplomes (separate table) ====== -->
+          <h3 class="section-title" style="margin-top: 2rem;">
+            <i class="pi pi-graduation-cap"></i>
+            Diplomes
+            <span class="tab-badge" *ngIf="diplomes.length">{{ diplomes.length }}</span>
+          </h3>
+
+          <div class="container primTable docs-table">
+            <p-table [value]="diplomes" [responsiveLayout]="'scroll'">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th class="doc-name-col">Niveau</th>
+                  <th>Specialite</th>
+                  <th>Etablissement</th>
+                  <th>Date obtention</th>
+                  <th>Mention</th>
+                  <th>Scan</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-d>
+                <tr>
+                  <td class="doc-name-cell">
+                    <i class="pi pi-graduation-cap doc-icon" style="color:#7c3aed;"></i>
+                    <strong>{{ d.niveau || '-' }}</strong>
+                  </td>
+                  <td>{{ d.specialite || '-' }}</td>
+                  <td>{{ d.etablissement || '-' }}</td>
+                  <td>{{ d.dateObtention | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ d.mention || '-' }}</td>
+                  <td>
+                    <a *ngIf="d.scanUrl"
+                       [href]="d.scanUrl"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="doc-link">
+                      <i class="pi pi-download"></i>
+                      {{ d.scanFileName || 'Telecharger' }}
+                    </a>
+                    <p-tag *ngIf="!d.scanUrl" severity="warn" value="Scan manquant"></p-tag>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="6">
+                    <div class="empty-state">
+                      <i class="pi pi-graduation-cap"></i>
+                      <span>Aucun diplome enregistre.</span>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+
+          <!-- ====== Formations / stages (separate table) ====== -->
+          <h3 class="section-title" style="margin-top: 2rem;">
+            <i class="pi pi-book"></i>
+            Formations & stages
+            <span class="tab-badge" *ngIf="formations.length">{{ formations.length }}</span>
+          </h3>
+
+          <div class="container primTable docs-table">
+            <p-table [value]="formations" [responsiveLayout]="'scroll'">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th class="doc-name-col">Formation</th>
+                  <th>Stage</th>
+                  <th>Debut</th>
+                  <th>Fin</th>
+                  <th>Certificat</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-f>
+                <tr>
+                  <td class="doc-name-cell">
+                    <i class="pi pi-book doc-icon" style="color:#2563eb;"></i>
+                    <strong>{{ f.intituleFormation || '-' }}</strong>
+                  </td>
+                  <td>{{ f.intituleStage || '-' }}</td>
+                  <td>{{ f.dateDebut | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ f.dateFin | date:'dd/MM/yyyy' }}</td>
+                  <td>
+                    <a *ngIf="f.certificateUrl"
+                       [href]="f.certificateUrl"
+                       target="_blank"
+                       rel="noopener noreferrer"
+                       class="doc-link">
+                      <i class="pi pi-download"></i>
+                      {{ f.certificateFileName || 'Telecharger' }}
+                    </a>
+                    <p-tag *ngIf="!f.certificateUrl" severity="warn" value="Aucun certificat"></p-tag>
+                  </td>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="5">
+                    <div class="empty-state">
+                      <i class="pi pi-book"></i>
+                      <span>Aucune formation enregistree.</span>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </p-tabPanel>
+
+        <!-- ====== Activite ====== -->
+        <p-tabPanel>
+          <ng-template pTemplate="header">
+            <i class="pi pi-history"></i>
+            <span>Activite</span>
+            <span class="tab-badge" *ngIf="onboarding.actionLogs?.length as count">
+              {{ count }}
+            </span>
+          </ng-template>
+
+          <ng-container *ngIf="onboarding.actionLogs?.length && onboarding.actionLogs as logs; else noLogs">
+            <ul class="activity-list">
+              <li *ngFor="let log of logs"
+                  class="activity-item"
+                  [attr.data-severity]="actionSeverity(log.action)">
+                <div class="activity-icon">
+                  <i class="pi" [ngClass]="actionIcon(log.action)"></i>
+                </div>
+                <div class="activity-body">
+                  <div class="activity-head">
+                    <strong>{{ actionLabel(log.action) }}</strong>
+                    <small class="muted">{{ log.createdAt | date:'dd/MM/yyyy HH:mm' }}</small>
+                  </div>
+                  <small class="muted" *ngIf="log.actorUserId">
+                    <i class="pi pi-user"></i>
+                    Utilisateur #{{ log.actorUserId }}
+                  </small>
+                </div>
+              </li>
+            </ul>
+          </ng-container>
+          <ng-template #noLogs>
+            <div class="empty-state">
+              <i class="pi pi-history"></i>
+              <span>Aucune activite enregistree pour ce dossier.</span>
+            </div>
+          </ng-template>
+        </p-tabPanel>
+      </p-tabView>
+    </div>
+
+    <!-- Bottom action bar (sticky, only when actionable) -->
+    <div class="detail-actions" *ngIf="isPendingValidation()">
+      <div class="detail-actions-hint">
+        <i class="pi pi-info-circle"></i>
+        <span>Ce dossier est en attente de votre validation finale.</span>
+      </div>
+      <div class="detail-actions-buttons">
+        <button pButton
+                label="Rejeter le dossier"
+                icon="pi pi-times"
+                class="p-button-outlined p-button-danger"
+                (click)="askRejectDossier()">
+        </button>
+        <button pButton
+                label="Valider le dossier"
+                icon="pi pi-check"
+                class="primary-gradient"
+                (click)="validateDossier()">
+        </button>
+      </div>
     </div>
   </ng-container>
 </div>

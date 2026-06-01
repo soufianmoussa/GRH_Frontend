@@ -26,7 +26,7 @@
 
             <p-table #dtDiplome [value]="diplomes" [rows]="5" [paginator]="true" [rowsPerPageOptions]="[3, 5, 10]"
               [responsiveLayout]="'scroll'"
-              [globalFilterFields]="['etablissement.typeEtab.libelle','specialite.formationInitiale.libelle','niveau.libelle','etablissement.libelle','codePays','specialite.libelle','dateObtention','mention']">
+              [globalFilterFields]="['niveau','etablissement','codePays','specialite','dateObtention','mention']">
 
               <ng-template pTemplate="caption">
                 <div class="flex align-items-center justify-content-between">
@@ -42,11 +42,11 @@
 
               <ng-template pTemplate="header">
                 <tr>
-                  <th><p-columnFilter type="text" field="specialite.formationInitiale.libelle" display="menu" /> Formation initiale</th>
-                  <th><p-columnFilter type="text" field="niveau.libelle" display="menu" /> Niveau</th>
-                  <th><p-columnFilter type="text" field="etablissement.libelle" display="menu" /> Établissement</th>
-                  <th><p-columnFilter type="text" field="specialite.libelle" display="menu" /> Spécialité</th>
+                  <th><p-columnFilter type="text" field="niveau" display="menu" /> Niveau</th>
+                  <th><p-columnFilter type="text" field="etablissement" display="menu" /> Établissement</th>
+                  <th><p-columnFilter type="text" field="specialite" display="menu" /> Spécialité</th>
                   <th><p-columnFilter type="text" field="dateObtention" display="menu" /> Date d'obtention</th>
+                  <th><p-columnFilter type="text" field="mention" display="menu" /> Mention</th>
                   <th>Scan</th>
                   <th>Actions</th>
                 </tr>
@@ -54,11 +54,11 @@
 
               <ng-template pTemplate="body" let-item>
                 <tr>
-                  <td>{{ item.specialite?.formationInitiale?.libelle }}</td>
-                  <td>{{ item.niveau?.libelle }}</td>
-                  <td>{{ item.etablissement?.libelle }}</td>
-                  <td>{{ item.specialite?.libelle }}</td>
+                  <td>{{ item.niveau || '-' }}</td>
+                  <td>{{ item.etablissement || '-' }}</td>
+                  <td>{{ item.specialite || '-' }}</td>
                   <td>{{ item.dateObtention | date:'dd/MM/yyyy' }}</td>
+                  <td>{{ item.mention || '-' }}</td>
 
                   <td>
                     <a *ngIf="item.scanUrl" [href]="item.scanUrl" target="_blank" pTooltip="Voir le scan"
@@ -109,25 +109,19 @@
     </div>
     <div class="w-full">
       <p-floatLabel>
-        <input pInputText id="v_formation" [ngModel]="selectedDiplome.specialite?.formationInitiale?.libelle" [disabled]="true" />
-        <label for="v_formation">Formation initiale</label>
-      </p-floatLabel>
-    </div>
-    <div class="w-full">
-      <p-floatLabel>
-        <input pInputText id="v_niveau" [ngModel]="selectedDiplome.niveau?.libelle" [disabled]="true" />
+        <input pInputText id="v_niveau" [ngModel]="selectedDiplome.niveau" [disabled]="true" />
         <label for="v_niveau">Niveau</label>
       </p-floatLabel>
     </div>
     <div class="w-full">
       <p-floatLabel>
-        <input pInputText id="v_etab" [ngModel]="selectedDiplome.etablissement?.libelle" [disabled]="true" />
+        <input pInputText id="v_etab" [ngModel]="selectedDiplome.etablissement" [disabled]="true" />
         <label for="v_etab">Établissement</label>
       </p-floatLabel>
     </div>
     <div class="w-full">
       <p-floatLabel>
-        <input pInputText id="v_spec" [ngModel]="selectedDiplome.specialite?.libelle" [disabled]="true" />
+        <input pInputText id="v_spec" [ngModel]="selectedDiplome.specialite" [disabled]="true" />
         <label for="v_spec">Spécialité</label>
       </p-floatLabel>
     </div>
@@ -157,7 +151,7 @@
       </div>
     </div>
   </div>
-  
+
   <ng-template pTemplate="footer">
     <p-button label="Fermer" icon="pi pi-times" [text]="true" severity="secondary" (onClick)="displayViewDialog=false"></p-button>
   </ng-template>
@@ -173,19 +167,7 @@
 
     <div class="w-full">
       <p-floatLabel>
-        <p-dropdown id="f_formation_init" name="f_formation_init" [options]="formationsInitiales" optionLabel="libelle" optionValue="id" [filter]="true"
-          [(ngModel)]="formDiplome.formationInitialeId" #f_formation_init="ngModel" required appendTo="body" (onChange)="formDiplome.specialiteId = null" [styleClass]="formDiplome.formationInitialeId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="f_formation_init.invalid && f_formation_init.touched">
-        </p-dropdown>
-        <label for="f_formation_init">Formation initiale <span style="color: red;">*</span></label>
-      </p-floatLabel>
-      <small class="text-red-500 block mt-1" *ngIf="f_formation_init.invalid && f_formation_init.touched">La formation initiale est obligatoire.</small>
-    </div>
-
-    <div class="w-full">
-      <p-floatLabel>
-        <p-dropdown id="f_niveau" name="f_niveau" [options]="niveaux" optionLabel="libelle" optionValue="id" [filter]="true"
-          [(ngModel)]="formDiplome.niveauId" #f_niveau="ngModel" required appendTo="body" [styleClass]="formDiplome.niveauId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="f_niveau.invalid && f_niveau.touched">
-        </p-dropdown>
+        <p-autoComplete id="f_niveau" name="f_niveau" [(ngModel)]="formDiplome.niveau" [suggestions]="niveauSuggestions" (completeMethod)="filterNiveau($event)" [dropdown]="true" [forceSelection]="false" appendTo="body" [styleClass]="formDiplome.niveau ? 'p-filled w-full' : 'w-full'" [inputStyleClass]="'w-full'" required #f_niveau="ngModel"></p-autoComplete>
         <label for="f_niveau">Niveau <span style="color: red;">*</span></label>
       </p-floatLabel>
       <small class="text-red-500 block mt-1" *ngIf="f_niveau.invalid && f_niveau.touched">Le niveau est obligatoire.</small>
@@ -193,22 +175,16 @@
 
     <div class="w-full">
       <p-floatLabel>
-        <p-dropdown id="f_etab" name="f_etab" [options]="etablissements" optionLabel="libelle" optionValue="id" [filter]="true"
-          [(ngModel)]="formDiplome.etablissementId" #f_etab="ngModel" required appendTo="body" [styleClass]="formDiplome.etablissementId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="f_etab.invalid && f_etab.touched">
-        </p-dropdown>
-        <label for="f_etab">Établissement <span style="color: red;">*</span></label>
+        <p-autoComplete id="f_etab" name="f_etab" [(ngModel)]="formDiplome.etablissement" [suggestions]="etablissementSuggestions" (completeMethod)="filterEtablissement($event)" [dropdown]="true" [forceSelection]="false" appendTo="body" [styleClass]="formDiplome.etablissement ? 'p-filled w-full' : 'w-full'" [inputStyleClass]="'w-full'"></p-autoComplete>
+        <label for="f_etab">Établissement</label>
       </p-floatLabel>
-      <small class="text-red-500 block mt-1" *ngIf="f_etab.invalid && f_etab.touched">L'établissement est obligatoire.</small>
     </div>
 
     <div class="w-full">
       <p-floatLabel>
-        <p-dropdown id="f_spec" name="f_spec" [options]="filteredSpecialites" optionLabel="libelle" optionValue="id" [filter]="true"
-          [(ngModel)]="formDiplome.specialiteId" #f_spec="ngModel" required appendTo="body" [styleClass]="formDiplome.specialiteId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="f_spec.invalid && f_spec.touched">
-        </p-dropdown>
-        <label for="f_spec">Spécialité <span style="color: red;">*</span></label>
+        <p-autoComplete id="f_spec" name="f_spec" [(ngModel)]="formDiplome.specialite" [suggestions]="specialiteSuggestions" (completeMethod)="filterSpecialite($event)" [dropdown]="true" [forceSelection]="false" appendTo="body" [styleClass]="formDiplome.specialite ? 'p-filled w-full' : 'w-full'" [inputStyleClass]="'w-full'"></p-autoComplete>
+        <label for="f_spec">Spécialité</label>
       </p-floatLabel>
-      <small class="text-red-500 block mt-1" *ngIf="f_spec.invalid && f_spec.touched">La spécialité est obligatoire.</small>
     </div>
 
     <div class="w-full">
@@ -221,7 +197,7 @@
 
     <div class="w-full">
       <p-floatLabel>
-        <p-dropdown id="f_mention" name="f_mention" [options]="mentions" optionLabel="label" optionValue="label" [(ngModel)]="formDiplome.mention"
+        <p-dropdown id="f_mention" name="f_mention" [options]="mentionsList" [(ngModel)]="formDiplome.mention"
           #f_mention="ngModel" required appendTo="body" [styleClass]="formDiplome.mention ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="f_mention.invalid && f_mention.touched">
         </p-dropdown>
         <label for="f_mention">Mention <span style="color: red;">*</span></label>
@@ -244,11 +220,9 @@
       <small class="text-red-500 block mt-1" *ngIf="f_pays.invalid && f_pays.touched">Le code pays est obligatoire.</small>
     </div>
 
-    <!-- File upload (optional) -->
     <div class="w-full dialog-upload">
       <input #fileInput type="file" accept=".pdf,.jpg,.jpeg,.png" (change)="onFileSelect($event)" hidden />
 
-      <!-- Existing file (edit mode) -->
       <div class="file-selected" *ngIf="dialogMode === 'edit' && formDiplome.scanFileName && !selectedFile">
         <i class="pi pi-file"></i>
         <a [href]="formDiplome.scanUrl" target="_blank" class="file-name">{{ formDiplome.scanFileName }}</a>
@@ -257,7 +231,6 @@
         </button>
       </div>
 
-      <!-- Upload card (empty state) -->
       <div class="file-upload-zone" *ngIf="!selectedFile && !(dialogMode === 'edit' && formDiplome.scanFileName)" (click)="fileInput.click()">
         <label class="file-upload-label">
           <div class="upload-icon-box"><i class="pi pi-cloud-upload"></i></div>
@@ -269,7 +242,6 @@
         </label>
       </div>
 
-      <!-- File selected chip -->
       <div class="file-selected" *ngIf="selectedFile">
         <i class="pi pi-file"></i>
         <span class="file-name">{{ selectedFile.name }}</span>

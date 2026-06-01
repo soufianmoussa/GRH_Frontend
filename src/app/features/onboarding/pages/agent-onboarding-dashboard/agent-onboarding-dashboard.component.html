@@ -1,61 +1,174 @@
 <p-toast position="top-center"></p-toast>
 
-<div class="content agent-onboarding-dashboard">
-  <div class="page-header">
-    <div>
-      <h1 class="titleh1">Mon onboarding</h1>
-      <p>Suivez votre dossier onboarding et les elements attendus par l administration.</p>
-    </div>
+<div class="content agent-onboarding-hub">
+
+  <!-- Loading -->
+  <div *ngIf="loading" class="loading-card">
+    <i class="pi pi-spin pi-spinner"></i>
+    <span>Chargement de votre onboarding...</span>
   </div>
 
-  <div *ngIf="loading" class="card loading-card">Chargement de votre onboarding...</div>
-
   <ng-container *ngIf="!loading && onboarding">
-    <div class="welcome-card">
-      <div>
-        <span>Bienvenue</span>
-        <h2>{{ onboarding.agent?.prenom || 'Agent' }} {{ onboarding.agent?.nom || '' }}</h2>
-        <p>Votre dossier est actuellement : {{ statusLabel(onboarding.status) }}.</p>
-      </div>
-      <p-tag [value]="statusLabel(onboarding.status)" [severity]="statusSeverity(onboarding.status)"></p-tag>
-    </div>
 
-    <div class="dashboard-grid">
-      <div class="card progress-card">
-        <h2>Progression</h2>
-        <p-progressBar [value]="progress()"></p-progressBar>
-        <p class="muted" *ngIf="onboarding.status === 'PENDING_VALIDATION'">Votre profil a ete soumis avec succes. Il est en attente de validation par l administration.</p>
-        <p class="muted" *ngIf="onboarding.status === 'REJECTED'">Votre dossier contient des elements rejetes a corriger.</p>
-        <a *ngIf="canContinue()" pButton routerLink="/agent/onboarding/complete" label="Continuer mon profil" icon="pi pi-arrow-right"></a>
-      </div>
-
-      <div class="card">
-        <h2>Elements a completer</h2>
-        <div *ngIf="!missingDocuments().length && !rejectedDocuments().length" class="empty-state">
-          Aucun element bloquant pour le moment.
+    <!-- Hero banner -->
+    <section class="hero-card" [class.hero-card--locked]="locked()">
+      <div class="hero-card__bg"></div>
+      <div class="hero-card__content">
+        <div class="hero-card__left">
+          <span class="hero-card__hello">Bienvenue,</span>
+          <h2 class="hero-card__name">{{ agentFullName() }}</h2>
+          <div class="hero-card__meta">
+            <span class="meta-chip" *ngIf="onboarding.matricule?.matricule">
+              <i class="pi pi-id-card"></i>
+              Matricule&nbsp;: <strong>{{ onboarding.matricule?.matricule }}</strong>
+            </span>
+            <span class="meta-chip" *ngIf="onboarding.agent?.grade?.libelle">
+              <i class="pi pi-briefcase"></i>
+              {{ onboarding.agent?.grade?.libelle }}
+            </span>
+          </div>
         </div>
-        <ul *ngIf="missingDocuments().length || rejectedDocuments().length" class="document-list">
-          <li *ngFor="let document of missingDocuments()">
-            <span>{{ document.label || document.name || document.type || document.code }}</span>
-            <p-tag value="Manquant" severity="warn"></p-tag>
-          </li>
-          <li *ngFor="let document of rejectedDocuments()">
-            <span>{{ document.label || document.name || document.type || document.code }}</span>
-            <p-tag [value]="documentStatusLabel(document.status)" severity="danger"></p-tag>
-          </li>
-        </ul>
+        <div class="hero-card__right">
+          <app-onboarding-status-badge [status]="onboarding.status"></app-onboarding-status-badge>
+          <span class="hero-card__hint">{{ nextActionHint() }}</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Rejection banner -->
+    <p-message
+      *ngIf="onboarding.status === 'REJECTED' && onboarding.rejectionReason"
+      severity="error"
+      [text]="'Votre dossier a ete rejete. Motif : ' + onboarding.rejectionReason"
+      styleClass="reject-banner">
+    </p-message>
+
+    <!-- Progress strip -->
+    <section class="progress-card card">
+      <div class="progress-card__head">
+        <div class="progress-card__head-text">
+          <h3>Progression du dossier</h3>
+          <small>{{ progress }}% complete &mdash; mis a jour automatiquement a chaque etape validee.</small>
+        </div>
+        <div class="progress-card__metric">
+          <span class="progress-card__value">{{ progress }}<small>%</small></span>
+        </div>
+      </div>
+      <p-progressBar [value]="progress" [showValue]="false"></p-progressBar>
+    </section>
+
+    <!-- 2-col layout: actions + side -->
+    <div class="hub-grid">
+
+      <!-- Main: journey cards -->
+      <div class="hub-grid__main">
+        <h3 class="section-title">
+          <i class="pi pi-compass"></i>
+          Votre parcours d'integration
+        </h3>
+
+        <div class="actions-grid">
+          <a
+            *ngFor="let card of actionCards(); let i = index"
+            class="action-card"
+            [routerLink]="card.route"
+            [class.done]="card.state === 'done'"
+            [class.in-progress]="card.state === 'in-progress'"
+            [class.locked]="card.state === 'locked'"
+            [class.todo]="card.state === 'todo'">
+
+            <div class="action-card__step">{{ i + 1 }}</div>
+
+            <div class="action-card__icon">
+              <i [class]="card.icon"></i>
+            </div>
+
+            <div class="action-card__body">
+              <div class="action-card__head">
+                <h4>{{ card.title }}</h4>
+                <p-tag
+                  *ngIf="cardBadge(card) as badge"
+                  [value]="badge.value"
+                  [severity]="badge.severity"
+                  [rounded]="true">
+                </p-tag>
+              </div>
+              <p class="action-card__desc">{{ card.description }}</p>
+              <span class="action-card__cta">
+                <span>{{ cardCtaLabel(card) }}</span>
+                <i class="pi pi-arrow-right"></i>
+              </span>
+            </div>
+
+            <span class="action-card__overlay" *ngIf="card.state === 'locked'">
+              <i class="pi pi-lock"></i>
+            </span>
+          </a>
+        </div>
+
+        <!-- Submit reminder -->
+        <div class="cta-banner" *ngIf="!locked()">
+          <div class="cta-banner__icon">
+            <i class="pi pi-send"></i>
+          </div>
+          <div class="cta-banner__text">
+            <strong>Pret a soumettre&nbsp;?</strong>
+            <span>Completez chaque etape puis envoyez votre dossier a l'administration depuis le recapitulatif.</span>
+          </div>
+          <a class="p-button p-button-sm" routerLink="/mon-onboarding/wizard">
+            <i class="pi pi-arrow-right"></i>
+            <span>Ouvrir le formulaire</span>
+          </a>
+        </div>
       </div>
 
-      <div class="card">
-        <h2>Documents en revue</h2>
-        <div *ngIf="!pendingDocuments().length" class="empty-state">Aucun document en revue.</div>
-        <ul *ngIf="pendingDocuments().length" class="document-list">
-          <li *ngFor="let document of pendingDocuments()">
-            <span>{{ document.label || document.name || document.type || document.code }}</span>
-            <p-tag [value]="documentStatusLabel(document.status)" severity="warn"></p-tag>
-          </li>
-        </ul>
-      </div>
+      <!-- Side: timeline + help -->
+      <aside class="hub-grid__side">
+
+        <!-- Timeline -->
+        <div class="card timeline-card" *ngIf="timeline().length">
+          <h3 class="section-title">
+            <i class="pi pi-history"></i>
+            Historique du dossier
+          </h3>
+          <ul class="timeline">
+            <li *ngFor="let entry of timeline(); let last = last"
+                [class.done]="entry.status === 'done'"
+                [class.last]="last">
+              <span class="dot">
+                <i *ngIf="entry.status === 'done'" class="pi pi-check"></i>
+              </span>
+              <div class="timeline__content">
+                <strong>{{ entry.label }}</strong>
+                <small *ngIf="entry.at">{{ entry.at | date:'dd/MM/yyyy HH:mm' }}</small>
+                <small *ngIf="!entry.at" class="muted">En attente</small>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Help card -->
+        <div class="card help-card">
+          <h3 class="section-title">
+            <i class="pi pi-info-circle"></i>
+            Conseils utiles
+          </h3>
+          <ul class="help-list">
+            <li>
+              <i class="pi pi-check-circle"></i>
+              <span>Preparez votre <strong>CIN</strong>, vos <strong>diplomes</strong> et certificats au format PDF, JPG ou PNG (10&nbsp;Mo max).</span>
+            </li>
+            <li>
+              <i class="pi pi-check-circle"></i>
+              <span>Vous pouvez enregistrer un brouillon a tout moment et reprendre plus tard.</span>
+            </li>
+            <li>
+              <i class="pi pi-check-circle"></i>
+              <span>Votre dossier sera verrouille apres soumission, en attendant la validation de l'administration.</span>
+            </li>
+          </ul>
+        </div>
+      </aside>
     </div>
   </ng-container>
 </div>

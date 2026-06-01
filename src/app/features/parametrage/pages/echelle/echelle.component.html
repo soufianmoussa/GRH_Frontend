@@ -35,7 +35,7 @@
               [paginator]="true"
               [rowsPerPageOptions]="[5, 10, 20]"
               [responsiveLayout]="'scroll'"
-              [globalFilterFields]="['echelle', 'description', 'niveauDiplome.libelle']"
+              [globalFilterFields]="['echelle', 'description', 'niveauDiplome']"
               [loading]="loading"
               [lazy]="true"
               [totalRecords]="totalRecords"
@@ -59,7 +59,7 @@
               <ng-template pTemplate="header">
                 <tr>
                   <th><p-columnFilter type="text" field="echelle" display="menu" />Échelle</th>
-                  <th><p-columnFilter type="text" field="niveauDiplome.libelle" display="menu" />Niveau Diplôme</th>
+                  <th><p-columnFilter type="text" field="niveauDiplome" display="menu" />Niveau Diplôme</th>
                   <th><p-columnFilter type="text" field="description" display="menu" />Description</th>
                   <th>Actions</th>
                 </tr>
@@ -68,7 +68,7 @@
               <ng-template pTemplate="body" let-item>
                 <tr>
                   <td>{{ item.echelle }}</td>
-                  <td>{{ item.niveauDiplome?.libelle }}</td>
+                  <td>{{ item.niveauDiplome || '-' }}</td>
                   <td>{{ item.description }}</td>
 
                   <td class="actions-cell">
@@ -101,7 +101,7 @@
       </div>
       <div class="w-full">
         <p-floatLabel>
-          <input pInputText id="view_niveauDiplome" [ngModel]="selectedEchelle.niveauDiplome?.libelle" [disabled]="true" />
+          <input pInputText id="view_niveauDiplome" [ngModel]="selectedEchelle.niveauDiplome" [disabled]="true" />
           <label for="view_niveauDiplome">Niveau Diplôme</label>
         </p-floatLabel>
       </div>
@@ -132,10 +132,9 @@
 
     <div class="w-full">
       <p-floatLabel>
-        <p-dropdown id="niveauDiplomeId" name="niveauDiplomeId" [options]="niveauxDiplome" [(ngModel)]="form.niveauDiplomeId" #niveauDiplomeId="ngModel" required optionLabel="libelle" optionValue="id" appendTo="body" [styleClass]="form.niveauDiplomeId ? 'p-filled w-full' : 'w-full'" [class.ng-dirty]="niveauDiplomeId.invalid && niveauDiplomeId.touched"></p-dropdown>
-        <label for="niveauDiplomeId">Niveau Diplôme <span style="color: red;">*</span></label>
+        <p-autoComplete id="niveauDiplome" name="niveauDiplome" [(ngModel)]="form.niveauDiplome" [suggestions]="niveauSuggestions" (completeMethod)="filterNiveau($event)" [dropdown]="true" [forceSelection]="false" appendTo="body" [styleClass]="form.niveauDiplome ? 'p-filled w-full' : 'w-full'" [inputStyleClass]="'w-full'"></p-autoComplete>
+        <label for="niveauDiplome">Niveau Diplôme</label>
       </p-floatLabel>
-      <small class="text-red-500 block mt-1" *ngIf="niveauDiplomeId.invalid && niveauDiplomeId.touched">Le niveau de diplôme est obligatoire.</small>
     </div>
 
     <div class="w-full">

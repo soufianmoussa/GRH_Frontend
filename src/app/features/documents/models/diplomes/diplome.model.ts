@@ -1,7 +1,3 @@
-import { NiveauDiplome } from './niveau-diplome.model';
-import { Etablissement } from './etablissement.model';
-import { Specialite } from './specialite.model';
-
 export interface Diplome {
   id: number;
   agentId: number;
@@ -10,9 +6,9 @@ export interface Diplome {
   agentMatricule?: string;
   dateObtention: string;
 
-  niveau?: NiveauDiplome;
-  etablissement?: Etablissement;
-  specialite?: Specialite;
+  niveau?: string;
+  etablissement?: string;
+  specialite?: string;
 
   codePays: string;
   mention: string;
@@ -25,9 +21,9 @@ export interface DiplomeCreateUpdateRequest {
   agentId: number;
   dateObtention: string;
 
-  niveauId?: number;
-  etablissementId?: number;
-  specialiteId?: number;
+  niveau?: string;
+  etablissement?: string;
+  specialite?: string;
 
   codePays: string;
   mention: string;

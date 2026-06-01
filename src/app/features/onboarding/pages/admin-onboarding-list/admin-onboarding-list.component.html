@@ -1,78 +1,195 @@
 <p-toast position="top-center"></p-toast>
 <p-confirmDialog [style]="{ width: '450px' }"></p-confirmDialog>
+<app-rejection-reason-dialog
+  header="Rejeter le dossier"
+  subject="Indiquez le motif du rejet. L'agent verra ce motif dans son tableau de bord."
+  (confirm)="confirmRejectDossier($event)">
+</app-rejection-reason-dialog>
 
 <div class="content admin-onboarding-list">
-  <div class="page-shell">
-    <div class="page-header">
-      <div>
-        <h1 class="titleh1">Suivi onboarding</h1>
-        <p>Suivez les invitations et la validation des dossiers agents.</p>
-      </div>
-      <a pButton routerLink="/admin/onboarding/initialiser" label="Initialiser un agent" icon="pi pi-plus"></a>
+  <div class="page-header">
+    <div>
+      <h1 class="titleh1">
+        <i class="pi pi-id-card title-icon"></i>
+        Suivi onboarding
+      </h1>
+      <p class="page-subtitle">Tableau de bord des dossiers d'integration des agents.</p>
     </div>
+    <a pButton
+       routerLink="/admin/onboarding/initialiser"
+       label="Initialiser un agent"
+       icon="pi pi-plus"
+       class="primary-action">
+    </a>
+  </div>
 
-    <div class="card">
-      <div class="container primTable table-container">
-        <div class="flex justify-content-between align-items-center mb-3">
-          <h3>
-            <i class="pi pi-users" style="font-size: 30px; margin-right: 5px;"></i>
-            Liste des onboardings
-          </h3>
+  <!-- KPI cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-total">
+      <div class="kpi-icon"><i class="pi pi-users"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-label">Total</span>
+        <span class="kpi-value">{{ onboardings.length }}</span>
+      </div>
+    </div>
+    <div class="kpi-card kpi-info">
+      <div class="kpi-icon"><i class="pi pi-send"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-label">A activer</span>
+        <span class="kpi-value">{{ countByStatus('PROFILE_INCOMPLETE') }}</span>
+      </div>
+    </div>
+    <div class="kpi-card kpi-progress">
+      <div class="kpi-icon"><i class="pi pi-spin pi-spinner-dotted"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-label">En cours</span>
+        <span class="kpi-value">{{ countByStatus('IN_PROGRESS') }}</span>
+      </div>
+    </div>
+    <div class="kpi-card kpi-warn">
+      <div class="kpi-icon"><i class="pi pi-hourglass"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-label">A valider</span>
+        <span class="kpi-value">{{ countByStatus('PENDING_VALIDATION') }}</span>
+      </div>
+    </div>
+    <div class="kpi-card kpi-success">
+      <div class="kpi-icon"><i class="pi pi-check-circle"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-label">Valides</span>
+        <span class="kpi-value">{{ countByStatus('VALIDATED', 'ACTIVE') }}</span>
+      </div>
+    </div>
+    <div class="kpi-card kpi-danger">
+      <div class="kpi-icon"><i class="pi pi-times-circle"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-label">Rejetes</span>
+        <span class="kpi-value">{{ countByStatus('REJECTED') }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="container primTable">
+
+      <!-- Header: title + segmented tabs + search -->
+      <div class="table-toolbar">
+        <h3>
+          <i class="pi pi-list" style="font-size: 22px; margin-right: 8px;"></i>
+          Liste des dossiers
+        </h3>
+
+        <div class="toolbar-controls">
+          <div class="dashboard-tabs" role="tablist">
+            <button
+              *ngFor="let tab of tabs"
+              type="button"
+              role="tab"
+              class="tab"
+              [class.active]="activeTab === tab.key"
+              [attr.aria-selected]="activeTab === tab.key"
+              (click)="setTab(tab.key)">
+              {{ tab.label }}
+              <span class="count">{{ countFor(tab) }}</span>
+            </button>
+          </div>
+
+          <span class="p-input-icon-left search-wrap">
+            <i class="pi pi-search"></i>
+            <input pInputText
+                   type="text"
+                   [(ngModel)]="search"
+                   placeholder="Rechercher (nom, matricule, email)..." />
+          </span>
         </div>
+      </div>
 
-        <p-table
-          [value]="onboardings"
-          [lazy]="true"
-          [loading]="loading"
-          [paginator]="true"
-          [rows]="rows"
-          [totalRecords]="totalRecords"
-          [rowsPerPageOptions]="[10, 20, 50]"
-          [responsiveLayout]="'scroll'"
-          (onLazyLoad)="load($event)">
+      <p-table
+        [value]="filteredOnboardings()"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="rows"
+        [rowsPerPageOptions]="[10, 20, 50]"
+        [responsiveLayout]="'scroll'"
+        currentPageReportTemplate="Affichage {first} - {last} sur {totalRecords} dossiers"
+        [showCurrentPageReport]="true">
 
-          <ng-template pTemplate="header">
-            <tr>
-              <th class="agent-col">Agent</th>
-              <th>Matricule</th>
-              <th class="grade-col">Grade</th>
-              <th>Statut</th>
-              <th>Actions</th>
-            </tr>
-          </ng-template>
+        <ng-template pTemplate="header">
+          <tr>
+            <th class="agent-col">Agent</th>
+            <th>Matricule</th>
+            <th class="grade-col">Grade</th>
+            <th>Statut</th>
+            <th class="progress-col">Progression</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </ng-template>
 
-          <ng-template pTemplate="body" let-onboarding>
-            <tr>
-              <td class="agent-cell">
+        <ng-template pTemplate="body" let-onboarding>
+          <tr>
+            <td>
+              <div class="agent-cell">
                 <strong>{{ agentName(onboarding) }}</strong>
                 <small>{{ email(onboarding) }}</small>
-                <small class="agent-meta">{{ agentStatusLabel(onboarding.agent?.status) }} - {{ modeLabel(onboarding.completionMode) }}</small>
-              </td>
-              <td><strong>{{ matricule(onboarding) }}</strong></td>
-              <td class="grade-cell">
+                <span class="agent-meta">
+                  <i class="pi pi-user-edit"></i>
+                  {{ modeLabel(onboarding.completionMode) }}
+                </span>
+              </div>
+            </td>
+            <td><strong class="matricule-cell">{{ matricule(onboarding) }}</strong></td>
+            <td>
+              <div class="grade-cell">
                 <span>{{ grade(onboarding) }}</span>
-                <small>{{ echelle(onboarding) }} - {{ echelon(onboarding) }}</small>
-              </td>
-              <td>
-                <p-tag [value]="onboardingStatusLabel(onboarding.status)" [severity]="tagSeverity(onboarding.status)"></p-tag>
-              </td>
-              <td class="actions-cell">
-                <a pButton icon="pi pi-eye" class="p-button-rounded p-button-text p-button-success mr-2" [routerLink]="['/admin/onboarding', onboarding.id]" pTooltip="Voir detail"></a>
-                <button pButton icon="pi pi-send" class="p-button-rounded p-button-text p-button-info mr-2" pTooltip="Renvoyer invitation" (click)="resendInvitation(onboarding)"></button>
-                <a pButton icon="pi pi-pencil" class="p-button-rounded p-button-text p-button-info mr-2" [routerLink]="['/admin/onboarding', onboarding.id, 'complete']" pTooltip="Modifier"></a>
+                <small>echelle {{ echelle(onboarding) }} &middot; echelon {{ echelon(onboarding) }}</small>
+              </div>
+            </td>
+            <td>
+              <p-tag
+                [value]="onboardingStatusLabel(onboarding.status)"
+                [severity]="tagSeverity(onboarding.status)">
+              </p-tag>
+            </td>
+            <td>
+              <div class="progress-cell">
+                <p-progressBar [value]="progress(onboarding)" [showValue]="false"></p-progressBar>
+                <span class="progress-value">{{ progress(onboarding) }}%</span>
+              </div>
+            </td>
+            <td>
+              <div class="actions-cell">
+                <a pButton
+                   icon="pi pi-eye"
+                   class="p-button-rounded p-button-text p-button-success"
+                   [routerLink]="['/admin/onboarding', onboarding.id]"
+                   pTooltip="Voir le dossier"
+                   tooltipPosition="top">
+                </a>
                 <p-menu #moreMenu [model]="moreActions(onboarding)" [popup]="true" appendTo="body"></p-menu>
-                <button pButton icon="pi pi-ellipsis-v" class="p-button-rounded p-button-text" pTooltip="Autres actions" (click)="moreMenu.toggle($event)"></button>
-              </td>
-            </tr>
-          </ng-template>
+                <button pButton
+                        icon="pi pi-ellipsis-v"
+                        class="p-button-rounded p-button-text p-button-info"
+                        pTooltip="Autres actions"
+                        tooltipPosition="top"
+                        (click)="moreMenu.toggle($event)">
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
 
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="5" class="text-center">Aucun onboarding trouve.</td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6">
+              <div class="empty-state">
+                <i class="pi pi-inbox"></i>
+                <span>Aucun dossier dans cet onglet.</span>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+
     </div>
   </div>
 </div>

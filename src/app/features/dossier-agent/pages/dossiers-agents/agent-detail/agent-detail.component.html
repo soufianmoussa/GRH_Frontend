@@ -243,8 +243,8 @@
                     <div class="cv-card-icon"><i class="pi pi-graduation-cap"></i></div>
                     <div class="cv-card-body">
                       <h4>{{ diplomeTitle(diplome) }}</h4>
-                      <p class="cv-sub" *ngIf="diplome.etablissement?.libelle">
-                        <i class="pi pi-building"></i> {{ diplome.etablissement?.libelle }}
+                      <p class="cv-sub" *ngIf="diplome.etablissement">
+                        <i class="pi pi-building"></i> {{ diplome.etablissement }}
                       </p>
                       <div class="cv-meta">
                         <p-tag severity="info" [value]="diplomeYear(diplome)"></p-tag>

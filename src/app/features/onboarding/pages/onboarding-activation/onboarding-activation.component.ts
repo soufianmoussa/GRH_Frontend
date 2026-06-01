@@ -102,7 +102,7 @@ export class OnboardingActivationComponent implements OnInit, OnDestroy {
           this.form.reset();
           this.state = 'success';
           this.message = 'Votre compte est active. Vous allez completer votre profil onboarding.';
-          setTimeout(() => this.router.navigate(['/onboarding/complete-profile']), 1200);
+          setTimeout(() => this.router.navigate(['/mon-onboarding/wizard']), 1200);
         },
         error: (error) => {
           this.message = ToastHelper.extractErrorMessage(error, 'Activation impossible. Le lien est peut-etre expire ou deja utilise.');

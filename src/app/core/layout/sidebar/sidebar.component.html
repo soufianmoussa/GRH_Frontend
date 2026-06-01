@@ -22,7 +22,7 @@
         <i class="fa-solid fa-folder-open"></i>
         <span>{{ 'LAYOUT.SIDEBAR.DONNEES_ADMINISTRATIVES' | translate }}</span>
       </li>
-      <li routerLinkActive="active" routerLink="/agent/onboarding">
+      <li routerLinkActive="active" routerLink="/mon-onboarding">
         <i class="fa-solid fa-clipboard-list"></i>
         <span>Mon onboarding</span>
       </li>
@@ -181,7 +181,6 @@
       <ul class="submenu" *ngIf="gestionPersonnelle">
         <li routerLinkActive="active" routerLink="/admin/onboarding/initialiser"><i class="fa-solid fa-user-plus"></i><span>Initialiser un agent</span></li>
         <li routerLinkActive="active" routerLink="/admin/onboarding"><i class="fa-solid fa-list-check"></i><span>Suivi onboarding</span></li>
-        <li routerLinkActive="active" routerLink="/admin/onboarding/documents"><i class="fa-solid fa-file-circle-check"></i><span>Validation documents</span></li>
         <li routerLinkActive="active" routerLink="/InitialisationMatricules"><i class="fa-solid fa-id-badge"></i><span>{{ 'LAYOUT.SIDEBAR.INITIALISATION_MATRICULES' | translate }}</span></li>
         <li routerLinkActive="active" routerLink="/GestionUtilisateurs"><i class="fa-solid fa-users-gear"></i><span>{{ 'LAYOUT.SIDEBAR.DOSSIERS_AGENTS' | translate }}</span></li>
         <li routerLinkActive="active" routerLink="/GestionComptes"><i class="fa-solid fa-shield-halved"></i><span>{{ 'LAYOUT.SIDEBAR.GESTION_COMPTES' | translate }}</span></li>
@@ -226,11 +225,6 @@
       </li>
       <ul class="submenu" *ngIf="diplomeMenu">
         <li routerLinkActive="active" routerLink="/Diplomes"><i class="fa-solid fa-certificate"></i><span>{{ 'LAYOUT.SIDEBAR.LISTE_DIPLOMES' | translate }}</span></li>
-        <li routerLinkActive="active" routerLink="/TypeEtablissement"><i class="fa-solid fa-building-columns"></i><span>{{ 'LAYOUT.SIDEBAR.TYPE_ETABLISSEMENT' | translate }}</span></li>
-        <li routerLinkActive="active" routerLink="/FormationInitiale"><i class="fa-solid fa-book"></i><span>{{ 'LAYOUT.SIDEBAR.FORMATION_INITIALE' | translate }}</span></li>
-        <li routerLinkActive="active" routerLink="/Etablissement"><i class="fa-solid fa-school"></i><span>{{ 'LAYOUT.SIDEBAR.ETABLISSEMENT' | translate }}</span></li>
-        <li routerLinkActive="active" routerLink="/NiveauDiplome"><i class="fa-solid fa-layer-group"></i><span>{{ 'LAYOUT.SIDEBAR.NIVEAU_DIPLOME' | translate }}</span></li>
-        <li routerLinkActive="active" routerLink="/Specialite"><i class="fa-solid fa-tags"></i><span>{{ 'LAYOUT.SIDEBAR.SPECIALITE' | translate }}</span></li>
       </ul>
 
       <li routerLinkActive="active" routerLink="/FichierPrimes"><i class="fa-solid fa-file-invoice-dollar"></i><span>{{ 'LAYOUT.SIDEBAR.FICHIER_PRIMES' | translate }}</span></li>

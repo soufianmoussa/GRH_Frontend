@@ -1,12 +1,15 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
+import { InputTextModule } from 'primeng/inputtext';
 import { MenuModule } from 'primeng/menu';
-import { TableLazyLoadEvent, TableModule } from 'primeng/table';
+import { ProgressBarModule } from 'primeng/progressbar';
+import { TableModule } from 'primeng/table';
 import { TagModule } from 'primeng/tag';
 import { Toast } from 'primeng/toast';
 import { TooltipModule } from 'primeng/tooltip';
@@ -15,33 +18,63 @@ import {
   COMPLETION_MODE_LABELS,
   INVITATION_STATUS_LABELS,
   OnboardingDetail,
+  OnboardingStatus,
   ONBOARDING_STATUS_LABELS
 } from '../../../../models/onboarding.model';
 import { AdminOnboardingService } from '../../services/admin-onboarding.service';
 import { ToastHelper } from '../../../../shared/utils/toast-helper';
+import { RejectionReasonDialogComponent } from '../../components/rejection-reason-dialog/rejection-reason-dialog.component';
+import { onboardingTagSeverity, PrimengSeverity } from '../../utils/onboarding-status.util';
+
+type DashboardTab = 'all' | 'to-activate' | 'in-progress' | 'to-validate' | 'validated' | 'rejected';
+
+interface TabDef {
+  key: DashboardTab;
+  label: string;
+  predicate: (o: OnboardingDetail) => boolean;
+}
 
 @Component({
   selector: 'app-admin-onboarding-list',
   providers: [MessageService, ConfirmationService],
   imports: [
     CommonModule,
+    FormsModule,
     RouterLink,
     ButtonModule,
     ConfirmDialogModule,
+    InputTextModule,
     MenuModule,
+    ProgressBarModule,
     TableModule,
     TagModule,
     Toast,
-    TooltipModule
+    TooltipModule,
+    RejectionReasonDialogComponent
   ],
   templateUrl: './admin-onboarding-list.component.html',
   styleUrl: './admin-onboarding-list.component.scss'
 })
 export class AdminOnboardingListComponent implements OnInit {
   onboardings: OnboardingDetail[] = [];
-  totalRecords = 0;
   rows = 10;
   loading = false;
+  activeTab: DashboardTab = 'all';
+  search = '';
+
+  rejectVisible = false;
+  private pendingReject?: OnboardingDetail;
+
+  @ViewChild(RejectionReasonDialogComponent) rejectDialog?: RejectionReasonDialogComponent;
+
+  readonly tabs: TabDef[] = [
+    { key: 'all',           label: 'Tous',          predicate: () => true },
+    { key: 'to-activate',   label: 'A activer',     predicate: o => o.status === 'PROFILE_INCOMPLETE' },
+    { key: 'in-progress',   label: 'En cours',      predicate: o => o.status === 'IN_PROGRESS' },
+    { key: 'to-validate',   label: 'A valider',     predicate: o => o.status === 'PENDING_VALIDATION' },
+    { key: 'validated',     label: 'Valides',       predicate: o => o.status === 'VALIDATED' || o.status === 'ACTIVE' },
+    { key: 'rejected',      label: 'Rejetes',       predicate: o => o.status === 'REJECTED' }
+  ];
 
   readonly onboardingLabels = ONBOARDING_STATUS_LABELS;
   readonly agentLabels = AGENT_STATUS_LABELS;
@@ -58,21 +91,45 @@ export class AdminOnboardingListComponent implements OnInit {
     this.load();
   }
 
-  load(event?: TableLazyLoadEvent): void {
-    const first = event?.first ?? 0;
-    const rows = event?.rows ?? this.rows;
-    const page = Math.floor(first / rows);
-    this.rows = rows;
+  load(): void {
     this.loading = true;
-
-    this.onboardingService.list(page, rows)
+    // Load every onboarding once and let p-table handle pagination/filtering
+    // client-side. The tab counters and the search bar both operate on the
+    // already-loaded array, so server-side pagination here would silently
+    // hide rows when client filters are applied.
+    this.onboardingService.list(0, 1000)
       .pipe(finalize(() => this.loading = false))
       .subscribe({
         next: (response) => {
           this.onboardings = response.content ?? [];
-          this.totalRecords = response.totalElements ?? this.onboardings.length;
         },
         error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Erreur lors du chargement des onboardings.')
+      });
+  }
+
+  setTab(tab: DashboardTab): void {
+    this.activeTab = tab;
+  }
+
+  countFor(tab: TabDef): number {
+    return this.onboardings.filter(tab.predicate).length;
+  }
+
+  countByStatus(...statuses: OnboardingStatus[]): number {
+    return this.onboardings.filter(o => statuses.includes(o.status)).length;
+  }
+
+  filteredOnboardings(): OnboardingDetail[] {
+    const tab = this.tabs.find(t => t.key === this.activeTab) ?? this.tabs[0];
+    const search = this.search.trim().toLowerCase();
+    return this.onboardings
+      .filter(tab.predicate)
+      .filter(o => {
+        if (!search) return true;
+        const name = [o.agent?.prenom, o.agent?.nom].filter(Boolean).join(' ').toLowerCase();
+        const mat = (o.matricule?.matricule || o.agent?.matricule?.matricule || '').toLowerCase();
+        const email = (o.agent?.email || o.invitation?.email || '').toLowerCase();
+        return name.includes(search) || mat.includes(search) || email.includes(search);
       });
   }
 
@@ -113,23 +170,31 @@ export class AdminOnboardingListComponent implements OnInit {
     );
   }
 
-  rejectDossier(onboarding: OnboardingDetail): void {
-    const reason = window.prompt('Motif du rejet');
-    if (!reason) {
-      return;
-    }
+  askRejectDossier(onboarding: OnboardingDetail): void {
+    this.pendingReject = onboarding;
+    this.rejectDialog?.show();
+  }
 
-    this.onboardingService.rejectDossier(onboarding.id, reason).subscribe({
+  confirmRejectDossier(reason: string): void {
+    const target = this.pendingReject;
+    if (!target) return;
+    this.onboardingService.rejectDossier(target.id, reason).subscribe({
       next: (updated) => {
-        Object.assign(onboarding, updated);
+        Object.assign(target, updated);
         ToastHelper.showSuccess(this.messageService, 'Dossier rejete.');
       },
       error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Rejet impossible.')
     });
+    this.pendingReject = undefined;
   }
 
   moreActions(onboarding: OnboardingDetail): MenuItem[] {
     return [
+      {
+        label: 'Renvoyer l\'invitation',
+        icon: 'pi pi-send',
+        command: () => this.resendInvitation(onboarding)
+      },
       {
         label: 'Activer le mode assiste',
         icon: 'pi pi-user-edit',
@@ -146,24 +211,14 @@ export class AdminOnboardingListComponent implements OnInit {
         label: 'Rejeter le dossier',
         icon: 'pi pi-times',
         disabled: onboarding.status !== 'PENDING_VALIDATION',
-        command: () => this.rejectDossier(onboarding)
+        command: () => this.askRejectDossier(onboarding)
       }
     ];
   }
 
+  // Single source of truth: backend OnboardingStepService.computeProgressPercent.
   progress(onboarding: OnboardingDetail): number {
-    if (onboarding.status === 'VALIDATED' || onboarding.status === 'ACTIVE') return 100;
-    if (onboarding.status === 'REJECTED') return 100;
-    if (onboarding.status === 'PENDING_VALIDATION') return 80;
-    if (onboarding.status === 'IN_PROGRESS') {
-      const steps = onboarding.steps ?? [];
-      if (steps.length) {
-        const completed = steps.filter(step => !!step.completedAt || step.status === 'COMPLETED').length;
-        return Math.max(45, Math.round((completed / steps.length) * 75));
-      }
-      return 50;
-    }
-    return 15;
+    return onboarding.progressPercent ?? 0;
   }
 
   agentName(onboarding: OnboardingDetail): string {
@@ -193,27 +248,8 @@ export class AdminOnboardingListComponent implements OnInit {
     return onboarding.agent?.echelon?.echelon || onboarding.agent?.echelon?.libelle || '-';
   }
 
-  tagSeverity(status?: string): 'success' | 'info' | 'warn' | 'danger' | 'secondary' {
-    switch (status) {
-      case 'ACTIVE':
-      case 'VALIDATED':
-      case 'USED':
-        return 'success';
-      case 'PENDING_VALIDATION':
-      case 'PENDING':
-      case 'PENDING_REVIEW':
-        return 'warn';
-      case 'REJECTED':
-      case 'EXPIRED':
-      case 'REVOKED':
-        return 'danger';
-      case 'IN_PROGRESS':
-      case 'PROFILE_INCOMPLETE':
-      case 'INCOMPLETE':
-        return 'info';
-      default:
-        return 'secondary';
-    }
+  tagSeverity(status?: string): PrimengSeverity {
+    return onboardingTagSeverity(status);
   }
 
   agentStatusLabel(status?: string): string {

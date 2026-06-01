@@ -128,8 +128,8 @@ export class AgentDetailComponent implements OnInit {
   readonly cvLoading = signal(false);
 
   diplomeTitle(d: Diplome): string {
-    const niveau = d.niveau?.libelle?.trim();
-    const spec = d.specialite?.libelle?.trim();
+    const niveau = d.niveau?.trim();
+    const spec = d.specialite?.trim();
     if (niveau && spec) return `${niveau} — ${spec}`;
     return niveau || spec || 'Diplôme';
   }

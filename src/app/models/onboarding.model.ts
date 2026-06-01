@@ -8,6 +8,14 @@ export type OnboardingStatus = 'PROFILE_INCOMPLETE' | 'IN_PROGRESS' | 'PENDING_V
 export type CompletionMode = 'SELF_SERVICE' | 'ASSISTED';
 export type DocumentStatus = 'PENDING_REVIEW' | 'VALIDATED' | 'REJECTED';
 export type InvitationStatus = 'PENDING' | 'USED' | 'EXPIRED' | 'REVOKED';
+export type OnboardingStepType =
+  | 'MATRICULE_ALLOCATION'
+  | 'ACCOUNT_ACTIVATION'
+  | 'PROFILE'
+  | 'DOCUMENTS'
+  | 'REVIEW'
+  | 'VALIDATION';
+export type OnboardingStepStatus = 'PENDING' | 'IN_PROGRESS' | 'COMPLETED';
 
 export interface Grade {
   id: number;
@@ -77,10 +85,17 @@ export interface OnboardingProfileRequest {
 
 export interface OnboardingStep {
   id: number;
+  /** Canonical step (backend Slice 1: replaces the legacy free-form `stepKey`). */
+  stepType?: OnboardingStepType;
+  /**
+   * @deprecated Backwards-compatible alias for {@link stepType}. Read `stepType` instead.
+   * TODO(post-release): remove once the backend drops the legacy `getStepKey()` JSON alias.
+   */
+  stepKey?: string;
   code?: string;
   label?: string;
   title?: string;
-  status?: string;
+  status?: OnboardingStepStatus | string;
   completedAt?: string;
   completedBy?: string;
   position?: number;
@@ -106,13 +121,24 @@ export interface OnboardingDocument {
   rejectedBy?: string;
 }
 
+/**
+ * Mirrors the backend {@code OnboardingActionLogDto}. The backend sends
+ * {@code actorUserId} and {@code metadataJson}; the older display fields
+ * ({@code actor}, {@code actorRole}, {@code comment}) are kept as optional
+ * aliases for legacy callers and can be removed after the next release.
+ */
 export interface OnboardingActionLog {
   id: number;
   action?: string;
-  actor?: string;
-  actorRole?: string;
-  comment?: string;
+  actorUserId?: number;
+  metadataJson?: string;
   createdAt?: string;
+  /** @deprecated never populated by the backend, kept until consumers are migrated. */
+  actor?: string;
+  /** @deprecated never populated by the backend, kept until consumers are migrated. */
+  actorRole?: string;
+  /** @deprecated never populated by the backend, kept until consumers are migrated. */
+  comment?: string;
 }
 
 export interface InvitationStatusDto {
@@ -132,7 +158,10 @@ export interface OnboardingDetail {
   matricule?: Matricule;
   completionMode: CompletionMode;
   status: OnboardingStatus;
-  currentStep?: string;
+  /** Backend serialises {@link OnboardingStepType} as its string name; this stays wire-compatible. */
+  currentStep?: OnboardingStepType | string;
+  /** Single source of truth for progress, computed by the backend (0-100). */
+  progressPercent?: number;
   submittedAt?: string;
   validatedAt?: string;
   rejectedAt?: string;
@@ -141,7 +170,12 @@ export interface OnboardingDetail {
   updatedAt?: string;
   steps?: OnboardingStep[];
   documents?: OnboardingDocument[];
-  logs?: OnboardingActionLog[];
+  /**
+   * Audit trail of admin/agent actions on the dossier.
+   * Wire-aligned with backend {@code OnboardingDetailDto.actionLogs} since Slice 1.
+   * (Pre-Slice-5 the frontend read {@code logs} and silently got nothing.)
+   */
+  actionLogs?: OnboardingActionLog[];
   invitation?: InvitationStatusDto;
 }
 

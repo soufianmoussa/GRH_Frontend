@@ -74,8 +74,8 @@ export class LoginComponent {
       const status = this.authService.getCurrentUser()?.onboardingStatus;
       if (status && !['VALIDATED', 'ACTIVE'].includes(status)) {
         const route = status === 'PENDING_VALIDATION'
-          ? '/onboarding/waiting'
-          : '/onboarding/complete-profile';
+          ? '/mon-onboarding'
+          : '/mon-onboarding/profil';
         this.router.navigate([route]);
         return;
       }

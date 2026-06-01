@@ -8,18 +8,9 @@ import { PrimeTemplate } from 'primeng/api';
 import {Dialog} from 'primeng/dialog';
 import {DropdownModule} from 'primeng/dropdown';
 import {DatePicker} from 'primeng/datepicker';
+import {AutoCompleteModule} from 'primeng/autocomplete';
 import {Diplome, DiplomeCreateUpdateRequest} from '../../../models/diplomes/diplome.model';
 import {DiplomesService} from '../../../services/diplomes/diplomes.service';
-import {TypeEtablissementService} from '../../../services/diplomes/type-etablissement.service';
-import {FormationInitialeService} from '../../../services/diplomes/formation-initiale.service';
-import {EtablissementService} from '../../../services/diplomes/etablissement.service';
-import {NiveauDiplomeService} from '../../../services/diplomes/niveau-diplome.service';
-import {SpecialiteService} from '../../../services/diplomes/specialite.service';
-import {TypeEtablissement} from '../../../models/diplomes/type-etablissement.model';
-import {FormationInitiale} from '../../../models/diplomes/formation-initiale.model';
-import {Etablissement} from '../../../models/diplomes/etablissement.model';
-import {NiveauDiplome} from '../../../models/diplomes/niveau-diplome.model';
-import {Specialite} from '../../../models/diplomes/specialite.model';
 import {AgentService} from '../../../../dossier-agent/services/agent.service';
 import {AgentModel} from '../../../../../models/Agent.model';
 import { MessageService, ConfirmationService } from 'primeng/api';
@@ -29,6 +20,12 @@ import { FloatLabelModule } from 'primeng/floatlabel';
 import { ToastHelper } from '../../../../../shared/utils/toast-helper';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'primeng/tabs';
 import { TooltipModule } from 'primeng/tooltip';
+import {
+  DIPLOME_ETABLISSEMENTS,
+  DIPLOME_MENTIONS,
+  DIPLOME_NIVEAUX,
+  DIPLOME_SPECIALITES
+} from '../../../../onboarding/constants/diplome-options.constants';
 
 @Component({
   selector: 'app-diplomes',
@@ -36,7 +33,7 @@ import { TooltipModule } from 'primeng/tooltip';
   providers: [MessageService, ConfirmationService],
   imports: [
     CommonModule, TableModule, Button, InputText, FormsModule, PrimeTemplate,
-    Dialog, DropdownModule, ButtonDirective, DatePicker, Toast,
+    Dialog, DropdownModule, ButtonDirective, DatePicker, AutoCompleteModule, Toast,
     ConfirmDialogModule, FloatLabelModule, Tabs, TabList, Tab, TabPanels,
     TabPanel, TooltipModule, NgIf
   ],
@@ -57,23 +54,23 @@ export class DiplomesComponent implements OnInit {
   form: any = {};
   @ViewChild('addForm') addForm?: NgForm;
 
-  typesEtablissement: TypeEtablissement[] = [];
-  specialites: Specialite[] = [];
-  etablissements: Etablissement[] = [];
-  niveaux: NiveauDiplome[] = [];
-  formationsInitiales: FormationInitiale[] = [];
   agents: AgentModel[] = [];
+
+  // Curated suggestion lists for the autocomplete fields (free text allowed).
+  readonly niveauxList: string[] = DIPLOME_NIVEAUX;
+  readonly specialitesList: string[] = DIPLOME_SPECIALITES;
+  readonly etablissementsList: string[] = DIPLOME_ETABLISSEMENTS;
+  readonly mentionsList: string[] = DIPLOME_MENTIONS;
+
+  niveauSuggestions: string[] = [];
+  specialiteSuggestions: string[] = [];
+  etablissementSuggestions: string[] = [];
 
   // File upload
   selectedFile: File | null = null;
 
   constructor(
     private diplomesService: DiplomesService,
-    private typeEtablissementService: TypeEtablissementService,
-    private formationInitialeService: FormationInitialeService,
-    private etablissementService: EtablissementService,
-    private niveauDiplomeService: NiveauDiplomeService,
-    private specialiteService: SpecialiteService,
     private agentService: AgentService,
     private cdr: ChangeDetectorRef,
     private messageService: MessageService,
@@ -82,7 +79,7 @@ export class DiplomesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDiplomes();
-    this.loadDropdownData();
+    this.agentService.getAll().subscribe(res => this.agents = res);
   }
 
   onMoyenneChange() {
@@ -92,7 +89,7 @@ export class DiplomesComponent implements OnInit {
     } else if (value > 20) {
       this.form.mention = null;
     } else if (value >= 16) {
-      this.form.mention = 'Très Bien';
+      this.form.mention = 'Tres Bien';
     } else if (value >= 14) {
       this.form.mention = 'Bien';
     } else if (value >= 12) {
@@ -102,15 +99,6 @@ export class DiplomesComponent implements OnInit {
     } else {
       this.form.mention = null;
     }
-  }
-
-  loadDropdownData() {
-    this.typeEtablissementService.getAll(0, 1000).subscribe(res => this.typesEtablissement = res.content);
-    this.specialiteService.getAll(0, 1000).subscribe(res => this.specialites = res.content);
-    this.etablissementService.getAll(0, 1000).subscribe(res => this.etablissements = res.content);
-    this.niveauDiplomeService.getAll(0, 1000).subscribe(res => this.niveaux = res.content);
-    this.formationInitialeService.getAll(0, 1000).subscribe(res => this.formationsInitiales = res.content);
-    this.agentService.getAll().subscribe(res => this.agents = res);
   }
 
   loadDiplomes() {
@@ -163,9 +151,9 @@ export class DiplomesComponent implements OnInit {
       id: dp.id,
       agentId: dp.agentId,
       dateObtention: dp.dateObtention ? new Date(dp.dateObtention) : null,
-      niveauId: dp.niveau?.id,
-      etablissementId: dp.etablissement?.id,
-      specialiteId: dp.specialite?.id,
+      niveau: dp.niveau || '',
+      etablissement: dp.etablissement || '',
+      specialite: dp.specialite || '',
       codePays: dp.codePays,
       mention: dp.mention,
       moyenne: dp.moyenne,
@@ -176,6 +164,22 @@ export class DiplomesComponent implements OnInit {
     setTimeout(() => {
       this.addForm?.resetForm(this.form);
     });
+  }
+
+  filterNiveau(event: { query: string }) {
+    this.niveauSuggestions = this.filterList(this.niveauxList, event.query);
+  }
+  filterSpecialite(event: { query: string }) {
+    this.specialiteSuggestions = this.filterList(this.specialitesList, event.query);
+  }
+  filterEtablissement(event: { query: string }) {
+    this.etablissementSuggestions = this.filterList(this.etablissementsList, event.query);
+  }
+
+  private filterList(list: string[], q: string): string[] {
+    const needle = (q || '').trim().toLowerCase();
+    if (!needle) return list.slice(0, 30);
+    return list.filter(v => v.toLowerCase().includes(needle));
   }
 
   onFileSelect(event: Event) {
@@ -210,7 +214,6 @@ export class DiplomesComponent implements OnInit {
           next: () => {
             this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Scan supprimé' });
             this.loadDiplomes();
-            // Also update the form if editing
             if (this.form.id === dp.id) {
               this.form.scanFileName = null;
               this.form.scanUrl = null;
@@ -228,8 +231,8 @@ export class DiplomesComponent implements OnInit {
 
   save() {
     const f = this.form;
-    if (!f.agentId || !f.dateObtention || !f.niveauId ||
-        !f.etablissementId || !f.specialiteId || !f.codePays?.trim() || f.moyenne == null) {
+    if (!f.agentId || !f.dateObtention || !f.niveau ||
+        !f.codePays?.trim() || f.moyenne == null) {
       ToastHelper.showFormError(this.messageService);
       return;
     }
@@ -242,9 +245,9 @@ export class DiplomesComponent implements OnInit {
     const payload: DiplomeCreateUpdateRequest = {
       agentId: f.agentId,
       dateObtention: this.toIsoDate(f.dateObtention),
-      niveauId: f.niveauId,
-      etablissementId: f.etablissementId,
-      specialiteId: f.specialiteId,
+      niveau: (f.niveau || '').trim(),
+      etablissement: (f.etablissement || '').trim() || undefined,
+      specialite: (f.specialite || '').trim() || undefined,
       codePays: f.codePays.trim(),
       mention: f.mention,
       moyenne: f.moyenne
@@ -260,8 +263,7 @@ export class DiplomesComponent implements OnInit {
                 ToastHelper.showAdd(this.messageService);
                 this.loadDiplomes();
               },
-              error: (err) => {
-                console.error('Erreur lors de l\'upload du scan:', err);
+              error: () => {
                 this.displayDialog = false;
                 ToastHelper.showAdd(this.messageService);
                 this.loadDiplomes();
@@ -285,8 +287,7 @@ export class DiplomesComponent implements OnInit {
                 ToastHelper.showEdit(this.messageService);
                 this.loadDiplomes();
               },
-              error: (err) => {
-                console.error('Erreur lors de l\'upload du scan:', err);
+              error: () => {
                 this.displayDialog = false;
                 ToastHelper.showEdit(this.messageService);
                 this.loadDiplomes();
