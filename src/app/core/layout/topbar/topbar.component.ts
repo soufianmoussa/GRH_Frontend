@@ -1,4 +1,4 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, HostListener, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { AuthService } from '../../auth/auth.service';
@@ -50,6 +50,17 @@ export class TopbarComponent implements OnInit {
     return this.currentLanguage.toLowerCase() === 'fr' ? 'EN' : 'FR';
   }
 
+  /** Two-letter initials derived from the username (handles "first.last", "first_last", "firstlast"). */
+  get userInitials(): string {
+    const name = this.currentUser?.username?.trim() || '';
+    if (!name) return '?';
+    const parts = name.split(/[\s._@-]+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
   toggleLanguage() {
     this.languageService.toggle();
   }
@@ -71,6 +82,11 @@ export class TopbarComponent implements OnInit {
     return this.activeRole ? (this.roleLabels[this.activeRole] ?? null) : null;
   }
 
+  /** Whether the user can switch role (more than one role available). */
+  get canSwitchRole(): boolean {
+    return this.availableRoles.length > 1;
+  }
+
   private readonly roleDefaultRoutes: Record<string, string> = {
     'ADMIN':             '/dashboard',
     'AGENT':             '/accueil',
@@ -90,6 +106,12 @@ export class TopbarComponent implements OnInit {
 
   closeDropdown() {
     this.dropdownOpen = false;
+  }
+
+  /** Close the dropdown on Escape for keyboard accessibility. */
+  @HostListener('document:keydown.escape')
+  onEscape() {
+    if (this.dropdownOpen) this.closeDropdown();
   }
 
   logout() {

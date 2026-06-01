@@ -505,6 +505,87 @@
     50%      { box-shadow: 0 0 0 2px #2a52be, 0 0 0 10px rgba(42, 82, 190, 0.05); }
   }
 
+  /* ---------- Agent documents grid (RIB, marriage, birth, photo...) -- */
+  .agent-docs-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: .85rem;
+    margin: .25rem 0 .5rem;
+  }
+
+  .agent-doc-card {
+    display: flex;
+    align-items: center;
+    gap: .85rem;
+    padding: .85rem 1rem;
+    background: #fff;
+    border: 1px solid #eef2f7;
+    border-left: 4px solid #cbd5e1;
+    border-radius: 12px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+
+    &:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    }
+
+    &.has-file {
+      border-left-color: #10b981;
+      background: #f0fdf4;
+    }
+
+    &__icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 11px;
+      background: rgba(35, 122, 210, 0.1);
+      color: var(--rh-primary);
+      display: grid;
+      place-items: center;
+      flex-shrink: 0;
+      i { font-size: 1.15rem; }
+    }
+
+    &.has-file &__icon {
+      background: rgba(16, 185, 129, 0.12);
+      color: #10b981;
+    }
+
+    &__body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: .15rem;
+      min-width: 0;
+
+      strong {
+        color: #1f2937;
+        font-size: .92rem;
+        font-weight: 600;
+      }
+
+      small {
+        font-size: .78rem;
+      }
+
+      .agent-doc-card__title {
+        color: #475569;
+      }
+
+      .muted {
+        display: inline-flex;
+        align-items: center;
+        gap: .3rem;
+        color: #94a3b8;
+        i { font-size: .7rem; }
+      }
+    }
+
+    &__actions {
+      flex-shrink: 0;
+    }
+  }
+
   /* ---------- Documents table --------------------------------------- */
   .docs-table {
     margin-top: 0.25rem;

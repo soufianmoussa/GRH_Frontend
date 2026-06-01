@@ -1,151 +1,600 @@
+<div class="bi-dashboard">
 
-<div class="dashboard-wrapper">
-  <main class="dashboard-container">
-    <header class="dashboard-header">
-      <h1 class="titleh1">Tableau de Bord RH</h1>
-      <p class="subtitle">Indicateurs et suivi des mouvements administratifs</p>
-    </header>
-
-    <section class="kpi-grid">
-      <div class="card kpi-card">
-        <div class="kpi-icon bg-blue-100 text-blue-600">
-          <i class="pi pi-users" style="font-size: 1.5rem"></i>
-        </div>
-        <div class="kpi-details">
-          <span class="kpi-title">Total Agents</span>
-          <span class="kpi-value">{{ totalAgents }}</span>
-        </div>
+  <!-- ================== Hero / Filters ================== -->
+  <header class="bi-hero">
+    <div class="bi-hero__title">
+      <span class="bi-hero__icon"><i class="pi pi-chart-bar"></i></span>
+      <div>
+        <h1>Tableau de bord RH</h1>
+        <p>Pilotage et indicateurs clés en temps réel</p>
       </div>
+    </div>
 
-      <div class="card kpi-card">
-        <div class="kpi-icon bg-purple-100 text-purple-600">
-          <i class="pi pi-briefcase" style="font-size: 1.5rem"></i>
-        </div>
-        <div class="kpi-details">
-          <span class="kpi-title">Postes Occupés</span>
-          <span class="kpi-value">{{ postesOccupes }}</span>
-        </div>
+    <div class="bi-hero__actions">
+      <p-selectButton
+        [options]="periodOptions"
+        [ngModel]="selectedPeriod"
+        (onChange)="onPeriodChange($event.value)"
+        optionLabel="label"
+        optionValue="value"
+        styleClass="bi-period">
+      </p-selectButton>
+
+      <button pButton
+              type="button"
+              class="p-button-text bi-hero__btn"
+              icon="pi pi-refresh"
+              [loading]="loading()"
+              pTooltip="Rafraichir"
+              tooltipPosition="bottom"
+              (click)="refresh()">
+      </button>
+
+      <button pButton
+              type="button"
+              class="p-button-text bi-hero__btn"
+              icon="pi pi-download"
+              pTooltip="Exporter (JSON)"
+              tooltipPosition="bottom"
+              [disabled]="!snapshot()"
+              (click)="exportSnapshot()">
+      </button>
+    </div>
+
+    <small class="bi-hero__meta" *ngIf="snapshot() as s">
+      <i class="pi pi-clock"></i>
+      Mis à jour : {{ s.generatedAt | date:'dd/MM/yyyy HH:mm' }}
+    </small>
+  </header>
+
+
+  <!-- ================== Skeleton while loading ================== -->
+  <ng-container *ngIf="loading() && !snapshot()">
+    <div class="kpi-grid">
+      <div class="kpi-card" *ngFor="let _ of [1,2,3,4,5,6]">
+        <p-skeleton width="38px" height="38px" borderRadius="10px" styleClass="mb-3"></p-skeleton>
+        <p-skeleton width="60%" height="2rem" styleClass="mb-2"></p-skeleton>
+        <p-skeleton width="80%" height="0.9rem"></p-skeleton>
       </div>
+    </div>
+  </ng-container>
 
-      <div class="card kpi-card">
-        <div class="kpi-icon bg-green-100 text-green-600">
-          <i class="pi pi-calendar" style="font-size: 1.5rem"></i>
-        </div>
-        <div class="kpi-details">
-          <span class="kpi-title">Congés & Maternités</span>
-          <span class="kpi-value">{{ congesMaternites }}</span>
-        </div>
-      </div>
 
-      <div class="card kpi-card">
-        <div class="kpi-icon bg-orange-100 text-orange-600">
-          <i class="pi pi-heart-fill" style="font-size: 1.5rem"></i>
-        </div>
-        <div class="kpi-details">
-          <span class="kpi-title">Accidents & Maladies</span>
-          <span class="kpi-value">{{ accidentsMaladies }}</span>
-        </div>
-      </div>
+  <ng-container *ngIf="snapshot() as snap">
 
-      <div class="card kpi-card">
-        <div class="kpi-icon bg-indigo-100 text-indigo-600">
-          <i class="pi pi-arrow-up-right" style="font-size: 1.5rem"></i>
-        </div>
-        <div class="kpi-details">
-          <span class="kpi-title">Avancements</span>
-          <span class="kpi-value">{{ avancementsPromotions }}</span>
-        </div>
-      </div>
+    <!-- ================== Tabs ================== -->
+    <p-tabs [(value)]="activeTab" styleClass="bi-tabs">
+      <p-tablist>
+        <p-tab *ngFor="let t of tabs" [value]="t.key">
+          <i [class]="t.icon"></i>
+          <span class="bi-tab-label">{{ t.label }}</span>
+        </p-tab>
+      </p-tablist>
 
-      <div class="card kpi-card">
-        <div class="kpi-icon bg-yellow-100 text-yellow-600">
-          <i class="pi pi-file-edit" style="font-size: 1.5rem"></i>
-        </div>
-        <div class="kpi-details">
-          <span class="kpi-title">Actes Visés en Attente</span>
-          <span class="kpi-value">{{ actesVisesEnAttente }}</span>
-        </div>
-      </div>
+      <p-tabpanels>
 
-      <div class="card kpi-card">
-        <div class="kpi-icon bg-cyan-100 text-cyan-600">
-          <i class="pi pi-wallet" style="font-size: 1.5rem"></i>
-        </div>
-        <div class="kpi-details">
-          <span class="kpi-title">Prêts Actifs</span>
-          <span class="kpi-value">{{ dossiersPretsActifs }}</span>
-        </div>
-      </div>
-    </section>
+        <!-- ============================================================ -->
+        <!-- ============== TAB 1 — Aperçu (Command center) ============= -->
+        <!-- ============================================================ -->
+        <p-tabpanel value="overview">
 
-    <section class="charts-grid">
-      <div class="card chart-card">
-        <h3>Répartition des Congés par Catégorie</h3>
-        <div class="chart-container">
-          <p-chart type="doughnut" [data]="congesData" [options]="congesOptions" height="300px"></p-chart>
-        </div>
-      </div>
+          <!-- KPIs -->
+          <section class="bi-block">
+            <div class="bi-block__head">
+              <h2>Indicateurs clés</h2>
+              <small>vs. période précédente</small>
+            </div>
+            <div class="kpi-grid">
+              <article
+                *ngFor="let kpi of snap.kpis"
+                class="kpi-card"
+                [attr.data-accent]="kpi.accent"
+                [class.is-clickable]="kpi.route"
+                (click)="go(kpi.route)">
 
-      <div class="card chart-card">
-        <h3>Diplômes par Spécialité</h3>
-        <div class="chart-container">
-          <p-chart type="bar" [data]="echellesData" [options]="echellesOptions" height="300px"></p-chart>
-        </div>
-      </div>
+                <header class="kpi-card__head">
+                  <div class="kpi-card__icon">
+                    <i class="pi" [ngClass]="kpi.icon || 'pi-chart-line'"></i>
+                  </div>
+                  <div class="kpi-card__delta" [ngClass]="trendClass(kpi)" *ngIf="kpi.deltaPct !== undefined">
+                    <i class="pi" [ngClass]="trendArrow(kpi)"></i>
+                    <span>{{ kpi.deltaPct > 0 ? '+' : '' }}{{ kpi.deltaPct }}%</span>
+                  </div>
+                </header>
 
-      <div class="card chart-card">
-        <h3>Pyramide des Âges et Diversité</h3>
-        <div class="chart-container">
-          <p-chart type="bar" [data]="pyramideAgeData" [options]="pyramideAgeOptions" height="300px"></p-chart>
-        </div>
-      </div>
+                <div class="kpi-card__value">
+                  {{ kpi.value | number:'1.0-0' }}<span class="kpi-card__suffix" *ngIf="kpi.suffix"> {{ kpi.suffix }}</span>
+                </div>
 
-      <div class="card chart-card">
-        <h3>Effectifs par Unité Structurelle</h3>
-        <div class="chart-container">
-          <p-chart type="bar" [data]="effectifsUniteData" [options]="effectifsUniteOptions" height="300px"></p-chart>
-        </div>
-      </div>
+                <div class="kpi-card__label">
+                  <span>{{ kpi.label }}</span>
+                  <small *ngIf="kpi.hint" [pTooltip]="kpi.hint" tooltipPosition="top">
+                    <i class="pi pi-info-circle"></i>
+                  </small>
+                </div>
 
-      <div class="card chart-card">
-        <h3>Distribution par Famille Professionnelle</h3>
-        <div class="chart-container">
-          <p-chart type="bar" [data]="familleProData" [options]="familleProOptions" height="300px"></p-chart>
-        </div>
-      </div>
+                <!-- Inline SVG sparkline -->
+                <svg class="spark" *ngIf="kpi.sparkline?.length" viewBox="0 0 100 32" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient [attr.id]="'sparkGrad-' + kpi.key" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"   [attr.stop-color]="accentColor(kpi.accent)" stop-opacity="0.35"></stop>
+                      <stop offset="100%" [attr.stop-color]="accentColor(kpi.accent)" stop-opacity="0"></stop>
+                    </linearGradient>
+                  </defs>
+                  <path [attr.d]="sparkAreaPath(kpi.sparkline!)" [attr.fill]="'url(#sparkGrad-' + kpi.key + ')'"></path>
+                  <path [attr.d]="sparkLinePath(kpi.sparkline!)" fill="none" [attr.stroke]="accentColor(kpi.accent)" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+              </article>
+            </div>
+          </section>
 
-      <div class="card chart-card">
-        <h3>Répartition des Indemnités et Primes</h3>
-        <div class="chart-container">
-          <p-chart type="bar" [data]="primesData" [options]="primesOptions" height="300px"></p-chart>
-        </div>
-      </div>
-    </section>
+          <!-- Alerts + onboarding gauge -->
+          <section class="bi-block bi-block--split">
+            <div class="bi-card">
+              <div class="bi-card__head">
+                <strong><i class="pi pi-bell"></i> Actions prioritaires</strong>
+                <small>{{ snap.alerts.length }} alerte(s)</small>
+              </div>
+              <ul class="alerts-list">
+                <li *ngFor="let a of snap.alerts" [attr.data-severity]="a.severity">
+                  <div class="alerts-list__icon"><i class="pi" [ngClass]="a.icon || 'pi-exclamation-circle'"></i></div>
+                  <div class="alerts-list__body">
+                    <div class="alerts-list__title">
+                      <strong>{{ a.title }}</strong>
+                      <span class="alerts-list__count" *ngIf="a.count">{{ a.count }}</span>
+                    </div>
+                    <p>{{ a.description }}</p>
+                  </div>
+                  <button pButton
+                          *ngIf="a.route"
+                          type="button"
+                          class="p-button-sm p-button-text"
+                          [label]="a.cta || 'Voir'"
+                          icon="pi pi-arrow-right"
+                          iconPos="right"
+                          (click)="go(a.route)">
+                  </button>
+                </li>
+              </ul>
+            </div>
 
-    <section class="card table-section">
-      <h3>Derniers Actes Administratifs</h3>
-      <p-table [value]="derniersActes" [paginator]="true" [rows]="5" responsiveLayout="scroll" styleClass="p-datatable-sm">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Matricule</th>
-            <th>Type de demande</th>
-            <th>Date d'affectation</th>
-            <th style="width: 100px; text-align: center;">Action</th>
-          </tr>
-        </ng-template>
-        <ng-template pTemplate="body" let-acte>
-          <tr>
-            <td><strong>{{ acte.matricule }}</strong></td>
-            <td>
-              <span class="badge-type">{{ acte.typeDemande }}</span>
-            </td>
-            <td>{{ acte.dateAffectation }}</td>
-            <td style="text-align: center;">
-              <p-button icon="pi pi-eye" styleClass="p-button-rounded p-button-text p-button-sm p-button-info" (onClick)="voirActe(acte)" pTooltip="Voir l'acte"></p-button>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-    </section>
-  </main>
+            <div class="bi-card bi-card--gauge">
+              <div class="bi-card__head">
+                <strong><i class="pi pi-bullseye"></i> Taux de validation</strong>
+                <small>Onboarding — global</small>
+              </div>
+              <div class="gauge-wrap">
+                <p-knob
+                  [ngModel]="validationRate()"
+                  [readonly]="true"
+                  [size]="180"
+                  [strokeWidth]="12"
+                  valueColor="#198897"
+                  rangeColor="#eef2f7"
+                  textColor="#1f2937"
+                  valueTemplate="{value}%">
+                </p-knob>
+                <div class="gauge-meta">
+                  <span><strong>{{ snap.onboardingFunnel.validated }}</strong> agents validés sur <strong>{{ totalOnboarding() }}</strong></span>
+                  <button pButton
+                          type="button"
+                          label="Voir les dossiers"
+                          icon="pi pi-arrow-right"
+                          iconPos="right"
+                          class="p-button-sm p-button-outlined"
+                          (click)="go('/admin/onboarding')">
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- File d'action rapide -->
+          <section class="bi-block">
+            <div class="bi-card">
+              <div class="bi-card__head">
+                <strong><i class="pi pi-list-check"></i> À valider en priorité</strong>
+                <a class="bi-card__more" (click)="go('/admin/onboarding')">Tout voir <i class="pi pi-arrow-right"></i></a>
+              </div>
+              <ul class="ops-list">
+                <li *ngFor="let p of snap.pendingValidations" (click)="go(p.route)">
+                  <div class="ops-list__main">
+                    <strong>{{ p.agent }}</strong>
+                    <small>
+                      <span class="mono">{{ p.matricule }}</span>
+                      <span>·</span>
+                      <span>{{ p.type }}</span>
+                    </small>
+                  </div>
+                  <div class="ops-list__meta">
+                    <p-tag [severity]="pendingTone(p.daysWaiting)" [value]="p.daysWaiting + ' j'" [rounded]="true"></p-tag>
+                    <i class="pi pi-chevron-right"></i>
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+        </p-tabpanel>
+
+
+        <!-- ============================================================ -->
+        <!-- ============== TAB 2 — Effectifs =========================== -->
+        <!-- ============================================================ -->
+        <p-tabpanel value="workforce">
+
+          <!-- Headcount trend (custom SVG line+area chart) -->
+          <section class="bi-block">
+            <div class="bi-card">
+              <div class="bi-card__head">
+                <div>
+                  <strong>Évolution de l'effectif</strong>
+                  <small>12 derniers mois — {{ snap.headcountTrend.values[snap.headcountTrend.values.length - 1] }} agents en fin de période</small>
+                </div>
+              </div>
+              <div class="chart-wrap">
+                <svg viewBox="0 0 600 220" preserveAspectRatio="none" class="trend-chart">
+                  <defs>
+                    <linearGradient id="trendArea" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%"   stop-color="#198897" stop-opacity="0.35"></stop>
+                      <stop offset="100%" stop-color="#198897" stop-opacity="0"></stop>
+                    </linearGradient>
+                  </defs>
+                  <!-- gridlines -->
+                  <g class="grid">
+                    <line *ngFor="let i of [0,1,2,3,4]" x1="0" [attr.y1]="20 + i * 45" x2="600" [attr.y2]="20 + i * 45"></line>
+                  </g>
+                  <!-- area + line -->
+                  <path [attr.d]="trendAreaPath(snap.headcountTrend.values, 600, 220)" fill="url(#trendArea)"></path>
+                  <path [attr.d]="trendLinePath(snap.headcountTrend.values, 600, 220)" fill="none" stroke="#198897" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"></path>
+                  <!-- points -->
+                  <g class="trend-points">
+                    <circle *ngFor="let p of trendPoints(snap.headcountTrend.values, 600, 220)"
+                            [attr.cx]="p.x" [attr.cy]="p.y" r="4" fill="#fff" stroke="#198897" stroke-width="2"></circle>
+                  </g>
+                </svg>
+                <div class="chart-xaxis">
+                  <span *ngFor="let l of snap.headcountTrend.labels">{{ l }}</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Demographics + Distribution -->
+          <section class="bi-block bi-block--split">
+            <!-- Pyramide des âges -->
+            <div class="bi-card">
+              <div class="bi-card__head">
+                <strong>Pyramide des âges</strong>
+                <div class="legend">
+                  <span class="dot" style="background:#2a52be"></span> Hommes
+                  <span class="dot" style="background:#ec4899"></span> Femmes
+                </div>
+              </div>
+              <div class="pyramid">
+                <div *ngFor="let label of snap.agePyramid.labels; let i = index" class="pyramid__row">
+                  <div class="pyramid__side pyramid__side--left">
+                    <span class="pyramid__value">{{ snap.agePyramid.men[i] }}</span>
+                    <div class="pyramid__bar" [style.width.%]="barPct(snap.agePyramid.men[i], pyramidMax())"
+                         style="background: linear-gradient(90deg, transparent, #2a52be);"></div>
+                  </div>
+                  <div class="pyramid__label">{{ label }}</div>
+                  <div class="pyramid__side pyramid__side--right">
+                    <div class="pyramid__bar" [style.width.%]="barPct(snap.agePyramid.women[i], pyramidMax())"
+                         style="background: linear-gradient(90deg, #ec4899, transparent);"></div>
+                    <span class="pyramid__value">{{ snap.agePyramid.women[i] }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- By echelle -->
+            <div class="bi-card">
+              <div class="bi-card__head">
+                <strong>Répartition par échelle</strong>
+                <small>Grille indiciaire</small>
+              </div>
+              <ul class="hbars">
+                <li *ngFor="let item of snap.byEchelle">
+                  <span class="hbars__label">{{ item.label }}</span>
+                  <div class="hbars__track">
+                    <div class="hbars__fill" [style.width.%]="barPct(item.value, seriesMax(snap.byEchelle))"
+                         style="background: linear-gradient(90deg, #2a52be, #198897);"></div>
+                  </div>
+                  <span class="hbars__value">{{ item.value }}</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+          <!-- By specialty + By unit -->
+          <section class="bi-block bi-block--split">
+            <div class="bi-card">
+              <div class="bi-card__head">
+                <strong>Spécialités</strong>
+                <small>Domaines de compétence</small>
+              </div>
+              <ul class="hbars">
+                <li *ngFor="let item of snap.bySpecialite">
+                  <span class="hbars__label">{{ item.label }}</span>
+                  <div class="hbars__track">
+                    <div class="hbars__fill" [style.width.%]="barPct(item.value, seriesMax(snap.bySpecialite))"
+                         style="background: linear-gradient(90deg, #198897, #10b981);"></div>
+                  </div>
+                  <span class="hbars__value">{{ item.value }}</span>
+                </li>
+              </ul>
+            </div>
+
+            <div class="bi-card">
+              <div class="bi-card__head">
+                <strong>Top unités structurelles</strong>
+                <a class="bi-card__more" (click)="go('/UniteStructurelle')">Détail <i class="pi pi-arrow-right"></i></a>
+              </div>
+              <ul class="hbars">
+                <li *ngFor="let u of snap.byUnit">
+                  <span class="hbars__label">{{ u.label }}</span>
+                  <div class="hbars__track">
+                    <div class="hbars__fill" [style.width.%]="barPct(u.value, seriesMax(snap.byUnit))"
+                         style="background: linear-gradient(90deg, #7c3aed, #2a52be);"></div>
+                  </div>
+                  <span class="hbars__value">{{ u.value }}</span>
+                </li>
+              </ul>
+            </div>
+          </section>
+
+        </p-tabpanel>
+
+
+        <!-- ============================================================ -->
+        <!-- ============== TAB 3 — Onboarding ========================== -->
+        <!-- ============================================================ -->
+        <p-tabpanel value="onboarding">
+
+          <!-- Funnel as horizontal progress steps -->
+          <section class="bi-block">
+            <div class="bi-card">
+              <div class="bi-card__head">
+                <strong><i class="pi pi-arrow-right-arrow-left"></i> Pipeline d'onboarding</strong>
+                <small>{{ totalOnboarding() }} dossiers au total</small>
+              </div>
+              <div class="funnel">
+                <div class="funnel-step" data-tone="indigo">
+                  <span class="funnel-step__num">1</span>
+                  <span class="funnel-step__label">À activer</span>
+                  <span class="funnel-step__value">{{ snap.onboardingFunnel.toActivate }}</span>
+                  <p-progressBar [value]="funnelPct(snap.onboardingFunnel.toActivate)" [showValue]="false" styleClass="funnel-step__bar"></p-progressBar>
+                </div>
+                <div class="funnel-step" data-tone="violet">
+                  <span class="funnel-step__num">2</span>
+                  <span class="funnel-step__label">En cours</span>
+                  <span class="funnel-step__value">{{ snap.onboardingFunnel.inProgress }}</span>
+                  <p-progressBar [value]="funnelPct(snap.onboardingFunnel.inProgress)" [showValue]="false" styleClass="funnel-step__bar"></p-progressBar>
+                </div>
+                <div class="funnel-step" data-tone="amber">
+                  <span class="funnel-step__num">3</span>
+                  <span class="funnel-step__label">À valider</span>
+                  <span class="funnel-step__value">{{ snap.onboardingFunnel.toValidate }}</span>
+                  <p-progressBar [value]="funnelPct(snap.onboardingFunnel.toValidate)" [showValue]="false" styleClass="funnel-step__bar"></p-progressBar>
+                </div>
+                <div class="funnel-step" data-tone="emerald">
+                  <span class="funnel-step__num">4</span>
+                  <span class="funnel-step__label">Validés</span>
+                  <span class="funnel-step__value">{{ snap.onboardingFunnel.validated }}</span>
+                  <p-progressBar [value]="funnelPct(snap.onboardingFunnel.validated)" [showValue]="false" styleClass="funnel-step__bar"></p-progressBar>
+                </div>
+                <div class="funnel-step" data-tone="rose">
+                  <span class="funnel-step__num">5</span>
+                  <span class="funnel-step__label">Rejetés</span>
+                  <span class="funnel-step__value">{{ snap.onboardingFunnel.rejected }}</span>
+                  <p-progressBar [value]="funnelPct(snap.onboardingFunnel.rejected)" [showValue]="false" styleClass="funnel-step__bar"></p-progressBar>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Pending validations + KPI conversion -->
+          <section class="bi-block bi-block--split">
+            <div class="bi-card">
+              <div class="bi-card__head">
+                <strong>À valider en priorité</strong>
+                <small>Triés par ancienneté</small>
+              </div>
+              <ul class="ops-list">
+                <li *ngFor="let p of snap.pendingValidations" (click)="go(p.route)">
+                  <div class="ops-list__main">
+                    <strong>{{ p.agent }}</strong>
+                    <small>
+                      <span class="mono">{{ p.matricule }}</span>
+                      <span>·</span>
+                      <span>{{ p.type }}</span>
+                    </small>
+                  </div>
+                  <div class="ops-list__meta">
+                    <p-tag [severity]="pendingTone(p.daysWaiting)" [value]="p.daysWaiting + ' j'" [rounded]="true"></p-tag>
+                    <i class="pi pi-chevron-right"></i>
+                  </div>
+                </li>
+              </ul>
+            </div>
+
+            <div class="bi-card bi-card--gauge">
+              <div class="bi-card__head">
+                <strong><i class="pi pi-bullseye"></i> Conversion</strong>
+                <small>Validés / Total</small>
+              </div>
+              <div class="gauge-wrap">
+                <p-knob
+                  [ngModel]="validationRate()"
+                  [readonly]="true"
+                  [size]="180"
+                  [strokeWidth]="12"
+                  valueColor="#10b981"
+                  rangeColor="#eef2f7"
+                  textColor="#1f2937"
+                  valueTemplate="{value}%">
+                </p-knob>
+                <div class="gauge-meta">
+                  <span>Objectif&nbsp;: <strong>85%</strong> · Actuel&nbsp;: <strong>{{ validationRate() }}%</strong></span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </p-tabpanel>
+
+
+        <!-- ============================================================ -->
+        <!-- ============== TAB 4 — Finance ============================= -->
+        <!-- ============================================================ -->
+        <p-tabpanel value="finance">
+
+          <section class="bi-block bi-block--split">
+            <!-- Leave categories donut -->
+            <div class="bi-card">
+              <div class="bi-card__head">
+                <strong>Catégories de congés</strong>
+                <small>Répartition actuelle</small>
+              </div>
+              <div class="donut-wrap">
+                <svg class="donut" viewBox="-50 -50 100 100">
+                  <!-- background ring -->
+                  <circle r="40" cx="0" cy="0" fill="none" stroke="#eef2f7" stroke-width="14"></circle>
+                  <!-- segments -->
+                  <circle *ngFor="let seg of donutSegments(snap.leaveCategoriesBreakdown)"
+                          r="40" cx="0" cy="0"
+                          fill="none"
+                          [attr.stroke]="seg.color"
+                          stroke-width="14"
+                          [attr.stroke-dasharray]="seg.dasharray"
+                          [attr.stroke-dashoffset]="seg.dashoffset"
+                          transform="rotate(-90)"></circle>
+                  <text x="0" y="-3" text-anchor="middle" class="donut__num">{{ seriesTotal(snap.leaveCategoriesBreakdown) }}</text>
+                  <text x="0" y="10" text-anchor="middle" class="donut__lbl">en congé</text>
+                </svg>
+                <ul class="donut-legend">
+                  <li *ngFor="let it of snap.leaveCategoriesBreakdown; let i = index">
+                    <span class="dot" [style.background]="donutSegments(snap.leaveCategoriesBreakdown)[i].color"></span>
+                    <span class="legend-label">{{ it.label }}</span>
+                    <span class="legend-value">{{ it.value }}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Primes (stacked bars built from CSS / div) -->
+            <div class="bi-card">
+              <div class="bi-card__head">
+                <strong>Évolution des primes</strong>
+                <small>Cumul mensuel (k MAD)</small>
+              </div>
+              <div class="stacked-bars">
+                <div class="stacked-bars__group" *ngFor="let label of snap.primesEvolution.labels; let i = index">
+                  <div class="stacked-bars__col">
+                    <div *ngFor="let s of snap.primesEvolution.series"
+                         class="stacked-bars__seg"
+                         [style.background]="accentColor(s.accent)"
+                         [style.height.px]="s.values[i] / 12"
+                         [pTooltip]="s.name + ' : ' + s.values[i] + ' k'"
+                         tooltipPosition="top"></div>
+                  </div>
+                  <small>{{ label }}</small>
+                </div>
+              </div>
+              <div class="stacked-legend">
+                <span *ngFor="let s of snap.primesEvolution.series">
+                  <span class="dot" [style.background]="accentColor(s.accent)"></span>{{ s.name }}
+                </span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Top units financial summary -->
+          <section class="bi-block">
+            <div class="bi-card">
+              <div class="bi-card__head">
+                <strong>Top unités par effectif</strong>
+                <small>Mouvement net du mois</small>
+              </div>
+              <table class="ops-table">
+                <thead>
+                  <tr>
+                    <th>Unité</th>
+                    <th class="num">Total</th>
+                    <th class="num">Entrées</th>
+                    <th class="num">Sorties</th>
+                    <th class="num">Δ Net</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let u of snap.topUnits">
+                    <td>{{ u.unit }}</td>
+                    <td class="num"><strong>{{ u.total }}</strong></td>
+                    <td class="num"><span class="num-good">+{{ u.hires }}</span></td>
+                    <td class="num"><span class="num-bad">−{{ u.exits }}</span></td>
+                    <td class="num">
+                      <span [class.num-good]="u.netChange > 0" [class.num-bad]="u.netChange < 0">
+                        {{ u.netChange > 0 ? '+' : '' }}{{ u.netChange }}
+                      </span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+        </p-tabpanel>
+
+
+        <!-- ============================================================ -->
+        <!-- ============== TAB 5 — Activité ============================ -->
+        <!-- ============================================================ -->
+        <p-tabpanel value="activity">
+          <section class="bi-block">
+            <div class="bi-card">
+              <div class="bi-card__head">
+                <strong><i class="pi pi-history"></i> Derniers actes administratifs</strong>
+                <small>Activité récente sur les dossiers agents</small>
+              </div>
+              <p-table [value]="snap.recentActes" [paginator]="true" [rows]="8" responsiveLayout="scroll" styleClass="p-datatable-sm">
+                <ng-template pTemplate="header">
+                  <tr>
+                    <th>Matricule</th>
+                    <th>Agent</th>
+                    <th>Type d'acte</th>
+                    <th>Date</th>
+                    <th>Statut</th>
+                    <th style="width: 80px; text-align: center;">Action</th>
+                  </tr>
+                </ng-template>
+                <ng-template pTemplate="body" let-acte>
+                  <tr>
+                    <td><strong class="mono">{{ acte.matricule }}</strong></td>
+                    <td>{{ acte.agent }}</td>
+                    <td>{{ acte.typeDemande }}</td>
+                    <td>{{ acte.dateAffectation | date:'dd/MM/yyyy' }}</td>
+                    <td>
+                      <p-tag [severity]="acteSeverity(acte.status)" [value]="acteLabel(acte.status)" [rounded]="true"></p-tag>
+                    </td>
+                    <td style="text-align: center;">
+                      <button pButton
+                              icon="pi pi-eye"
+                              class="p-button-rounded p-button-text p-button-sm p-button-info"
+                              pTooltip="Voir l'acte"
+                              tooltipPosition="left"
+                              (click)="voirActe(acte)">
+                      </button>
+                    </td>
+                  </tr>
+                </ng-template>
+              </p-table>
+            </div>
+          </section>
+        </p-tabpanel>
+
+      </p-tabpanels>
+    </p-tabs>
+
+  </ng-container>
 </div>

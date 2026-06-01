@@ -31,6 +31,12 @@ import { DiplomesService } from '../../../documents/services/diplomes/diplomes.s
 import { FormationService } from '../../../documents/services/formation/formation.service';
 import { Diplome } from '../../../documents/models/diplomes/diplome.model';
 import { Formation } from '../../../../models/formation.model';
+import { AgentDocumentsService } from '../../../dossier-agent/services/dossiers-agents/agent-documents.service';
+import {
+  AgentDocument,
+  AGENT_DOCUMENT_TYPE_ICONS,
+  AGENT_DOCUMENT_TYPE_LABELS
+} from '../../../../models/agent-document.model';
 import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
@@ -150,7 +156,11 @@ export class AdminOnboardingDetailComponent implements OnInit {
   onboarding?: OnboardingDetail;
   diplomes: Diplome[] = [];
   formations: Formation[] = [];
+  agentDocuments: AgentDocument[] = [];
   loading = true;
+
+  readonly agentDocLabels = AGENT_DOCUMENT_TYPE_LABELS;
+  readonly agentDocIcons = AGENT_DOCUMENT_TYPE_ICONS;
 
   private onboardingId!: number;
   private pendingReject?: RejectionTarget;
@@ -168,6 +178,7 @@ export class AdminOnboardingDetailComponent implements OnInit {
     private onboardingService: AdminOnboardingService,
     private diplomesService: DiplomesService,
     private formationService: FormationService,
+    private agentDocumentsService: AgentDocumentsService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) {}
@@ -194,28 +205,51 @@ export class AdminOnboardingDetailComponent implements OnInit {
   private loadAgentDiplomesAndFormations(): void {
     const matricule = this.onboarding?.matricule?.matricule
       || this.onboarding?.agent?.matricule?.matricule;
-    if (!matricule) return;
-    this.diplomesService.getByMatricule(matricule)
-      .pipe(catchError(() => of([] as Diplome[])))
-      .subscribe(list => this.diplomes = list);
-    this.formationService.getByMatricule(matricule)
-      .pipe(catchError(() => of([] as Formation[])))
-      .subscribe(list => this.formations = list);
+    const agentId = this.onboarding?.agent?.id;
+
+    if (matricule) {
+      this.diplomesService.getByMatricule(matricule)
+        .pipe(catchError(() => of([] as Diplome[])))
+        .subscribe(list => this.diplomes = list);
+      this.formationService.getByMatricule(matricule)
+        .pipe(catchError(() => of([] as Formation[])))
+        .subscribe(list => this.formations = list);
+    }
+
+    if (agentId) {
+      // All ad-hoc agent documents (RIB, marriage cert, birth cert, photo, etc.)
+      this.agentDocumentsService.getByAgent(agentId)
+        .pipe(catchError(() => of([] as AgentDocument[])))
+        .subscribe(list => {
+          // The CIN slot is already shown in the OnboardingDocument table — skip it here.
+          this.agentDocuments = list.filter(d => d.documentType !== 'CARTE_NATIONALE');
+        });
+    }
+  }
+
+  agentDocLabel(type: string): string {
+    return (this.agentDocLabels as Record<string, string>)[type] ?? type;
+  }
+
+  agentDocIcon(type: string): string {
+    return (this.agentDocIcons as Record<string, string>)[type] ?? 'pi pi-file';
   }
 
   // --- Counters for tab badges ---------------------------------------------
 
   totalDocumentsCount(): number {
     return (this.onboarding?.documents?.length ?? 0)
+      + this.agentDocuments.length
       + this.diplomes.length
       + this.formations.length;
   }
 
   totalValidatedCount(): number {
     const cinValidated = (this.onboarding?.documents ?? []).filter(d => d.status === 'VALIDATED').length;
+    const agentDocsWithFile = this.agentDocuments.filter(d => !!d.fileUrl).length;
     const diplomesWithScan = this.diplomes.filter(d => !!d.scanUrl).length;
     const formationsWithCert = this.formations.filter(f => !!f.certificateUrl).length;
-    return cinValidated + diplomesWithScan + formationsWithCert;
+    return cinValidated + agentDocsWithFile + diplomesWithScan + formationsWithCert;
   }
 
   // --- Dossier-level actions ------------------------------------------------

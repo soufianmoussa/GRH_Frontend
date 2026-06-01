@@ -28,6 +28,13 @@ import { DiplomesService } from '../../../documents/services/diplomes/diplomes.s
 import { FormationService } from '../../../documents/services/formation/formation.service';
 import { Diplome, DiplomeCreateUpdateRequest } from '../../../documents/models/diplomes/diplome.model';
 import { Formation } from '../../../../models/formation.model';
+import { AgentDocumentsService } from '../../../dossier-agent/services/dossiers-agents/agent-documents.service';
+import {
+  AgentDocument,
+  AgentDocumentType,
+  AGENT_DOCUMENT_TYPE_LABELS
+} from '../../../../models/agent-document.model';
+import { stripEmptyStrings } from '../../../../shared/utils/payload-utils';
 import {
   DIPLOME_ETABLISSEMENTS,
   DIPLOME_MENTIONS,
@@ -169,19 +176,22 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private diplomesService: DiplomesService,
-    private formationService: FormationService
+    private formationService: FormationService,
+    private agentDocumentsService: AgentDocumentsService
   ) {
     this.identityForm = this.fb.group({
       nom: ['', Validators.required],
       prenom: ['', Validators.required],
       cin: ['', Validators.required],
-      sexe: ['', Validators.required],
-      situation: [''],
-      dateNaissance: ['', Validators.required],
+      // Enum-typed fields start as null (not '') so the JSON payload doesn't
+      // contain "" which would crash Jackson on the Java enum side.
+      sexe: [null as string | null, Validators.required],
+      situation: [null as string | null],
+      dateNaissance: [null as Date | null, Validators.required],
       nomTuteurAr: [''],
       prenomTuteurAr: [''],
       pprTuteur: [''],
-      dateTutorat: [''],
+      dateTutorat: [null as Date | null],
       numEnfant: [0]
     });
 
@@ -205,7 +215,7 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
         nom: [''],
         prenom: [''],
         cin: [''],
-        dateNaissance: [''],
+        dateNaissance: [null as Date | null],
         profession: ['']
       }),
       enfants: this.fb.array([])
@@ -402,8 +412,9 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
       nom: [e.nom ?? '', Validators.required],
       prenom: [e.prenom ?? '', Validators.required],
       dateNaissance: [e.dateNaissance ? new Date(e.dateNaissance) : null],
-      sexe: [e.sexe ?? ''],
-      situation: [e.situation ?? ''],
+      // null (not '') for enum-typed fields. See payload-utils + addEnfant().
+      sexe: [e.sexe ?? null],
+      situation: [e.situation ?? null],
       niveauScolaire: [e.niveauScolaire ?? '']
     })));
   }
@@ -465,17 +476,27 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     const banqueSan = this.sanitizeObject(contact.coordonneesBancaires ?? {});
     const hasBanque = Object.keys(banqueSan).length > 0;
 
-    const payload: AgentCreateRequest = {
+    // Backend rule: if situation === 'M', conjoint info is mandatory.
+    // The user typically picks the situation in step 2 BEFORE filling
+    // the conjoint section in step 3 — so we delay sending situation='M'
+    // until the conjoint data is actually present. The same applies when
+    // the persisted record already has a conjoint (re-edits).
+    const conjointFilled = this.hasConjoint(contact.conjoint);
+    const situationToSend = (id.situation === 'M' && !conjointFilled)
+      ? undefined
+      : (id.situation || undefined);
+
+    const rawPayload: AgentCreateRequest = {
       matriculeId: a.matricule?.id ?? null,
       nom: id.nom,
       prenom: id.prenom,
       cin: id.cin,
       sexe: id.sexe,
-      situation: id.situation || undefined,
+      situation: situationToSend,
       dateNaissance: this.toIsoDate(id.dateNaissance),
-      nomTuteurAr: id.nomTuteurAr || undefined,
-      prenomTuteurAr: id.prenomTuteurAr || undefined,
-      pprTuteur: id.pprTuteur || undefined,
+      nomTuteurAr: id.nomTuteurAr,
+      prenomTuteurAr: id.prenomTuteurAr,
+      pprTuteur: id.pprTuteur,
       dateTutorat: this.toIsoDate(id.dateTutorat),
       numEnfant: id.numEnfant ?? 0,
       conjoint: this.hasConjoint(contact.conjoint) ? {
@@ -487,8 +508,12 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
         dateNaissance: this.toIsoDate(e.dateNaissance)
       }))
     };
-    if (hasAdresse) payload.adresses = [adresseSan as any];
-    if (hasBanque) payload.coordonneesBancaires = banqueSan as any;
+    if (hasAdresse) rawPayload.adresses = [adresseSan as any];
+    if (hasBanque) rawPayload.coordonneesBancaires = banqueSan as any;
+
+    // Recursively drop empty strings so Java enums don't choke on "".
+    // Centralises the previous per-field `|| undefined` defensive code.
+    const payload = stripEmptyStrings(rawPayload);
 
     this.saving.set(true);
     this.adminService.updateProfile(this.onboardingId, payload as any)
@@ -522,9 +547,10 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     this.enfants.push(this.fb.group({
       nom: ['', Validators.required],
       prenom: ['', Validators.required],
-      dateNaissance: [null],
-      sexe: [''],
-      situation: [''],
+      dateNaissance: [null as Date | null],
+      // Enum-typed fields kept as null so empty strings never reach the backend.
+      sexe: [null as string | null],
+      situation: [null as string | null],
       niveauScolaire: ['']
     }));
   }
@@ -548,6 +574,7 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     this.pendingPhotoFile = file;
     if (this.photoPreviewUrl) URL.revokeObjectURL(this.photoPreviewUrl);
     this.photoPreviewUrl = URL.createObjectURL(file);
+    this.uploadAgentDocument('PHOTO_PROFIL', file);
   }
 
   removePhoto(): void {
@@ -606,17 +633,59 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
 
   onRibFileSelected(event: Event): void {
     const file = this.pickFile(event);
-    if (file) this.pendingRibFile = file;
+    if (!file) return;
+    this.pendingRibFile = file;
+    this.uploadAgentDocument('ATTESTATION_RIB', file);
   }
 
   onMariageFileSelected(event: Event): void {
     const file = this.pickFile(event);
-    if (file) this.pendingMariageFile = file;
+    if (!file) return;
+    this.pendingMariageFile = file;
+    this.uploadAgentDocument('ACTE_MARIAGE', file);
   }
 
   onActeNaissanceSelected(event: Event, index: number): void {
     const file = this.pickFile(event);
-    if (file) this.pendingActesNaissance.set(index, file);
+    if (!file) return;
+    this.pendingActesNaissance.set(index, file);
+    const enfant = this.enfants.at(index)?.value;
+    const childName = enfant ? `${enfant.prenom || ''} ${enfant.nom || ''}`.trim() : `Enfant #${index + 1}`;
+    this.uploadAgentDocument('ACTE_NAISSANCE', file, childName || `Enfant #${index + 1}`);
+  }
+
+  /**
+   * Create an AgentDocument record + upload the file. Used for the docs that
+   * live outside the OnboardingDocument workflow (RIB, marriage, birth, photo).
+   */
+  private uploadAgentDocument(type: AgentDocumentType, file: File, titleSuffix?: string): void {
+    const agentId = this.onboarding?.agent?.id;
+    if (!agentId) {
+      ToastHelper.showError(this.messageService, 'Agent introuvable.');
+      return;
+    }
+    const baseTitle = AGENT_DOCUMENT_TYPE_LABELS[type];
+    const title = titleSuffix ? `${baseTitle} — ${titleSuffix}` : baseTitle;
+
+    this.saving.set(true);
+    this.agentDocumentsService.create({
+      agentId,
+      documentType: type,
+      title
+    }).subscribe({
+      next: (doc) => {
+        this.agentDocumentsService.uploadFile(doc.id, file)
+          .pipe(finalize(() => this.saving.set(false)))
+          .subscribe({
+            next: () => ToastHelper.showSuccess(this.messageService, `${baseTitle} televerse.`),
+            error: (e) => ToastHelper.handleApiError(this.messageService, e, `Televersement ${baseTitle} impossible.`)
+          });
+      },
+      error: (e) => {
+        this.saving.set(false);
+        ToastHelper.handleApiError(this.messageService, e, `Creation document ${baseTitle} impossible.`);
+      }
+    });
   }
 
   hasActeNaissance(index: number): boolean {
@@ -885,6 +954,89 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
 
   private newUid(): string {
     return Math.random().toString(36).slice(2, 10);
+  }
+
+  // ---------- Recap helpers ----------
+
+  /**
+   * Returns the list of validation issues blocking submission.
+   * Each issue carries a step number so the user can jump back and fix it.
+   */
+  recapIssues(): Array<{ step: WizardStep; label: string; severity: 'error' | 'warn' }> {
+    const issues: Array<{ step: WizardStep; label: string; severity: 'error' | 'warn' }> = [];
+    const id = this.identityForm.value;
+    const c = this.contactForm.value;
+
+    // Step 2 — required identity
+    if (!id.nom?.trim()) issues.push({ step: 2, label: 'Nom obligatoire', severity: 'error' });
+    if (!id.prenom?.trim()) issues.push({ step: 2, label: 'Prenom obligatoire', severity: 'error' });
+    if (!id.cin?.trim()) issues.push({ step: 2, label: 'CIN obligatoire', severity: 'error' });
+    if (!id.sexe) issues.push({ step: 2, label: 'Sexe obligatoire', severity: 'error' });
+    if (!id.dateNaissance) issues.push({ step: 2, label: 'Date de naissance obligatoire', severity: 'error' });
+    if (!this.pendingCinFile) issues.push({ step: 2, label: 'Scan CIN manquant', severity: 'error' });
+    if (!this.photoPreviewUrl) issues.push({ step: 2, label: 'Photo de profil recommandee', severity: 'warn' });
+
+    // Step 3 — required contact
+    if (!c.adresse?.adresse?.trim()) issues.push({ step: 3, label: 'Adresse obligatoire', severity: 'error' });
+    if (!c.adresse?.ville?.trim()) issues.push({ step: 3, label: 'Ville obligatoire', severity: 'error' });
+
+    // Bank fields are optional but if any filled we want a RIB attached
+    const hasBankFields = !!(c.coordonneesBancaires?.banque || c.coordonneesBancaires?.rib || c.coordonneesBancaires?.iban);
+    if (hasBankFields && !this.pendingRibFile) {
+      issues.push({ step: 3, label: 'Attestation RIB recommandee (banque renseignee)', severity: 'warn' });
+    }
+
+    // Spouse: if married, conjoint info required + acte de mariage
+    if (id.situation === 'M') {
+      if (!c.conjoint?.nom?.trim()) issues.push({ step: 3, label: 'Nom du conjoint obligatoire (situation : Marie/e)', severity: 'error' });
+      if (!c.conjoint?.prenom?.trim()) issues.push({ step: 3, label: 'Prenom du conjoint obligatoire', severity: 'error' });
+      if (!c.conjoint?.cin?.trim()) issues.push({ step: 3, label: 'CIN du conjoint obligatoire', severity: 'error' });
+      if (!this.pendingMariageFile) issues.push({ step: 3, label: 'Acte de mariage manquant', severity: 'warn' });
+    }
+
+    // Each child needs an acte de naissance
+    this.enfants.controls.forEach((_, i) => {
+      const enfant = this.enfants.at(i).value;
+      if (!enfant.nom?.trim() || !enfant.prenom?.trim()) {
+        issues.push({ step: 3, label: `Enfant #${i + 1} : nom et prenom obligatoires`, severity: 'error' });
+      }
+      if (!this.pendingActesNaissance.has(i)) {
+        const childName = `${enfant.prenom || ''} ${enfant.nom || ''}`.trim() || `Enfant #${i + 1}`;
+        issues.push({ step: 3, label: `Acte de naissance manquant pour ${childName}`, severity: 'warn' });
+      }
+    });
+
+    // Step 4 — diplomes
+    if (this.diplomes.length === 0) {
+      issues.push({ step: 4, label: 'Au moins un diplome est obligatoire', severity: 'error' });
+    }
+    if (this.diplomes.length > 0 && !this.diplomes.some(d => !!d.scanUrl)) {
+      issues.push({ step: 4, label: 'Au moins un diplome doit avoir un scan', severity: 'error' });
+    }
+
+    return issues;
+  }
+
+  recapErrors(): number {
+    return this.recapIssues().filter(i => i.severity === 'error').length;
+  }
+
+  recapWarnings(): number {
+    return this.recapIssues().filter(i => i.severity === 'warn').length;
+  }
+
+  canSubmit(): boolean {
+    return this.recapErrors() === 0;
+  }
+
+  /** Friendly label for a sexe code (M/F). */
+  sexeLabel(code?: string | null): string {
+    return this.sexeOptions.find(o => o.value === code)?.label || '-';
+  }
+
+  /** Friendly label for a situation familiale code. */
+  situationLabel(code?: string | null): string {
+    return this.situationOptions.find(o => o.value === code)?.label || '-';
   }
 
   // ---------- Submit ----------
