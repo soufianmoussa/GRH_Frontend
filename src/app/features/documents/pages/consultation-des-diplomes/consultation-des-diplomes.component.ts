@@ -12,22 +12,19 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { AgentcardComponent } from '../../../../shared/components/agent-card/agent-card.component';
 import { TooltipModule } from 'primeng/tooltip';
 import { DropdownModule } from 'primeng/dropdown';
+import { AutoCompleteModule } from 'primeng/autocomplete';
 import { DatePicker } from 'primeng/datepicker';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { Toast } from 'primeng/toast';
 import { ToastHelper } from '../../../../shared/utils/toast-helper';
 import { Diplome, DiplomeCreateUpdateRequest } from '../../models/diplomes/diplome.model';
 import { DiplomesService } from '../../services/diplomes/diplomes.service';
-import { TypeEtablissementService } from '../../services/diplomes/type-etablissement.service';
-import { FormationInitialeService } from '../../services/diplomes/formation-initiale.service';
-import { EtablissementService } from '../../services/diplomes/etablissement.service';
-import { NiveauDiplomeService } from '../../services/diplomes/niveau-diplome.service';
-import { SpecialiteService } from '../../services/diplomes/specialite.service';
-import { TypeEtablissement } from '../../models/diplomes/type-etablissement.model';
-import { FormationInitiale } from '../../models/diplomes/formation-initiale.model';
-import { Etablissement } from '../../models/diplomes/etablissement.model';
-import { NiveauDiplome } from '../../models/diplomes/niveau-diplome.model';
-import { Specialite } from '../../models/diplomes/specialite.model';
+import {
+  DIPLOME_ETABLISSEMENTS,
+  DIPLOME_MENTIONS,
+  DIPLOME_NIVEAUX,
+  DIPLOME_SPECIALITES
+} from '../../../onboarding/constants/diplome-options.constants';
 
 @Component({
   selector: 'app-consultation-des-diplomes',
@@ -52,6 +49,7 @@ import { Specialite } from '../../models/diplomes/specialite.model';
     TooltipModule,
     ConfirmDialogModule,
     DropdownModule,
+    AutoCompleteModule,
     DatePicker,
     FloatLabelModule,
     Toast
@@ -73,29 +71,19 @@ export class ConsultationDesDiplomesComponent implements OnInit {
 
   formDiplome: any = {};
 
-  typesEtablissement: TypeEtablissement[] = [];
-  specialites: Specialite[] = [];
-  etablissements: Etablissement[] = [];
-  niveaux: NiveauDiplome[] = [];
-  formationsInitiales: FormationInitiale[] = [];
+  readonly niveauxList: string[] = DIPLOME_NIVEAUX;
+  readonly specialitesList: string[] = DIPLOME_SPECIALITES;
+  readonly etablissementsList: string[] = DIPLOME_ETABLISSEMENTS;
+  readonly mentionsList: string[] = DIPLOME_MENTIONS;
 
-  mentions = [
-    { code: 'Passable', label: 'Passable' },
-    { code: 'Assez bien', label: 'Assez bien' },
-    { code: 'Bien', label: 'Bien' },
-    { code: 'Très bien', label: 'Très bien' }
-  ];
+  niveauSuggestions: string[] = [];
+  specialiteSuggestions: string[] = [];
+  etablissementSuggestions: string[] = [];
 
-  // File upload
   selectedFile: File | null = null;
 
   constructor(
     private diplomesService: DiplomesService,
-    private typeEtablissementService: TypeEtablissementService,
-    private formationInitialeService: FormationInitialeService,
-    private etablissementService: EtablissementService,
-    private niveauDiplomeService: NiveauDiplomeService,
-    private specialiteService: SpecialiteService,
     private confirmationService: ConfirmationService,
     private messageService: MessageService,
     private cdr: ChangeDetectorRef
@@ -103,22 +91,6 @@ export class ConsultationDesDiplomesComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadDiplomes();
-    this.loadDropdownData();
-  }
-
-  loadDropdownData() {
-    this.typeEtablissementService.getAll(0, 1000).subscribe(res => this.typesEtablissement = res.content);
-    this.specialiteService.getAll(0, 1000).subscribe(res => this.specialites = res.content);
-    this.etablissementService.getAll(0, 1000).subscribe(res => this.etablissements = res.content);
-    this.niveauDiplomeService.getAll(0, 1000).subscribe(res => this.niveaux = res.content);
-    this.formationInitialeService.getAll(0, 1000).subscribe(res => this.formationsInitiales = res.content);
-  }
-
-  get filteredSpecialites(): Specialite[] {
-    if (!this.formDiplome.formationInitialeId) {
-      return this.specialites;
-    }
-    return this.specialites.filter(s => s.formationInitiale?.id === this.formDiplome.formationInitialeId);
   }
 
   loadDiplomes(): void {
@@ -127,28 +99,39 @@ export class ConsultationDesDiplomesComponent implements OnInit {
         this.diplomes = page.content;
         this.cdr.detectChanges();
       },
-      error: (err) => {
-        console.error('Erreur lors du chargement des diplômes:', err);
-      }
+      error: (err) => console.error('Erreur lors du chargement des diplômes:', err)
     });
   }
 
   onViewDiplome(item: Diplome) {
     this.selectedDiplome = {
       ...item,
-      dateObtention: item.dateObtention ? new Date(item.dateObtention) : null as any
+      dateObtention: item.dateObtention ? (new Date(item.dateObtention) as any) : null as any
     };
     this.displayViewDialog = true;
   }
 
-  applySearch() {
-
-  }
+  applySearch() { /* server-side filtering not wired yet */ }
 
   clear(table: Table) {
     this.searchDiplome = '';
     table.clear();
     this.applySearch();
+  }
+
+  filterNiveau(event: { query: string }) {
+    this.niveauSuggestions = this.filterList(this.niveauxList, event.query);
+  }
+  filterSpecialite(event: { query: string }) {
+    this.specialiteSuggestions = this.filterList(this.specialitesList, event.query);
+  }
+  filterEtablissement(event: { query: string }) {
+    this.etablissementSuggestions = this.filterList(this.etablissementsList, event.query);
+  }
+  private filterList(list: string[], q: string): string[] {
+    const needle = (q || '').trim().toLowerCase();
+    if (!needle) return list.slice(0, 30);
+    return list.filter(v => v.toLowerCase().includes(needle));
   }
 
   showAddDialog() {
@@ -159,10 +142,9 @@ export class ConsultationDesDiplomesComponent implements OnInit {
       agentId: 1,
       agentMatricule: 'EMP001',
       dateObtention: null,
-      formationInitialeId: null,
-      niveauId: null,
-      etablissementId: null,
-      specialiteId: null,
+      niveau: '',
+      etablissement: '',
+      specialite: '',
       codePays: 'MA',
       mention: '',
       moyenne: undefined
@@ -174,10 +156,9 @@ export class ConsultationDesDiplomesComponent implements OnInit {
         agentId: 1,
         agentMatricule: 'EMP001',
         dateObtention: null,
-        formationInitialeId: null,
-        niveauId: null,
-        etablissementId: null,
-        specialiteId: null,
+        niveau: '',
+        etablissement: '',
+        specialite: '',
         codePays: 'MA',
         mention: '',
         moyenne: undefined
@@ -193,10 +174,9 @@ export class ConsultationDesDiplomesComponent implements OnInit {
       agentId: d.agentId || 1,
       agentMatricule: d.agentMatricule,
       dateObtention: d.dateObtention ? new Date(d.dateObtention) : null,
-      formationInitialeId: d.specialite?.formationInitiale?.id,
-      niveauId: d.niveau?.id,
-      etablissementId: d.etablissement?.id,
-      specialiteId: d.specialite?.id,
+      niveau: d.niveau || '',
+      etablissement: d.etablissement || '',
+      specialite: d.specialite || '',
       codePays: d.codePays,
       mention: d.mention,
       moyenne: d.moyenne,
@@ -245,9 +225,9 @@ export class ConsultationDesDiplomesComponent implements OnInit {
     const payload: DiplomeCreateUpdateRequest = {
       agentId: this.formDiplome.agentId,
       dateObtention: this.toIsoDate(this.formDiplome.dateObtention),
-      niveauId: this.formDiplome.niveauId,
-      etablissementId: this.formDiplome.etablissementId,
-      specialiteId: this.formDiplome.specialiteId,
+      niveau: (this.formDiplome.niveau || '').trim(),
+      etablissement: (this.formDiplome.etablissement || '').trim() || undefined,
+      specialite: (this.formDiplome.specialite || '').trim() || undefined,
       codePays: this.formDiplome.codePays,
       mention: this.formDiplome.mention,
       moyenne: this.formDiplome.moyenne
@@ -255,58 +235,30 @@ export class ConsultationDesDiplomesComponent implements OnInit {
 
     if (this.dialogMode === 'add') {
       this.diplomesService.add(payload).subscribe({
-        next: (created) => {
-          if (this.selectedFile) {
-            this.diplomesService.uploadScan(created.id, this.selectedFile).subscribe({
-              next: () => {
-                this.displayDialog = false;
-                ToastHelper.showAdd(this.messageService);
-                this.loadDiplomes();
-              },
-              error: (err) => {
-                console.error('Erreur lors de l\'upload du scan:', err);
-                this.displayDialog = false;
-                ToastHelper.showAdd(this.messageService);
-                this.loadDiplomes();
-              }
-            });
-          } else {
-            this.displayDialog = false;
-            ToastHelper.showAdd(this.messageService);
-            this.loadDiplomes();
-          }
-        },
-        error: (err) => {
-          console.error('Erreur lors de l\'ajout du diplôme:', err);
-        }
+        next: (created) => this.afterCreateUpdate(created.id, true),
+        error: (err) => console.error('Erreur lors de l\'ajout du diplôme:', err)
       });
     } else if (this.dialogMode === 'edit' && this.editDiplomeId !== null) {
       this.diplomesService.update(this.editDiplomeId, payload).subscribe({
-        next: () => {
-          if (this.selectedFile) {
-            this.diplomesService.uploadScan(this.editDiplomeId!, this.selectedFile).subscribe({
-              next: () => {
-                this.displayDialog = false;
-                ToastHelper.showEdit(this.messageService);
-                this.loadDiplomes();
-              },
-              error: (err) => {
-                console.error('Erreur lors de l\'upload du scan:', err);
-                this.displayDialog = false;
-                ToastHelper.showEdit(this.messageService);
-                this.loadDiplomes();
-              }
-            });
-          } else {
-            this.displayDialog = false;
-            ToastHelper.showEdit(this.messageService);
-            this.loadDiplomes();
-          }
-        },
-        error: (err) => {
-          console.error('Erreur lors de la modification du diplôme:', err);
-        }
+        next: () => this.afterCreateUpdate(this.editDiplomeId!, false),
+        error: (err) => console.error('Erreur lors de la modification du diplôme:', err)
       });
+    }
+  }
+
+  private afterCreateUpdate(id: number, isAdd: boolean) {
+    const success = () => {
+      this.displayDialog = false;
+      isAdd ? ToastHelper.showAdd(this.messageService) : ToastHelper.showEdit(this.messageService);
+      this.loadDiplomes();
+    };
+    if (this.selectedFile) {
+      this.diplomesService.uploadScan(id, this.selectedFile).subscribe({
+        next: success,
+        error: success
+      });
+    } else {
+      success();
     }
   }
 
@@ -319,9 +271,7 @@ export class ConsultationDesDiplomesComponent implements OnInit {
             this.messageService.add({ severity: 'success', summary: 'Succès', detail: 'Scan supprimé' });
             this.loadDiplomes();
           },
-          error: (err) => {
-            console.error('Erreur lors de la suppression du scan:', err);
-          }
+          error: (err) => console.error('Erreur lors de la suppression du scan:', err)
         });
       }
     });
@@ -338,15 +288,13 @@ export class ConsultationDesDiplomesComponent implements OnInit {
           ToastHelper.showDelete(this.messageService);
           this.loadDiplomes();
         },
-        error: (err) => {
-          console.error('Erreur lors de la suppression du diplôme:', err);
-        }
+        error: (err) => console.error('Erreur lors de la suppression du diplôme:', err)
       });
     });
   }
 
   private validateForm(form: any): boolean {
-    return !!(form.dateObtention && form.formationInitialeId && form.niveauId && form.etablissementId && form.specialiteId && form.codePays?.trim() && form.mention?.trim());
+    return !!(form.dateObtention && form.niveau && form.codePays?.trim() && form.mention?.trim());
   }
 
   private toIsoDate(value: any): string {

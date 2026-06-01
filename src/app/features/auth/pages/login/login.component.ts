@@ -71,6 +71,15 @@ export class LoginComponent {
     } else if (roles.includes('RESPONSABLE_UNITE')) {
       this.router.navigate(['/DemandesCongeAttestation']);
     } else {
+      const status = this.authService.getCurrentUser()?.onboardingStatus;
+      if (status && !['VALIDATED', 'ACTIVE'].includes(status)) {
+        const route = status === 'PENDING_VALIDATION'
+          ? '/mon-onboarding'
+          : '/mon-onboarding/profil';
+        this.router.navigate([route]);
+        return;
+      }
+
       this.router.navigate(['/accueil']);
     }
   }

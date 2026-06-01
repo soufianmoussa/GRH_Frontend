@@ -1,0 +1,149 @@
+.activation-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background:
+    radial-gradient(circle at top left, rgba(35, 122, 210, 0.12), transparent 32rem),
+    linear-gradient(135deg, #f7fbff 0%, #eef4f8 52%, #f8fafc 100%);
+}
+
+.activation-card {
+  width: min(100%, 460px);
+  padding: 2rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.12);
+  text-align: center;
+}
+
+.brand-block {
+  margin-bottom: 1.5rem;
+}
+
+.activation-logo {
+  width: 150px;
+  max-width: 70%;
+}
+
+h1 {
+  margin: 0 0 0.75rem;
+  color: #1f2937;
+  font-size: 1.8rem;
+  font-weight: 700;
+}
+
+.activation-subtitle,
+.expiration,
+.redirect-note {
+  margin: 0 0 1.5rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.redirect-note {
+  margin-top: 1rem;
+  margin-bottom: 0;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.field {
+  text-align: left;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 0.45rem;
+  color: #334155;
+  font-weight: 600;
+}
+
+.readonly-input {
+  color: #334155;
+  background: #f8fafc;
+  cursor: default;
+}
+
+.p-error {
+  display: block;
+  margin-top: 0.35rem;
+  line-height: 1.35;
+}
+
+.activation-button,
+.activation-link-button {
+  width: 100%;
+  margin-top: 0.25rem;
+}
+
+.expiration {
+  margin-top: 1.25rem;
+  margin-bottom: 0;
+  font-size: 0.9rem;
+}
+
+.status-icon {
+  display: inline-flex;
+  margin-bottom: 1rem;
+  font-size: 3rem;
+}
+
+.status-icon.success {
+  color: #16a34a;
+}
+
+.status-icon.danger {
+  color: #dc2626;
+}
+
+:host ::ng-deep {
+  .activation-spinner {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 1rem;
+  }
+
+  .p-inputtext,
+  .p-password,
+  .p-password-input {
+    width: 100%;
+  }
+
+  .activation-password {
+    display: block;
+    width: 100%;
+  }
+
+  .activation-password .p-password-input {
+    min-height: 46px;
+    padding-right: 3rem;
+  }
+
+  .activation-password .p-password-toggle-mask {
+    right: 0.85rem;
+    color: #64748b;
+  }
+
+  .p-message {
+    width: 100%;
+    text-align: left;
+  }
+}
+
+@media (max-width: 560px) {
+  .activation-page {
+    padding: 1rem;
+  }
+
+  .activation-card {
+    padding: 1.5rem;
+  }
+}

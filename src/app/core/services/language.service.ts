@@ -13,12 +13,12 @@ export class LanguageService {
 
   init(): void {
     this.translate.addLangs(this.supportedLanguages);
-    this.translate.setDefaultLang(this.defaultLanguage);
+    this.translate.setFallbackLang(this.defaultLanguage);
     this.use(this.getStoredLanguage());
   }
 
   current(): AppLanguage {
-    const lang = this.translate.currentLang || this.translate.getDefaultLang() || this.defaultLanguage;
+    const lang = this.translate.currentLang || this.translate.getFallbackLang() || this.defaultLanguage;
     return this.isSupported(lang) ? lang : this.defaultLanguage;
   }
 

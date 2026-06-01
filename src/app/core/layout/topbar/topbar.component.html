@@ -1,67 +1,111 @@
-<header class="topbar" (click)="closeDropdown()">
-  <div class="container">
-    <div class="left-section">
-      <button class="menu-btn" (click)="$event.stopPropagation(); toggleSidebar.emit()">
+<header class="topbar" (click)="closeDropdown()" role="banner">
+  <div class="topbar__inner">
+    <!-- Left: sidebar toggle + brand -->
+    <div class="topbar__section topbar__section--left">
+      <button
+        type="button"
+        class="icon-btn icon-btn--menu"
+        (click)="$event.stopPropagation(); toggleSidebar.emit()"
+        [attr.aria-label]="'LAYOUT.TOPBAR.TOGGLE_SIDEBAR' | translate">
         <i class="pi pi-bars"></i>
       </button>
+
+      <a class="brand" href="/" (click)="$event.stopPropagation()">
+        <img [src]="logoProject" alt="Mastech RH" class="brand__logo" />
+      </a>
     </div>
 
-    <div class="center-section">
-      <img [src]="logoProject" alt="Logo" class="logo" />
-    </div>
-
-    <div class="right-section">
+    <!-- Right: language + user/role -->
+    <div class="topbar__section topbar__section--right">
       <button
+        type="button"
         class="lang-btn"
         (click)="$event.stopPropagation(); toggleLanguage()"
+        [attr.aria-label]="'LAYOUT.TOPBAR.CHANGE_LANGUAGE' | translate"
         [title]="'LAYOUT.TOPBAR.CHANGE_LANGUAGE' | translate">
         <i class="pi pi-globe"></i>
-        <span>{{ targetLanguage }}</span>
+        <span class="lang-btn__label">{{ targetLanguage }}</span>
       </button>
 
-      <div class="role-switcher" (click)="$event.stopPropagation()">
-        <button class="role-btn" (click)="toggleDropdown()">
-          <div class="role-btn-avatar">
-            <i class="fa-solid fa-user"></i>
-          </div>
-          <div class="role-btn-info" *ngIf="currentUser">
-            <span class="role-btn-username">{{ currentUser.username }}</span>
-            <span class="role-btn-mode" *ngIf="activeRoleLabel">
+      <span class="topbar__divider" aria-hidden="true"></span>
+
+      <div class="user-menu" (click)="$event.stopPropagation()" *ngIf="currentUser">
+        <button
+          type="button"
+          class="user-menu__trigger"
+          (click)="toggleDropdown()"
+          [attr.aria-expanded]="dropdownOpen"
+          aria-haspopup="menu">
+          <span class="user-menu__avatar">{{ userInitials }}</span>
+          <span class="user-menu__info">
+            <span class="user-menu__name">{{ currentUser.username }}</span>
+            <span class="user-menu__role" *ngIf="activeRoleLabel">
               <i [class]="activeRoleLabel.icon"></i>
               {{ activeRoleLabel.labelKey | translate }}
             </span>
-          </div>
-          <i class="pi pi-chevron-down role-btn-caret" [class.open]="dropdownOpen"></i>
+          </span>
+          <i class="pi pi-chevron-down user-menu__caret" [class.is-open]="dropdownOpen"></i>
         </button>
 
-        <div class="role-dropdown" *ngIf="dropdownOpen">
-          <div class="role-dropdown-header">
-            <span class="dropdown-title">{{ 'LAYOUT.TOPBAR.CHANGE_MODE' | translate }}</span>
+        <div class="user-menu__panel" *ngIf="dropdownOpen" role="menu">
+          <!-- Identity header -->
+          <div class="user-menu__panel-head">
+            <span class="user-menu__avatar user-menu__avatar--lg">{{ userInitials }}</span>
+            <div class="user-menu__panel-identity">
+              <strong>{{ currentUser.username }}</strong>
+              <small *ngIf="currentUser.matricule">
+                <i class="pi pi-hashtag"></i>
+                {{ currentUser.matricule }}
+              </small>
+            </div>
           </div>
-          <div class="role-dropdown-body">
+
+          <!-- Role switcher (only if more than one role) -->
+          <div class="user-menu__group" *ngIf="canSwitchRole">
+            <span class="user-menu__group-title">{{ 'LAYOUT.TOPBAR.CHANGE_MODE' | translate }}</span>
             <button
               *ngFor="let role of availableRoles"
-              class="role-option"
-              [class.active]="role.value === activeRole"
+              type="button"
+              role="menuitem"
+              class="user-menu__item"
+              [class.is-active]="role.value === activeRole"
               (click)="switchRole(role.value)">
-              <i [class]="role.icon"></i>
+              <i [class]="role.icon" class="user-menu__item-icon"></i>
               <span>{{ role.labelKey | translate }}</span>
-              <i class="pi pi-check check-icon" *ngIf="role.value === activeRole"></i>
+              <i class="pi pi-check user-menu__item-check" *ngIf="role.value === activeRole"></i>
             </button>
           </div>
-          <div class="role-dropdown-footer">
-            <button class="logout-option" (click)="logout()">
-              <i class="pi pi-sign-out"></i>
+
+          <!-- Single role: just show it (no switching) -->
+          <div class="user-menu__group" *ngIf="!canSwitchRole && activeRoleLabel">
+            <span class="user-menu__group-title">{{ 'LAYOUT.TOPBAR.CURRENT_MODE' | translate }}</span>
+            <div class="user-menu__item is-active" aria-disabled="true">
+              <i [class]="activeRoleLabel.icon" class="user-menu__item-icon"></i>
+              <span>{{ activeRoleLabel.labelKey | translate }}</span>
+            </div>
+          </div>
+
+          <!-- Footer: logout -->
+          <div class="user-menu__group user-menu__group--footer">
+            <button
+              type="button"
+              role="menuitem"
+              class="user-menu__item user-menu__item--danger"
+              (click)="logout()">
+              <i class="pi pi-sign-out user-menu__item-icon"></i>
               <span>{{ 'LAYOUT.TOPBAR.LOGOUT' | translate }}</span>
             </button>
           </div>
         </div>
       </div>
 
+      <!-- Fallback logout when no user (shouldn't normally happen) -->
       <button
-        class="logout-btn"
+        type="button"
+        class="icon-btn icon-btn--danger"
         *ngIf="!currentUser"
         (click)="logout()"
+        [attr.aria-label]="'LAYOUT.TOPBAR.LOGOUT' | translate"
         [title]="'LAYOUT.TOPBAR.LOGOUT' | translate">
         <i class="pi pi-sign-out"></i>
       </button>

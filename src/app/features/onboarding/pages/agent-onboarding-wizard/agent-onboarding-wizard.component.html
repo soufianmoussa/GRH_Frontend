@@ -1,0 +1,792 @@
+<p-toast position="top-center"></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="wizard-host" *ngIf="!loading(); else loadingTpl">
+
+  <!-- Sticky context header -->
+  <header class="wizard-header">
+    <div class="wizard-header__top">
+      <a class="wizard-header__back" routerLink="/mon-onboarding">
+        <i class="pi pi-arrow-left"></i>
+        <span>Retour au tableau de bord</span>
+      </a>
+      <app-onboarding-status-badge *ngIf="onboarding?.status" [status]="onboarding!.status">
+      </app-onboarding-status-badge>
+    </div>
+
+    <div class="wizard-header__main">
+      <div class="wizard-header__title">
+        <span class="title-icon"><i class="pi pi-id-card"></i></span>
+        <div>
+          <h2>Onboarding agent</h2>
+          <div class="wizard-header__meta">
+            <span><i class="pi pi-user"></i> <b>{{ onboarding?.agent?.prenom }} {{ onboarding?.agent?.nom }}</b></span>
+            <span *ngIf="onboarding?.matricule?.matricule">
+              <i class="pi pi-hashtag"></i> Matricule&nbsp;: <b>{{ onboarding?.matricule?.matricule }}</b>
+            </span>
+            <span *ngIf="onboarding?.agent?.grade?.libelle">
+              <i class="pi pi-briefcase"></i> {{ onboarding?.agent?.grade?.libelle }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="wizard-header__progress">
+        <div class="progress-pill">
+          <span class="progress-pill__value">{{ onboarding?.progressPercent ?? 0 }}%</span>
+          <small>complete</small>
+        </div>
+        <p-progressbar [value]="onboarding?.progressPercent ?? 0" [showValue]="false"></p-progressbar>
+      </div>
+    </div>
+  </header>
+
+  <p-message
+    *ngIf="onboarding?.status === 'REJECTED'"
+    severity="error"
+    styleClass="wizard-banner"
+    [text]="'Dossier rejete : ' + (onboarding?.rejectionReason || 'Veuillez corriger et resoumettre.')">
+  </p-message>
+
+  <p-message
+    *ngIf="locked()"
+    severity="info"
+    styleClass="wizard-banner"
+    text="Votre dossier a ete soumis. Les informations sont desormais en lecture seule.">
+  </p-message>
+
+  <!-- Stepper -->
+  <p-stepper [value]="activeStep" class="wizard-stepper">
+    <p-step-list>
+      <p-step [value]="1">Administratif</p-step>
+      <p-step [value]="2">Identite</p-step>
+      <p-step [value]="3">Coordonnees</p-step>
+      <p-step [value]="4">Documents</p-step>
+      <p-step [value]="5">Recapitulatif</p-step>
+    </p-step-list>
+
+    <p-step-panels>
+
+      <!-- ================= STEP 1 — Administratif (read-only) ================= -->
+      <p-step-panel [value]="1">
+        <ng-template #content let-activate="activateCallback">
+          <section class="step-card">
+            <header class="step-card__head">
+              <div class="step-card__head-text">
+                <span class="step-tag">Etape 1 sur 5</span>
+                <h3>Informations administratives</h3>
+                <p class="hint">
+                  <i class="pi pi-info-circle"></i>
+                  Ces informations ont ete renseignees par l'administration lors de l'initialisation de votre dossier. Elles ne sont pas modifiables.
+                </p>
+              </div>
+            </header>
+
+            <div class="form-grid">
+              <div class="field">
+                <label>Matricule</label>
+                <input type="text" pInputText [value]="onboarding?.matricule?.matricule || ''" readonly />
+              </div>
+              <div class="field">
+                <label>Date de recrutement</label>
+                <input type="text" pInputText [value]="onboarding?.matricule?.dateRecrutement || ''" readonly />
+              </div>
+              <div class="field">
+                <label>Grade</label>
+                <input type="text" pInputText [value]="onboarding?.agent?.grade?.libelle || ''" readonly />
+              </div>
+              <div class="field">
+                <label>Echelle</label>
+                <input type="text" pInputText [value]="onboarding?.agent?.echelle?.libelle || onboarding?.agent?.echelle?.echelle || ''" readonly />
+              </div>
+              <div class="field">
+                <label>Echelon</label>
+                <input type="text" pInputText [value]="onboarding?.agent?.echelon?.libelle || onboarding?.agent?.echelon?.echelon || ''" readonly />
+              </div>
+              <div class="field">
+                <label>Poste</label>
+                <input type="text" pInputText [value]="onboarding?.agent?.posteLibelle || ''" readonly />
+              </div>
+              <div class="field">
+                <label>Domaine</label>
+                <input type="text" pInputText [value]="onboarding?.matricule?.domaine || ''" readonly />
+              </div>
+              <div class="field">
+                <label>Sous-domaine</label>
+                <input type="text" pInputText [value]="onboarding?.matricule?.sousDomaine || ''" readonly />
+              </div>
+              <div class="field">
+                <label>Categorie</label>
+                <input type="text" pInputText [value]="onboarding?.matricule?.categorie || ''" readonly />
+              </div>
+              <div class="field">
+                <label>Type de contrat</label>
+                <input type="text" pInputText [value]="onboarding?.matricule?.typeContrat || ''" readonly />
+              </div>
+              <div class="field">
+                <label>Email professionnel</label>
+                <input type="text" pInputText [value]="onboarding?.agent?.email || onboarding?.agent?.coordonneesProfessionnelles?.emailPro || ''" readonly />
+              </div>
+              <div class="field">
+                <label>Telephone</label>
+                <input type="text" pInputText [value]="onboarding?.agent?.telephone || onboarding?.agent?.coordonneesProfessionnelles?.telPortable || ''" readonly />
+              </div>
+            </div>
+
+            <footer class="step-card__actions">
+              <span></span>
+              <p-button label="Continuer" icon="pi pi-arrow-right" iconPos="right" (onClick)="goTo(2, activate)"></p-button>
+            </footer>
+          </section>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- ================= STEP 2 — Identite ================= -->
+      <p-step-panel [value]="2">
+        <ng-template #content let-activate="activateCallback">
+          <section class="step-card">
+            <header class="step-card__head">
+              <div class="step-card__head-text">
+                <span class="step-tag">Etape 2 sur 5</span>
+                <h3>Identite et etat civil</h3>
+                <p class="hint">
+                  <i class="pi pi-info-circle"></i>
+                  Verifiez et completez vos informations personnelles. Les champs marques d'un asterisque sont obligatoires.
+                </p>
+              </div>
+            </header>
+
+            <form [formGroup]="identityForm">
+              <fieldset class="form-section">
+                <legend><i class="pi pi-user"></i> Informations personnelles</legend>
+                <div class="form-grid">
+                  <div class="field">
+                    <label>Nom <span class="req">*</span></label>
+                    <input pInputText formControlName="nom" placeholder="Votre nom" />
+                  </div>
+                  <div class="field">
+                    <label>Prenom <span class="req">*</span></label>
+                    <input pInputText formControlName="prenom" placeholder="Votre prenom" />
+                  </div>
+                  <div class="field">
+                    <label>Sexe <span class="req">*</span></label>
+                    <p-select formControlName="sexe" [options]="sexeOptions" optionLabel="label" optionValue="value" placeholder="Choisir"></p-select>
+                  </div>
+                  <div class="field">
+                    <label>Situation familiale</label>
+                    <p-select formControlName="situation" [options]="situationOptions" optionLabel="label" optionValue="value" placeholder="Choisir" [showClear]="true"></p-select>
+                  </div>
+                  <div class="field">
+                    <label>Date de naissance <span class="req">*</span></label>
+                    <p-datepicker formControlName="dateNaissance" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+                  </div>
+                  <div class="field">
+                    <label>Nombre d'enfants</label>
+                    <p-inputnumber formControlName="numEnfant" [min]="0" [showButtons]="true" buttonLayout="horizontal"
+                      incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus"></p-inputnumber>
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="form-section">
+                <legend><i class="pi pi-users"></i> Information tuteur (optionnel)</legend>
+                <div class="form-grid">
+                  <div class="field">
+                    <label>Nom du tuteur (Arabe)</label>
+                    <input pInputText formControlName="nomTuteurAr" />
+                  </div>
+                  <div class="field">
+                    <label>Prenom du tuteur (Arabe)</label>
+                    <input pInputText formControlName="prenomTuteurAr" />
+                  </div>
+                  <div class="field">
+                    <label>PPR du tuteur</label>
+                    <input pInputText formControlName="pprTuteur" />
+                  </div>
+                  <div class="field">
+                    <label>Date du tutorat</label>
+                    <p-datepicker formControlName="dateTutorat" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+                  </div>
+                </div>
+              </fieldset>
+            </form>
+
+            <footer class="step-card__actions">
+              <p-button label="Precedent" icon="pi pi-arrow-left" [outlined]="true" (onClick)="goTo(1, activate)"></p-button>
+              <span class="spacer"></span>
+              <p-button label="Enregistrer le brouillon" icon="pi pi-save" severity="secondary" [outlined]="true" [loading]="saving()" (onClick)="saveIdentity()"></p-button>
+              <p-button label="Enregistrer et continuer" icon="pi pi-arrow-right" iconPos="right" [loading]="saving()" (onClick)="saveIdentity(activate)"></p-button>
+            </footer>
+          </section>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- ================= STEP 3 — Coordonnees & famille ================= -->
+      <p-step-panel [value]="3">
+        <ng-template #content let-activate="activateCallback">
+          <section class="step-card">
+            <header class="step-card__head">
+              <div class="step-card__head-text">
+                <span class="step-tag">Etape 3 sur 5</span>
+                <h3>Coordonnees et situation familiale</h3>
+                <p class="hint">
+                  <i class="pi pi-info-circle"></i>
+                  Renseignez votre adresse principale, vos coordonnees bancaires et les informations sur votre famille.
+                </p>
+              </div>
+            </header>
+
+            <form [formGroup]="contactForm">
+              <fieldset class="form-section">
+                <legend><i class="pi pi-map-marker"></i> Adresse principale</legend>
+                <div class="form-grid" formGroupName="adresse">
+                  <div class="field col-span-2">
+                    <label>Adresse <span class="req">*</span></label>
+                    <input pInputText formControlName="adresse" placeholder="Rue, numero, quartier..." />
+                  </div>
+                  <div class="field">
+                    <label>Code postal</label>
+                    <input pInputText formControlName="codePostal" />
+                  </div>
+                  <div class="field">
+                    <label>Ville <span class="req">*</span></label>
+                    <input pInputText formControlName="ville" />
+                  </div>
+                  <div class="field">
+                    <label>Pays</label>
+                    <input pInputText formControlName="pays" />
+                  </div>
+                  <div class="field">
+                    <label>Telephone</label>
+                    <input pInputText formControlName="telephone" placeholder="+212 ..." />
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="form-section">
+                <legend><i class="pi pi-credit-card"></i> Coordonnees bancaires</legend>
+                <div class="form-grid" formGroupName="coordonneesBancaires">
+                  <div class="field">
+                    <label>Banque</label>
+                    <input pInputText formControlName="banque" />
+                  </div>
+                  <div class="field">
+                    <label>Compte</label>
+                    <input pInputText formControlName="compte" />
+                  </div>
+                  <div class="field">
+                    <label>RIB</label>
+                    <input pInputText formControlName="rib" />
+                  </div>
+                  <div class="field">
+                    <label>IBAN</label>
+                    <input pInputText formControlName="iban" />
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="form-section">
+                <legend><i class="pi pi-heart"></i> Conjoint (si marie/e)</legend>
+                <div class="form-grid" formGroupName="conjoint">
+                  <div class="field">
+                    <label>Nom</label>
+                    <input pInputText formControlName="nom" />
+                  </div>
+                  <div class="field">
+                    <label>Prenom</label>
+                    <input pInputText formControlName="prenom" />
+                  </div>
+                  <div class="field">
+                    <label>CIN</label>
+                    <input pInputText formControlName="cin" />
+                  </div>
+                  <div class="field">
+                    <label>Date de naissance</label>
+                    <p-datepicker formControlName="dateNaissance" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+                  </div>
+                  <div class="field">
+                    <label>Profession</label>
+                    <input pInputText formControlName="profession" />
+                  </div>
+                </div>
+              </fieldset>
+
+              <fieldset class="form-section">
+                <legend><i class="pi pi-users"></i> Enfants</legend>
+
+                <div class="children-list">
+                  <div *ngFor="let _ of enfants.controls; let i = index"
+                       class="child-row"
+                       [formGroup]="$any(enfants.at(i))">
+                    <div class="child-row__head">
+                      <span class="child-row__index">Enfant #{{ i + 1 }}</span>
+                      <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true"
+                                pTooltip="Supprimer" tooltipPosition="left"
+                                (onClick)="removeEnfant(i)"></p-button>
+                    </div>
+                    <div class="form-grid">
+                      <div class="field">
+                        <label>Nom <span class="req">*</span></label>
+                        <input pInputText formControlName="nom" />
+                      </div>
+                      <div class="field">
+                        <label>Prenom <span class="req">*</span></label>
+                        <input pInputText formControlName="prenom" />
+                      </div>
+                      <div class="field">
+                        <label>Date naissance</label>
+                        <p-datepicker formControlName="dateNaissance" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+                      </div>
+                      <div class="field">
+                        <label>Sexe</label>
+                        <p-select formControlName="sexe" [options]="sexeOptions" optionLabel="label" optionValue="value" [showClear]="true"></p-select>
+                      </div>
+                      <div class="field">
+                        <label>Niveau scolaire</label>
+                        <input pInputText formControlName="niveauScolaire" />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="children-empty" *ngIf="!enfants.controls.length">
+                    <i class="pi pi-users"></i>
+                    <span>Aucun enfant enregistre. Vous pouvez en ajouter ci-dessous.</span>
+                  </div>
+                </div>
+
+                <p-button label="Ajouter un enfant" icon="pi pi-plus" [outlined]="true" size="small"
+                          styleClass="mt-2"
+                          (onClick)="addEnfant()"></p-button>
+              </fieldset>
+            </form>
+
+            <footer class="step-card__actions">
+              <p-button label="Precedent" icon="pi pi-arrow-left" [outlined]="true" (onClick)="goTo(2, activate)"></p-button>
+              <span class="spacer"></span>
+              <p-button label="Enregistrer le brouillon" icon="pi pi-save" severity="secondary" [outlined]="true" [loading]="saving()" (onClick)="saveContact()"></p-button>
+              <p-button label="Enregistrer et continuer" icon="pi pi-arrow-right" iconPos="right" [loading]="saving()" (onClick)="saveContact(activate)"></p-button>
+            </footer>
+          </section>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- ================= STEP 4 — Documents ================= -->
+      <p-step-panel [value]="4">
+        <ng-template #content let-activate="activateCallback">
+          <section class="step-card">
+            <header class="step-card__head">
+              <div class="step-card__head-text">
+                <span class="step-tag">Etape 4 sur 5</span>
+                <h3>Documents justificatifs</h3>
+                <p class="hint">
+                  <i class="pi pi-info-circle"></i>
+                  CIN obligatoire (informations + scan). Au moins un diplome avec scan est requis. Les formations sont optionnelles.
+                  Formats acceptes&nbsp;: PDF, JPG, PNG, WebP &mdash; 10&nbsp;Mo max.
+                </p>
+              </div>
+            </header>
+
+            <!-- ============== CIN ============== -->
+            <fieldset class="form-section">
+              <legend>
+                <i class="pi pi-id-card"></i>
+                Carte Nationale d'Identite <span class="req">*</span>
+              </legend>
+
+              <form [formGroup]="cinForm" class="form-grid">
+                <div class="field">
+                  <label>Numero CIN <span class="req">*</span></label>
+                  <input pInputText formControlName="numero" />
+                </div>
+                <div class="field">
+                  <label>Date de delivrance</label>
+                  <p-datepicker formControlName="dateDelivrance" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+                </div>
+                <div class="field">
+                  <label>Date d'expiration</label>
+                  <p-datepicker formControlName="dateExpiration" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+                </div>
+                <div class="field">
+                  <label>Lieu de delivrance</label>
+                  <input pInputText formControlName="lieuDelivrance" />
+                </div>
+              </form>
+
+              <!-- Upload zone -->
+              <div class="upload-zone" [class.has-file]="!!cin?.fileUrl">
+                <div class="upload-zone__icon">
+                  <i [class]="cin?.fileUrl ? 'pi pi-file-check' : 'pi pi-cloud-upload'"></i>
+                </div>
+                <div class="upload-zone__body">
+                  <strong *ngIf="!cin?.fileUrl">Televerser le scan de la CIN</strong>
+                  <strong *ngIf="cin?.fileUrl">Scan CIN televerse</strong>
+                  <small *ngIf="!cin?.fileUrl">PDF, JPG, PNG ou WebP &mdash; 10&nbsp;Mo max</small>
+                  <a *ngIf="cin?.fileUrl" [href]="cin?.fileUrl" target="_blank" class="file-link">
+                    <i class="pi pi-external-link"></i> {{ cin?.fileName || 'Ouvrir le fichier' }}
+                  </a>
+                </div>
+                <div class="upload-zone__actions">
+                  <label class="file-input-btn">
+                    <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" (change)="onCinFileSelected($event)" />
+                    <i [class]="cin?.fileUrl ? 'pi pi-refresh' : 'pi pi-upload'"></i>
+                    <span>{{ cin?.fileUrl ? 'Remplacer' : 'Televerser' }}</span>
+                  </label>
+                  <p-button label="Enregistrer les informations" icon="pi pi-save" severity="secondary" [outlined]="true" size="small"
+                            [loading]="saving()" (onClick)="saveCin()"></p-button>
+                </div>
+              </div>
+            </fieldset>
+
+            <!-- ============== Diplomes ============== -->
+            <fieldset class="form-section">
+              <legend>
+                <i class="pi pi-graduation-cap"></i>
+                Diplomes <span class="req">* (au moins un avec scan)</span>
+              </legend>
+
+              <div class="section-toolbar">
+                <span class="muted">
+                  <i class="pi pi-list"></i>
+                  {{ diplomes.length }} diplome(s) enregistre(s)
+                </span>
+                <p-button label="Ajouter un diplome" icon="pi pi-plus" size="small" (onClick)="openNewDiplome()"></p-button>
+              </div>
+
+              <div class="primTable">
+                <p-table [value]="diplomes" responsiveLayout="scroll" styleClass="p-datatable-sm">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>Niveau</th>
+                      <th>Specialite</th>
+                      <th>Etablissement</th>
+                      <th>Date obtention</th>
+                      <th>Mention</th>
+                      <th>Scan</th>
+                      <th style="width: 110px;">Actions</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-d>
+                    <tr>
+                      <td>{{ niveauLabel(d) }}</td>
+                      <td>{{ specialiteLabel(d) }}</td>
+                      <td>{{ etablissementLabel(d) }}</td>
+                      <td>{{ d.dateObtention | date:'dd/MM/yyyy' }}</td>
+                      <td>{{ d.mention || '-' }}</td>
+                      <td>
+                        <a *ngIf="d.scanUrl" [href]="d.scanUrl" target="_blank" class="file-link">
+                          <i class="pi pi-file"></i> {{ d.scanFileName || 'Voir' }}
+                        </a>
+                        <p-tag *ngIf="!d.scanUrl" severity="warn" value="Scan manquant" [rounded]="true"></p-tag>
+                      </td>
+                      <td class="row-actions">
+                        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" pTooltip="Modifier" (onClick)="openEditDiplome(d)"></p-button>
+                        <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" pTooltip="Supprimer" (onClick)="deleteDiplome(d)"></p-button>
+                      </td>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="emptymessage">
+                    <tr>
+                      <td colspan="7" class="empty">
+                        <div class="empty-state">
+                          <i class="pi pi-graduation-cap"></i>
+                          <strong>Aucun diplome enregistre</strong>
+                          <small>Cliquez sur "Ajouter un diplome" pour commencer.</small>
+                        </div>
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </div>
+            </fieldset>
+
+            <!-- ============== Formations ============== -->
+            <fieldset class="form-section">
+              <legend>
+                <i class="pi pi-book"></i>
+                Formations / certificats <span class="muted">(optionnel)</span>
+              </legend>
+
+              <div class="section-toolbar">
+                <span class="muted">
+                  <i class="pi pi-list"></i>
+                  {{ formations.length }} formation(s) enregistree(s)
+                </span>
+                <p-button label="Ajouter une formation" icon="pi pi-plus" size="small" (onClick)="openNewFormation()"></p-button>
+              </div>
+
+              <div class="primTable">
+                <p-table [value]="formations" responsiveLayout="scroll" styleClass="p-datatable-sm">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>Formation</th>
+                      <th>Stage</th>
+                      <th>Debut</th>
+                      <th>Fin</th>
+                      <th>Certificat</th>
+                      <th style="width: 110px;">Actions</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-f>
+                    <tr>
+                      <td>{{ f.intituleFormation }}</td>
+                      <td>{{ f.intituleStage || '-' }}</td>
+                      <td>{{ f.dateDebut | date:'dd/MM/yyyy' }}</td>
+                      <td>{{ f.dateFin | date:'dd/MM/yyyy' }}</td>
+                      <td>
+                        <a *ngIf="f.certificateUrl" [href]="f.certificateUrl" target="_blank" class="file-link">
+                          <i class="pi pi-file"></i> {{ f.certificateFileName || 'Voir' }}
+                        </a>
+                        <p-tag *ngIf="!f.certificateUrl" severity="warn" value="Aucun certificat" [rounded]="true"></p-tag>
+                      </td>
+                      <td class="row-actions">
+                        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" pTooltip="Modifier" (onClick)="openEditFormation(f)"></p-button>
+                        <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" pTooltip="Supprimer" (onClick)="deleteFormation(f)"></p-button>
+                      </td>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="emptymessage">
+                    <tr>
+                      <td colspan="6" class="empty">
+                        <div class="empty-state">
+                          <i class="pi pi-book"></i>
+                          <strong>Aucune formation enregistree</strong>
+                          <small>Ajoutez vos formations et certificats si vous en avez.</small>
+                        </div>
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </div>
+            </fieldset>
+
+            <footer class="step-card__actions">
+              <p-button label="Precedent" icon="pi pi-arrow-left" [outlined]="true" (onClick)="goTo(3, activate)"></p-button>
+              <span class="spacer"></span>
+              <p-button label="Continuer" icon="pi pi-arrow-right" iconPos="right" (onClick)="next(activate)"></p-button>
+            </footer>
+          </section>
+        </ng-template>
+      </p-step-panel>
+
+      <!-- ================= STEP 5 — Recapitulatif ================= -->
+      <p-step-panel [value]="5">
+        <ng-template #content let-activate="activateCallback">
+          <section class="step-card">
+            <header class="step-card__head">
+              <div class="step-card__head-text">
+                <span class="step-tag">Etape 5 sur 5</span>
+                <h3>Recapitulatif et soumission</h3>
+                <p class="hint">
+                  <i class="pi pi-info-circle"></i>
+                  Verifiez vos informations avant soumission. Une fois envoye, le dossier sera revu par l'administration et ne pourra plus etre modifie.
+                </p>
+              </div>
+            </header>
+
+            <div class="recap-grid">
+
+              <!-- Identite recap -->
+              <div class="recap-card">
+                <div class="recap-card__head">
+                  <span class="recap-card__icon recap-card__icon--blue"><i class="pi pi-user"></i></span>
+                  <div>
+                    <strong>Identite</strong>
+                    <small>Informations personnelles</small>
+                  </div>
+                </div>
+                <ul class="recap-list">
+                  <li>
+                    <span class="recap-list__label">Nom complet</span>
+                    <span class="recap-list__value">{{ identityForm.value.prenom }} {{ identityForm.value.nom }}</span>
+                  </li>
+                  <li>
+                    <span class="recap-list__label">CIN</span>
+                    <span class="recap-list__value">{{ cinForm.value.numero || onboarding?.agent?.cin || '-' }}</span>
+                  </li>
+                  <li>
+                    <span class="recap-list__label">Date de naissance</span>
+                    <span class="recap-list__value">{{ (identityForm.value.dateNaissance | date:'dd/MM/yyyy') || '-' }}</span>
+                  </li>
+                  <li>
+                    <span class="recap-list__label">Situation</span>
+                    <span class="recap-list__value">{{ identityForm.value.situation || '-' }}</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Coordonnees recap -->
+              <div class="recap-card">
+                <div class="recap-card__head">
+                  <span class="recap-card__icon recap-card__icon--green"><i class="pi pi-map-marker"></i></span>
+                  <div>
+                    <strong>Coordonnees</strong>
+                    <small>Adresse & banque</small>
+                  </div>
+                </div>
+                <ul class="recap-list">
+                  <li>
+                    <span class="recap-list__label">Adresse</span>
+                    <span class="recap-list__value">{{ contactForm.value.adresse?.adresse || '-' }}</span>
+                  </li>
+                  <li>
+                    <span class="recap-list__label">Ville</span>
+                    <span class="recap-list__value">{{ contactForm.value.adresse?.ville || '-' }}</span>
+                  </li>
+                  <li>
+                    <span class="recap-list__label">Telephone</span>
+                    <span class="recap-list__value">{{ contactForm.value.adresse?.telephone || '-' }}</span>
+                  </li>
+                  <li>
+                    <span class="recap-list__label">Banque / RIB</span>
+                    <span class="recap-list__value">
+                      {{ contactForm.value.coordonneesBancaires?.banque || '-' }}
+                      <small *ngIf="contactForm.value.coordonneesBancaires?.rib"> &middot; {{ contactForm.value.coordonneesBancaires?.rib }}</small>
+                    </span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- Documents recap -->
+              <div class="recap-card recap-card--full">
+                <div class="recap-card__head">
+                  <span class="recap-card__icon recap-card__icon--purple"><i class="pi pi-folder"></i></span>
+                  <div>
+                    <strong>Documents</strong>
+                    <small>Pieces justificatives</small>
+                  </div>
+                </div>
+                <ul class="recap-list recap-list--inline">
+                  <li>
+                    <span class="recap-list__label">CIN</span>
+                    <p-tag *ngIf="cin?.fileUrl" severity="success" value="Scan televerse" [rounded]="true"></p-tag>
+                    <p-tag *ngIf="!cin?.fileUrl" severity="warn" value="Scan manquant" [rounded]="true"></p-tag>
+                  </li>
+                  <li>
+                    <span class="recap-list__label">Diplomes</span>
+                    <p-tag [severity]="diplomes.length ? 'success' : 'warn'" [value]="diplomes.length + ' enregistre(s)'" [rounded]="true"></p-tag>
+                  </li>
+                  <li>
+                    <span class="recap-list__label">Formations</span>
+                    <p-tag severity="info" [value]="formations.length + ' enregistree(s)'" [rounded]="true"></p-tag>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            <!-- Submission notice -->
+            <div class="submit-notice" *ngIf="!locked()">
+              <i class="pi pi-exclamation-triangle"></i>
+              <div>
+                <strong>Attention&nbsp;:</strong> Une fois votre dossier soumis, vous ne pourrez plus le modifier sans intervention de l'administration.
+              </div>
+            </div>
+
+            <footer class="step-card__actions">
+              <p-button label="Precedent" icon="pi pi-arrow-left" [outlined]="true" (onClick)="goTo(4, activate)"></p-button>
+              <span class="spacer"></span>
+              <p-button label="Soumettre mon dossier" icon="pi pi-send" severity="success"
+                        [loading]="submitting()" [disabled]="locked()" (onClick)="submit()"></p-button>
+            </footer>
+          </section>
+        </ng-template>
+      </p-step-panel>
+    </p-step-panels>
+  </p-stepper>
+</div>
+
+<!-- =============== Diplome dialog =============== -->
+<p-dialog header="Diplome" [(visible)]="showDiplomeDialog" [modal]="true" [draggable]="false"
+          [style]="{ width: '720px' }" styleClass="pdialogfon">
+  <form [formGroup]="diplomeForm">
+    <div class="form-grid">
+      <div class="field">
+        <label>Niveau <span class="req">*</span></label>
+        <p-autoComplete formControlName="niveau" [suggestions]="niveauSuggestions" (completeMethod)="filterNiveau($event)" [dropdown]="true" [forceSelection]="false" appendTo="body"></p-autoComplete>
+      </div>
+      <div class="field">
+        <label>Specialite</label>
+        <p-autoComplete formControlName="specialite" [suggestions]="specialiteSuggestions" (completeMethod)="filterSpecialite($event)" [dropdown]="true" [forceSelection]="false" appendTo="body"></p-autoComplete>
+      </div>
+      <div class="field">
+        <label>Etablissement</label>
+        <p-autoComplete formControlName="etablissement" [suggestions]="etablissementSuggestions" (completeMethod)="filterEtablissement($event)" [dropdown]="true" [forceSelection]="false" appendTo="body"></p-autoComplete>
+      </div>
+      <div class="field">
+        <label>Date d'obtention <span class="req">*</span></label>
+        <p-datepicker formControlName="dateObtention" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+      </div>
+      <div class="field">
+        <label>Mention</label>
+        <p-select formControlName="mention" [options]="mentionsList" placeholder="Choisir une mention" appendTo="body"></p-select>
+      </div>
+      <div class="field">
+        <label>Moyenne (/20)</label>
+        <p-inputnumber formControlName="moyenne" [minFractionDigits]="0" [maxFractionDigits]="2" [min]="0" [max]="20"></p-inputnumber>
+      </div>
+      <div class="field">
+        <label>Code pays</label>
+        <input pInputText formControlName="codePays" />
+      </div>
+      <div class="field col-span-2">
+        <label>Scan du diplome</label>
+        <label class="file-input-btn file-input-btn--block">
+          <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" (change)="onDiplomeFileSelected($event)" />
+          <i class="pi pi-upload"></i>
+          <span *ngIf="!pendingDiplomeFile && !editingDiplome?.scanUrl">Choisir un fichier (PDF, JPG, PNG, WebP)</span>
+          <span *ngIf="pendingDiplomeFile">{{ pendingDiplomeFile.name }}</span>
+          <span *ngIf="!pendingDiplomeFile && editingDiplome?.scanUrl">Remplacer le scan existant</span>
+        </label>
+      </div>
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" severity="secondary" [outlined]="true" (onClick)="showDiplomeDialog=false"></p-button>
+    <p-button label="Enregistrer" icon="pi pi-save" [loading]="saving()" (onClick)="saveDiplome()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- =============== Formation dialog =============== -->
+<p-dialog header="Formation" [(visible)]="showFormationDialog" [modal]="true" [draggable]="false"
+          [style]="{ width: '640px' }" styleClass="pdialogfon">
+  <form [formGroup]="formationForm">
+    <div class="form-grid">
+      <div class="field col-span-2">
+        <label>Intitule de la formation <span class="req">*</span></label>
+        <input pInputText formControlName="intituleFormation" />
+      </div>
+      <div class="field col-span-2">
+        <label>Intitule du stage</label>
+        <input pInputText formControlName="intituleStage" />
+      </div>
+      <div class="field">
+        <label>Date de debut <span class="req">*</span></label>
+        <p-datepicker formControlName="dateDebut" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+      </div>
+      <div class="field">
+        <label>Date de fin <span class="req">*</span></label>
+        <p-datepicker formControlName="dateFin" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+      </div>
+      <div class="field col-span-2">
+        <label>Certificat de la formation</label>
+        <label class="file-input-btn file-input-btn--block">
+          <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" (change)="onFormationFileSelected($event)" />
+          <i class="pi pi-upload"></i>
+          <span *ngIf="!pendingFormationFile && !editingFormation?.certificateUrl">Choisir un fichier (PDF, JPG, PNG, WebP)</span>
+          <span *ngIf="pendingFormationFile">{{ pendingFormationFile.name }}</span>
+          <span *ngIf="!pendingFormationFile && editingFormation?.certificateUrl">Remplacer le certificat existant</span>
+        </label>
+      </div>
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" severity="secondary" [outlined]="true" (onClick)="showFormationDialog=false"></p-button>
+    <p-button label="Enregistrer" icon="pi pi-save" [loading]="saving()" (onClick)="saveFormation()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<ng-template #loadingTpl>
+  <div class="wizard-loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <span>Chargement de votre dossier...</span>
+  </div>
+</ng-template>

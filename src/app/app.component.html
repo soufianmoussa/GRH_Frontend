@@ -1,5 +1,5 @@
 <!-- Layout principal (Topbar + Sidebar) -->
-<div *ngIf="!isLoginPage() && !isRegisterPage()" class="app-wrapper">
+<div *ngIf="!isPublicLayoutPage()" class="app-wrapper">
 
   <app-topbar (toggleSidebar)="sidebarOpened = !sidebarOpened"></app-topbar>
 
@@ -13,7 +13,7 @@
 
 </div>
 
-<!-- Pages Login / Register (sans layout) -->
-<div *ngIf="isLoginPage() || isRegisterPage()">
+<!-- Pages publiques / auth (sans layout admin) -->
+<div *ngIf="isPublicLayoutPage()">
   <router-outlet></router-outlet>
 </div>

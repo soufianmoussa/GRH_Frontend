@@ -6,6 +6,10 @@ export type AgentDocumentType =
   | 'FICHE_POSTE'
   | 'ATTESTATION_SALAIRE'
   | 'ATTESTATION_TRAVAIL'
+  | 'ATTESTATION_RIB'
+  | 'ACTE_MARIAGE'
+  | 'ACTE_NAISSANCE'
+  | 'PHOTO_PROFIL'
   | 'CV'
   | 'AUTRE';
 
@@ -46,8 +50,29 @@ export const AGENT_DOCUMENT_TYPE_LABELS: Record<AgentDocumentType, string> = {
   FICHE_POSTE: 'Fiche de poste',
   ATTESTATION_SALAIRE: 'Attestation de salaire',
   ATTESTATION_TRAVAIL: 'Attestation de travail',
+  ATTESTATION_RIB: 'Attestation de RIB',
+  ACTE_MARIAGE: 'Acte de mariage',
+  ACTE_NAISSANCE: 'Acte de naissance',
+  PHOTO_PROFIL: 'Photo de profil',
   CV: 'CV',
   AUTRE: 'Autre',
+};
+
+/** Icon for each document type (PrimeNG / FontAwesome class). */
+export const AGENT_DOCUMENT_TYPE_ICONS: Record<AgentDocumentType, string> = {
+  CARTE_NATIONALE: 'pi pi-id-card',
+  PASSEPORT: 'pi pi-id-card',
+  PERMIS_CONDUIRE: 'pi pi-id-card',
+  CONTRAT_TRAVAIL: 'pi pi-file-edit',
+  FICHE_POSTE: 'pi pi-briefcase',
+  ATTESTATION_SALAIRE: 'pi pi-money-bill',
+  ATTESTATION_TRAVAIL: 'pi pi-building',
+  ATTESTATION_RIB: 'pi pi-credit-card',
+  ACTE_MARIAGE: 'pi pi-heart-fill',
+  ACTE_NAISSANCE: 'pi pi-baby',
+  PHOTO_PROFIL: 'pi pi-camera',
+  CV: 'pi pi-file',
+  AUTRE: 'pi pi-paperclip',
 };
 
 export const AGENT_DOCUMENT_TYPES: { value: AgentDocumentType; label: string }[] =
