@@ -583,7 +583,39 @@
 
     &__actions {
       flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: .35rem;
     }
+
+    &__title-row {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+
+    &__validation {
+      display: inline-flex;
+      gap: .15rem;
+    }
+
+    &__rejection {
+      display: inline-flex;
+      align-items: flex-start;
+      gap: .35rem;
+      color: #b91c1c;
+      background: rgba(220, 38, 38, 0.08);
+      border-radius: 8px;
+      padding: .3rem .55rem;
+      font-style: italic;
+
+      i { margin-top: .15rem; font-size: .7rem; }
+    }
+
+    &[data-status='VALIDATED'] { border-left-color: #10b981; }
+    &[data-status='REJECTED']  { border-left-color: #dc2626; background: #fef2f2; }
   }
 
   /* ---------- Documents table --------------------------------------- */

@@ -34,13 +34,18 @@ import { Formation } from '../../../../models/formation.model';
 import { AgentDocumentsService } from '../../../dossier-agent/services/dossiers-agents/agent-documents.service';
 import {
   AgentDocument,
+  AgentDocumentStatus,
+  AGENT_DOCUMENT_STATUS_LABELS,
   AGENT_DOCUMENT_TYPE_ICONS,
   AGENT_DOCUMENT_TYPE_LABELS
 } from '../../../../models/agent-document.model';
 import { of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 
-type RejectionTarget = { kind: 'dossier' } | { kind: 'document'; documentId: number };
+type RejectionTarget =
+  | { kind: 'dossier' }
+  | { kind: 'document'; documentId: number }
+  | { kind: 'agent-document'; documentId: number };
 
 const STEP_LABELS: Record<OnboardingStepType, string> = {
   MATRICULE_ALLOCATION: 'Matricule attribue',
@@ -161,6 +166,7 @@ export class AdminOnboardingDetailComponent implements OnInit {
 
   readonly agentDocLabels = AGENT_DOCUMENT_TYPE_LABELS;
   readonly agentDocIcons = AGENT_DOCUMENT_TYPE_ICONS;
+  readonly agentDocStatusLabels = AGENT_DOCUMENT_STATUS_LABELS;
 
   private onboardingId!: number;
   private pendingReject?: RejectionTarget;
@@ -317,11 +323,32 @@ export class AdminOnboardingDetailComponent implements OnInit {
     this.rejectDialog?.show(document.rejectionReason ?? '');
   }
 
+  // --- AgentDocument (Photo, RIB, mariage, naissance, etc.) actions ---------
+  validateAgentDocument(doc: AgentDocument): void {
+    this.agentDocumentsService.validate(doc.id).subscribe({
+      next: (updated) => {
+        this.replaceAgentDocument(updated);
+        ToastHelper.showSuccess(this.messageService, 'Document valide.');
+      },
+      error: (e) => ToastHelper.handleApiError(this.messageService, e, 'Validation du document impossible.')
+    });
+  }
+
+  askRejectAgentDocument(doc: AgentDocument): void {
+    this.pendingReject = { kind: 'agent-document', documentId: doc.id };
+    this.rejectDialog?.show(doc.rejectionReason ?? '');
+  }
+
+  private replaceAgentDocument(updated: AgentDocument): void {
+    this.agentDocuments = this.agentDocuments.map(d => d.id === updated.id ? updated : d);
+  }
+
   confirmRejection(reason: string): void {
-    if (!this.onboarding || !this.pendingReject) return;
+    if (!this.pendingReject) return;
     const target = this.pendingReject;
 
     if (target.kind === 'dossier') {
+      if (!this.onboarding) return;
       this.onboardingService.rejectDossier(this.onboarding.id, reason).subscribe({
         next: (updated) => {
           this.onboarding = { ...updated, invitation: this.onboarding?.invitation };
@@ -329,7 +356,8 @@ export class AdminOnboardingDetailComponent implements OnInit {
         },
         error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Rejet impossible.')
       });
-    } else {
+    } else if (target.kind === 'document') {
+      if (!this.onboarding) return;
       this.onboardingService.rejectDocument(this.onboarding.id, target.documentId, reason).subscribe({
         next: (updated) => {
           this.onboarding = { ...updated, invitation: this.onboarding?.invitation };
@@ -337,8 +365,26 @@ export class AdminOnboardingDetailComponent implements OnInit {
         },
         error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Rejet du document impossible.')
       });
+    } else if (target.kind === 'agent-document') {
+      this.agentDocumentsService.reject(target.documentId, reason).subscribe({
+        next: (updated) => {
+          this.replaceAgentDocument(updated);
+          ToastHelper.showSuccess(this.messageService, 'Document rejete.');
+        },
+        error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Rejet du document impossible.')
+      });
     }
     this.pendingReject = undefined;
+  }
+
+  agentDocSeverity(status?: AgentDocumentStatus): PrimengSeverity {
+    return status === 'VALIDATED' ? 'success'
+         : status === 'REJECTED'  ? 'danger'
+         : 'warn';
+  }
+
+  agentDocStatusLabel(status?: AgentDocumentStatus): string {
+    return status ? this.agentDocStatusLabels[status] : 'En attente';
   }
 
   // --- Derived helpers ------------------------------------------------------

@@ -13,6 +13,8 @@ export type AgentDocumentType =
   | 'CV'
   | 'AUTRE';
 
+export type AgentDocumentStatus = 'PENDING_REVIEW' | 'VALIDATED' | 'REJECTED';
+
 export interface AgentDocument {
   id: number;
   agentId: number;
@@ -22,6 +24,12 @@ export interface AgentDocument {
   description?: string | null;
   issuedAt?: string | null;
   expiresAt?: string | null;
+
+  /** Review lifecycle. */
+  status?: AgentDocumentStatus;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
+  rejectionReason?: string | null;
 
   createdAt?: string;
   updatedAt?: string;
@@ -41,7 +49,10 @@ export interface AgentDocumentCreateUpdateRequest {
   expiresAt?: string | null;
 }
 
-/** User-facing label for each document type. */
+export interface AgentDocumentRejectRequest {
+  reason: string;
+}
+
 export const AGENT_DOCUMENT_TYPE_LABELS: Record<AgentDocumentType, string> = {
   CARTE_NATIONALE: 'Carte nationale',
   PASSEPORT: 'Passeport',
@@ -58,7 +69,6 @@ export const AGENT_DOCUMENT_TYPE_LABELS: Record<AgentDocumentType, string> = {
   AUTRE: 'Autre',
 };
 
-/** Icon for each document type (PrimeNG / FontAwesome class). */
 export const AGENT_DOCUMENT_TYPE_ICONS: Record<AgentDocumentType, string> = {
   CARTE_NATIONALE: 'pi pi-id-card',
   PASSEPORT: 'pi pi-id-card',
@@ -73,6 +83,12 @@ export const AGENT_DOCUMENT_TYPE_ICONS: Record<AgentDocumentType, string> = {
   PHOTO_PROFIL: 'pi pi-camera',
   CV: 'pi pi-file',
   AUTRE: 'pi pi-paperclip',
+};
+
+export const AGENT_DOCUMENT_STATUS_LABELS: Record<AgentDocumentStatus, string> = {
+  PENDING_REVIEW: 'En attente de validation',
+  VALIDATED: 'Validé',
+  REJECTED: 'Rejeté',
 };
 
 export const AGENT_DOCUMENT_TYPES: { value: AgentDocumentType; label: string }[] =

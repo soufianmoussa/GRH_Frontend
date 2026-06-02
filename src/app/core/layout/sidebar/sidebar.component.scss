@@ -11,7 +11,7 @@
   left: -320px;
   width: 290px;
   height: calc(100vh - 96px);
-  background: linear-gradient(180deg, #1f3c88 0%, #1a3070 100%);
+  background: #1E3A8A;
   color: #fff;
   border-radius: 16px;
   display: flex;
@@ -34,7 +34,7 @@
     top: 0;
     bottom: 0;
     width: 2px;
-    background: linear-gradient(180deg, transparent, rgba(25, 136, 151, 0.6), transparent);
+    background: linear-gradient(180deg, transparent, rgba(15, 139, 157, 0.6), transparent);
   }
 }
 
@@ -52,14 +52,14 @@
     width: 42px;
     height: 42px;
     border-radius: 50%;
-    background: linear-gradient(135deg, #198897, #2a52be);
+    background: linear-gradient(135deg, #0F8B9D, #1E3A8A);
     display: grid;
     place-items: center;
     color: #fff;
     font-weight: 700;
     font-size: 0.95rem;
     letter-spacing: 0.02em;
-    box-shadow: 0 4px 12px rgba(25, 136, 151, 0.35);
+    box-shadow: 0 4px 12px rgba(15, 139, 157, 0.35);
     flex-shrink: 0;
     user-select: none;
   }
@@ -92,7 +92,7 @@
 
       i {
         font-size: 0.7rem;
-        color: rgba(25, 136, 151, 0.9);
+        color: rgba(15, 139, 157, 0.9);
       }
     }
   }
@@ -223,7 +223,7 @@
   }
 
   &:hover {
-    background: rgba(255, 255, 255, 0.08);
+    background: #2A4A9E;
     color: #fff;
     i { color: #fff; }
   }
@@ -235,13 +235,15 @@
     outline-offset: -2px;
   }
 
-  /* Active route — gradient pill + accent bar */
+  /* Active route — teal pill with left accent bar */
   &.is-active {
-    background: linear-gradient(135deg, rgba(25, 136, 151, 0.4), rgba(42, 82, 190, 0.5));
+    background: #0F8B9D;
     color: #fff;
     font-weight: 600;
-    box-shadow: inset 3px 0 0 #ffffff, 0 2px 8px rgba(0, 0, 0, 0.12);
+    box-shadow: inset 3px 0 0 #ffffff, 0 2px 8px rgba(15, 139, 157, 0.25);
     i { color: #fff; }
+
+    &:hover { background: #0F8B9D; }
   }
 
   /* Sub-item — slightly smaller, indented, lighter background hover */
@@ -256,8 +258,8 @@
     }
 
     &.is-active {
-      background: linear-gradient(135deg, rgba(25, 136, 151, 0.5), rgba(42, 82, 190, 0.4));
-      box-shadow: inset 3px 0 0 #198897, 0 2px 8px rgba(0, 0, 0, 0.15);
+      background: rgba(15, 139, 157, 0.85);
+      box-shadow: inset 3px 0 0 #0F8B9D, 0 2px 8px rgba(15, 139, 157, 0.25);
     }
   }
 }
@@ -300,7 +302,7 @@
     }
 
     &:hover {
-      background: rgba(255, 255, 255, 0.08);
+      background: #2A4A9E;
       color: #fff;
     }
 
@@ -310,7 +312,7 @@
     }
 
     &.is-open {
-      background: rgba(255, 255, 255, 0.07);
+      background: #2A4A9E;
       color: #fff;
     }
   }

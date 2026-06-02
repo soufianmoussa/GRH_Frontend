@@ -115,7 +115,7 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
   identityForm: FormGroup;
   contactForm: FormGroup;
 
-  // ---- Local file slots (TODO backend persistence) ----
+  // ---- Local file slots (persisted via AgentDocument backend) ----
   pendingPhotoFile: File | null = null;
   photoPreviewUrl: string | null = null;
   pendingCinFile: File | null = null;
@@ -123,6 +123,26 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
   pendingMariageFile: File | null = null;
   /** Acte de naissance per child, keyed by index in the FormArray */
   pendingActesNaissance = new Map<number, File>();
+
+  /**
+   * Existing AgentDocuments already saved for this agent — keyed by document
+   * type. When the admin returns to the wizard, we re-target uploads to these
+   * existing rows instead of creating new ones (no duplicates in MinIO).
+   */
+  private existingDocs = new Map<AgentDocumentType, AgentDocument>();
+
+  /**
+   * Existing actes de naissance — one per enfant, keyed by the enfant's
+   * matching key (CIN if available, else "prenom nom").
+   */
+  private existingActesNaissance = new Map<string, AgentDocument>();
+
+  /** Public file URL / name per slot so the UI can render "déjà téléversé". */
+  existingPhoto: { url: string; name: string } | null = null;
+  existingCinDocUrl: { url: string; name: string } | null = null;
+  existingRib: { url: string; name: string } | null = null;
+  existingMariage: { url: string; name: string } | null = null;
+  existingActeNaissanceByIndex = new Map<number, { url: string; name: string }>();
 
   // ---- Backend-backed lists ----
   diplomes: Diplome[] = [];
@@ -331,6 +351,72 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     this.patchFromOnboarding();
     this.computeStartingStep();
     this.loadAgentDiplomesAndFormations();
+    this.loadExistingAgentDocuments();
+  }
+
+  /**
+   * Re-hydrate the upload slots from the AgentDocuments persisted server-side.
+   * Without this, the admin would see empty slots on return and re-upload the
+   * same files, creating duplicates in MinIO.
+   */
+  private loadExistingAgentDocuments(): void {
+    const agentId = this.onboarding?.agent?.id;
+    if (!agentId) return;
+    this.agentDocumentsService.getByAgent(agentId).subscribe(docs => {
+      this.existingDocs.clear();
+      this.existingActesNaissance.clear();
+      this.existingActeNaissanceByIndex.clear();
+
+      const singleTypes: AgentDocumentType[] = [
+        'PHOTO_PROFIL', 'CARTE_NATIONALE', 'ATTESTATION_RIB', 'ACTE_MARIAGE'
+      ];
+      for (const t of singleTypes) {
+        const matches = docs.filter(d => d.documentType === t);
+        const latest = matches.sort((a, b) => (b.createdAt ?? '').localeCompare(a.createdAt ?? ''))[0];
+        if (latest) this.existingDocs.set(t, latest);
+      }
+
+      docs.filter(d => d.documentType === 'ACTE_NAISSANCE').forEach(d => {
+        const key = (d.description || '').trim();
+        if (key) this.existingActesNaissance.set(key, d);
+      });
+
+      this.hydrateSlotsFromExistingDocs();
+    });
+  }
+
+  /** Populate the "déjà téléversé" placeholders that the UI displays. */
+  private hydrateSlotsFromExistingDocs(): void {
+    const photo = this.existingDocs.get('PHOTO_PROFIL');
+    if (photo?.fileUrl) {
+      this.existingPhoto = { url: photo.fileUrl, name: photo.fileName ?? 'Photo' };
+      if (!this.pendingPhotoFile) this.photoPreviewUrl = photo.fileUrl;
+    }
+
+    const cin = this.existingDocs.get('CARTE_NATIONALE');
+    if (cin?.fileUrl) this.existingCinDocUrl = { url: cin.fileUrl, name: cin.fileName ?? 'CIN' };
+
+    const rib = this.existingDocs.get('ATTESTATION_RIB');
+    if (rib?.fileUrl) this.existingRib = { url: rib.fileUrl, name: rib.fileName ?? 'RIB' };
+
+    const mariage = this.existingDocs.get('ACTE_MARIAGE');
+    if (mariage?.fileUrl) this.existingMariage = { url: mariage.fileUrl, name: mariage.fileName ?? 'Acte mariage' };
+
+    this.enfants.controls.forEach((_, idx) => {
+      const enfant = this.enfants.at(idx).value;
+      const key = this.acteNaissanceKey(enfant);
+      const doc = key ? this.existingActesNaissance.get(key) : undefined;
+      if (doc?.fileUrl) {
+        this.existingActeNaissanceByIndex.set(idx, { url: doc.fileUrl, name: doc.fileName ?? 'Acte naissance' });
+      }
+    });
+  }
+
+  /** Stable key for matching an enfant to an ACTE_NAISSANCE AgentDocument. */
+  private acteNaissanceKey(enfant: any): string {
+    if (enfant?.cin && String(enfant.cin).trim()) return `cin:${String(enfant.cin).trim().toUpperCase()}`;
+    const name = `${enfant?.prenom ?? ''} ${enfant?.nom ?? ''}`.trim().toLowerCase();
+    return name ? `name:${name}` : '';
   }
 
   /** Reload diplomes + formations already saved for this agent. */
@@ -651,14 +737,29 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     this.pendingActesNaissance.set(index, file);
     const enfant = this.enfants.at(index)?.value;
     const childName = enfant ? `${enfant.prenom || ''} ${enfant.nom || ''}`.trim() : `Enfant #${index + 1}`;
-    this.uploadAgentDocument('ACTE_NAISSANCE', file, childName || `Enfant #${index + 1}`);
+    const key = this.acteNaissanceKey(enfant) || `idx:${index}`;
+    this.uploadAgentDocument('ACTE_NAISSANCE', file, childName || `Enfant #${index + 1}`, key, index);
   }
 
   /**
-   * Create an AgentDocument record + upload the file. Used for the docs that
-   * live outside the OnboardingDocument workflow (RIB, marriage, birth, photo).
+   * Persist a file via the AgentDocument backend.
+   * - If a document of the same type (and same {@code matchKey} for
+   *   per-child docs) already exists for the agent, we re-upload onto its
+   *   id. The backend's uploadFile method already deletes the previous
+   *   MinIO object before saving the new one — no duplicates.
+   * - Otherwise we create a new AgentDocument then upload the file to it.
+   *
+   * For acte de naissance, {@code matchKey} encodes the child identity
+   * (CIN or "prenom nom") so the next visit can re-match the file to the
+   * right child. It is stored in {@code description}.
    */
-  private uploadAgentDocument(type: AgentDocumentType, file: File, titleSuffix?: string): void {
+  private uploadAgentDocument(
+    type: AgentDocumentType,
+    file: File,
+    titleSuffix?: string,
+    matchKey?: string,
+    enfantIndex?: number
+  ): void {
     const agentId = this.onboarding?.agent?.id;
     if (!agentId) {
       ToastHelper.showError(this.messageService, 'Agent introuvable.');
@@ -667,17 +768,45 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     const baseTitle = AGENT_DOCUMENT_TYPE_LABELS[type];
     const title = titleSuffix ? `${baseTitle} — ${titleSuffix}` : baseTitle;
 
+    // Look up existing document so we replace instead of duplicating.
+    let existing: AgentDocument | undefined;
+    if (type === 'ACTE_NAISSANCE') {
+      if (matchKey) existing = this.existingActesNaissance.get(matchKey);
+    } else {
+      existing = this.existingDocs.get(type);
+    }
+
     this.saving.set(true);
+
+    if (existing) {
+      // Re-upload onto the existing id. Backend replaces the StoredFile.
+      this.agentDocumentsService.uploadFile(existing.id, file)
+        .pipe(finalize(() => this.saving.set(false)))
+        .subscribe({
+          next: (updated) => {
+            this.cacheUploadedDoc(type, updated, matchKey, enfantIndex);
+            ToastHelper.showSuccess(this.messageService, `${baseTitle} mis à jour.`);
+          },
+          error: (e) => ToastHelper.handleApiError(this.messageService, e, `Televersement ${baseTitle} impossible.`)
+        });
+      return;
+    }
+
+    // No existing record — create then upload.
     this.agentDocumentsService.create({
       agentId,
       documentType: type,
-      title
+      title,
+      description: matchKey ?? null
     }).subscribe({
       next: (doc) => {
         this.agentDocumentsService.uploadFile(doc.id, file)
           .pipe(finalize(() => this.saving.set(false)))
           .subscribe({
-            next: () => ToastHelper.showSuccess(this.messageService, `${baseTitle} televerse.`),
+            next: (uploaded) => {
+              this.cacheUploadedDoc(type, uploaded, matchKey, enfantIndex);
+              ToastHelper.showSuccess(this.messageService, `${baseTitle} televerse.`);
+            },
             error: (e) => ToastHelper.handleApiError(this.messageService, e, `Televersement ${baseTitle} impossible.`)
           });
       },
@@ -688,12 +817,68 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     });
   }
 
+  /** Update the in-memory caches after a successful upload. */
+  private cacheUploadedDoc(
+    type: AgentDocumentType,
+    doc: AgentDocument,
+    matchKey?: string,
+    enfantIndex?: number
+  ): void {
+    if (type === 'ACTE_NAISSANCE') {
+      if (matchKey) this.existingActesNaissance.set(matchKey, doc);
+      if (enfantIndex !== undefined && doc.fileUrl) {
+        this.existingActeNaissanceByIndex.set(enfantIndex, { url: doc.fileUrl, name: doc.fileName ?? 'Acte naissance' });
+      }
+    } else {
+      this.existingDocs.set(type, doc);
+      if (doc.fileUrl) {
+        const slot = { url: doc.fileUrl, name: doc.fileName ?? AGENT_DOCUMENT_TYPE_LABELS[type] };
+        if (type === 'PHOTO_PROFIL')        this.existingPhoto      = slot;
+        else if (type === 'CARTE_NATIONALE') this.existingCinDocUrl = slot;
+        else if (type === 'ATTESTATION_RIB') this.existingRib       = slot;
+        else if (type === 'ACTE_MARIAGE')    this.existingMariage   = slot;
+      }
+    }
+  }
+
   hasActeNaissance(index: number): boolean {
-    return this.pendingActesNaissance.has(index);
+    return this.pendingActesNaissance.has(index) || this.existingActeNaissanceByIndex.has(index);
   }
 
   acteNaissanceName(index: number): string | null {
-    return this.pendingActesNaissance.get(index)?.name ?? null;
+    return this.pendingActesNaissance.get(index)?.name
+        ?? this.existingActeNaissanceByIndex.get(index)?.name
+        ?? null;
+  }
+
+  acteNaissanceUrl(index: number): string | null {
+    return this.existingActeNaissanceByIndex.get(index)?.url ?? null;
+  }
+
+  /** Convenience predicates / displayers for the single-instance slots. */
+  photoIsSet(): boolean { return !!this.pendingPhotoFile || !!this.existingPhoto; }
+  ribIsSet(): boolean { return !!this.pendingRibFile || !!this.existingRib; }
+  mariageIsSet(): boolean { return !!this.pendingMariageFile || !!this.existingMariage; }
+  cinFileIsSet(): boolean {
+    if (this.pendingCinFile || this.existingCinDocUrl) return true;
+    const cinDoc = this.findCinDocument();
+    return !!(cinDoc?.fileName || cinDoc?.fileUrl);
+  }
+  /** URL/name of the persisted CIN scan (OnboardingDocument), if any. */
+  cinPersistedFile(): { url?: string; name?: string } | null {
+    const d = this.findCinDocument();
+    if (d?.fileUrl || d?.fileName) return { url: d.fileUrl, name: d.fileName ?? 'CIN' };
+    return null;
+  }
+
+  ribDisplayName(): string | null {
+    return this.pendingRibFile?.name ?? this.existingRib?.name ?? null;
+  }
+  mariageDisplayName(): string | null {
+    return this.pendingMariageFile?.name ?? this.existingMariage?.name ?? null;
+  }
+  cinDisplayName(): string | null {
+    return this.pendingCinFile?.name ?? this.existingCinDocUrl?.name ?? null;
   }
 
   private pickFile(event: Event): File | null {
@@ -973,8 +1158,8 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     if (!id.cin?.trim()) issues.push({ step: 2, label: 'CIN obligatoire', severity: 'error' });
     if (!id.sexe) issues.push({ step: 2, label: 'Sexe obligatoire', severity: 'error' });
     if (!id.dateNaissance) issues.push({ step: 2, label: 'Date de naissance obligatoire', severity: 'error' });
-    if (!this.pendingCinFile) issues.push({ step: 2, label: 'Scan CIN manquant', severity: 'error' });
-    if (!this.photoPreviewUrl) issues.push({ step: 2, label: 'Photo de profil recommandee', severity: 'warn' });
+    if (!this.cinFileIsSet()) issues.push({ step: 2, label: 'Scan CIN manquant', severity: 'error' });
+    if (!this.photoIsSet()) issues.push({ step: 2, label: 'Photo de profil recommandee', severity: 'warn' });
 
     // Step 3 — required contact
     if (!c.adresse?.adresse?.trim()) issues.push({ step: 3, label: 'Adresse obligatoire', severity: 'error' });
@@ -982,7 +1167,7 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
 
     // Bank fields are optional but if any filled we want a RIB attached
     const hasBankFields = !!(c.coordonneesBancaires?.banque || c.coordonneesBancaires?.rib || c.coordonneesBancaires?.iban);
-    if (hasBankFields && !this.pendingRibFile) {
+    if (hasBankFields && !this.ribIsSet()) {
       issues.push({ step: 3, label: 'Attestation RIB recommandee (banque renseignee)', severity: 'warn' });
     }
 
@@ -991,7 +1176,7 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
       if (!c.conjoint?.nom?.trim()) issues.push({ step: 3, label: 'Nom du conjoint obligatoire (situation : Marie/e)', severity: 'error' });
       if (!c.conjoint?.prenom?.trim()) issues.push({ step: 3, label: 'Prenom du conjoint obligatoire', severity: 'error' });
       if (!c.conjoint?.cin?.trim()) issues.push({ step: 3, label: 'CIN du conjoint obligatoire', severity: 'error' });
-      if (!this.pendingMariageFile) issues.push({ step: 3, label: 'Acte de mariage manquant', severity: 'warn' });
+      if (!this.mariageIsSet()) issues.push({ step: 3, label: 'Acte de mariage manquant', severity: 'warn' });
     }
 
     // Each child needs an acte de naissance
@@ -1000,7 +1185,7 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
       if (!enfant.nom?.trim() || !enfant.prenom?.trim()) {
         issues.push({ step: 3, label: `Enfant #${i + 1} : nom et prenom obligatoires`, severity: 'error' });
       }
-      if (!this.pendingActesNaissance.has(i)) {
+      if (!this.hasActeNaissance(i)) {
         const childName = `${enfant.prenom || ''} ${enfant.nom || ''}`.trim() || `Enfant #${i + 1}`;
         issues.push({ step: 3, label: `Acte de naissance manquant pour ${childName}`, severity: 'warn' });
       }
@@ -1085,7 +1270,8 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
 
   private confirmAndSubmit(): void {
     this.confirmationService.confirm({
-      message: 'Confirmer la soumission du dossier pour validation ?',
+      message:
+        'Confirmer la soumission du dossier ? Un lien d\'activation sera envoye a l\'agent pour qu\'il definisse son mot de passe.',
       header: 'Soumission du dossier',
       icon: 'pi pi-exclamation-triangle',
       accept: () => {
@@ -1095,7 +1281,10 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
           .subscribe({
             next: (o) => {
               this.onboarding = o;
-              ToastHelper.showSuccess(this.messageService, 'Dossier soumis pour validation.');
+              ToastHelper.showSuccess(
+                this.messageService,
+                'Dossier soumis. Un lien d\'activation a ete envoye a l\'agent.'
+              );
               this.router.navigate(['/admin/onboarding', this.onboardingId]);
             },
             error: (e) => ToastHelper.handleApiError(this.messageService, e, 'Soumission impossible.')

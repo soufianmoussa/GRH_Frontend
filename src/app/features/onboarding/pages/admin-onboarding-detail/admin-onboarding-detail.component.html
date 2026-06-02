@@ -371,18 +371,30 @@
           <div *ngIf="agentDocuments.length" class="agent-docs-grid">
             <article *ngFor="let doc of agentDocuments"
                      class="agent-doc-card"
-                     [class.has-file]="!!doc.fileUrl">
+                     [class.has-file]="!!doc.fileUrl"
+                     [attr.data-status]="doc.status">
               <div class="agent-doc-card__icon">
                 <i class="pi" [ngClass]="agentDocIcon(doc.documentType)"></i>
               </div>
               <div class="agent-doc-card__body">
-                <strong>{{ agentDocLabel(doc.documentType) }}</strong>
+                <div class="agent-doc-card__title-row">
+                  <strong>{{ agentDocLabel(doc.documentType) }}</strong>
+                  <p-tag *ngIf="doc.fileUrl"
+                         [severity]="agentDocSeverity(doc.status)"
+                         [value]="agentDocStatusLabel(doc.status)"
+                         [rounded]="true">
+                  </p-tag>
+                </div>
                 <small *ngIf="doc.title && doc.title !== agentDocLabel(doc.documentType)" class="agent-doc-card__title">
                   {{ doc.title }}
                 </small>
                 <small class="muted" *ngIf="doc.createdAt">
                   <i class="pi pi-calendar"></i>
                   Ajoute le {{ doc.createdAt | date:'dd/MM/yyyy' }}
+                </small>
+                <small class="agent-doc-card__rejection" *ngIf="doc.status === 'REJECTED' && doc.rejectionReason">
+                  <i class="pi pi-exclamation-circle"></i>
+                  Motif : {{ doc.rejectionReason }}
                 </small>
               </div>
               <div class="agent-doc-card__actions">
@@ -398,6 +410,24 @@
                   <i class="pi pi-clock"></i>
                   En attente
                 </span>
+
+                <div class="agent-doc-card__validation" *ngIf="isPendingValidation() && doc.fileUrl">
+                  <button pButton
+                          icon="pi pi-check"
+                          class="p-button-rounded p-button-text p-button-success p-button-sm"
+                          pTooltip="Valider le document"
+                          tooltipPosition="top"
+                          [disabled]="doc.status === 'VALIDATED'"
+                          (click)="validateAgentDocument(doc)">
+                  </button>
+                  <button pButton
+                          icon="pi pi-times"
+                          class="p-button-rounded p-button-text p-button-danger p-button-sm"
+                          pTooltip="Rejeter le document"
+                          tooltipPosition="top"
+                          (click)="askRejectAgentDocument(doc)">
+                  </button>
+                </div>
               </div>
             </article>
           </div>

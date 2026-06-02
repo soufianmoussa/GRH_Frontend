@@ -200,22 +200,25 @@
                 </div>
 
                 <!-- Upload CIN -->
-                <div class="upload-zone" [class.has-file]="!!pendingCinFile">
+                <div class="upload-zone" [class.has-file]="cinFileIsSet()">
                   <div class="upload-zone__icon">
-                    <i [class]="pendingCinFile ? 'pi pi-file-check' : 'pi pi-id-card'"></i>
+                    <i [class]="cinFileIsSet() ? 'pi pi-file-check' : 'pi pi-id-card'"></i>
                   </div>
                   <div class="upload-zone__body">
                     <strong>Scan de la CIN <span class="req">*</span></strong>
-                    <small *ngIf="!pendingCinFile">PDF, JPG, PNG ou WebP &mdash; 10&nbsp;Mo max</small>
-                    <small *ngIf="pendingCinFile" class="file-meta">
-                      <i class="pi pi-paperclip"></i> {{ pendingCinFile.name }}
+                    <small *ngIf="!cinFileIsSet()">PDF, JPG, PNG ou WebP &mdash; 10&nbsp;Mo max</small>
+                    <small *ngIf="cinFileIsSet()" class="file-meta">
+                      <i class="pi pi-paperclip"></i>
+                      <span *ngIf="pendingCinFile">{{ pendingCinFile.name }}</span>
+                      <a *ngIf="!pendingCinFile && cinPersistedFile() as f"
+                         [href]="f.url" target="_blank" rel="noopener noreferrer">{{ f.name }}</a>
                     </small>
                   </div>
                   <div class="upload-zone__actions">
                     <label class="file-input-btn">
                       <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" [disabled]="locked()" (change)="onCinFileSelected($event)" />
-                      <i [class]="pendingCinFile ? 'pi pi-refresh' : 'pi pi-upload'"></i>
-                      <span>{{ pendingCinFile ? 'Remplacer' : 'Televerser' }}</span>
+                      <i [class]="cinFileIsSet() ? 'pi pi-refresh' : 'pi pi-upload'"></i>
+                      <span>{{ cinFileIsSet() ? 'Remplacer' : 'Televerser' }}</span>
                     </label>
                   </div>
                 </div>
@@ -282,22 +285,24 @@
                 </div>
 
                 <!-- Upload Attestation RIB -->
-                <div class="upload-zone" [class.has-file]="!!pendingRibFile">
+                <div class="upload-zone" [class.has-file]="ribIsSet()">
                   <div class="upload-zone__icon">
-                    <i [class]="pendingRibFile ? 'pi pi-file-check' : 'pi pi-money-bill'"></i>
+                    <i [class]="ribIsSet() ? 'pi pi-file-check' : 'pi pi-money-bill'"></i>
                   </div>
                   <div class="upload-zone__body">
                     <strong>Attestation de RIB</strong>
-                    <small *ngIf="!pendingRibFile">Document fourni par la banque (PDF, JPG, PNG, WebP &mdash; 10&nbsp;Mo)</small>
-                    <small *ngIf="pendingRibFile" class="file-meta">
-                      <i class="pi pi-paperclip"></i> {{ pendingRibFile.name }}
+                    <small *ngIf="!ribIsSet()">Document fourni par la banque (PDF, JPG, PNG, WebP &mdash; 10&nbsp;Mo)</small>
+                    <small *ngIf="ribIsSet()" class="file-meta">
+                      <i class="pi pi-paperclip"></i>
+                      <a *ngIf="existingRib && !pendingRibFile" [href]="existingRib.url" target="_blank" rel="noopener noreferrer">{{ ribDisplayName() }}</a>
+                      <span *ngIf="pendingRibFile">{{ pendingRibFile.name }}</span>
                     </small>
                   </div>
                   <div class="upload-zone__actions">
                     <label class="file-input-btn">
                       <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" [disabled]="locked()" (change)="onRibFileSelected($event)" />
-                      <i [class]="pendingRibFile ? 'pi pi-refresh' : 'pi pi-upload'"></i>
-                      <span>{{ pendingRibFile ? 'Remplacer' : 'Televerser' }}</span>
+                      <i [class]="ribIsSet() ? 'pi pi-refresh' : 'pi pi-upload'"></i>
+                      <span>{{ ribIsSet() ? 'Remplacer' : 'Televerser' }}</span>
                     </label>
                   </div>
                 </div>
@@ -317,22 +322,24 @@
                 </div>
 
                 <!-- Upload Acte de mariage -->
-                <div class="upload-zone" [class.has-file]="!!pendingMariageFile">
+                <div class="upload-zone" [class.has-file]="mariageIsSet()">
                   <div class="upload-zone__icon">
-                    <i [class]="pendingMariageFile ? 'pi pi-file-check' : 'pi pi-heart-fill'"></i>
+                    <i [class]="mariageIsSet() ? 'pi pi-file-check' : 'pi pi-heart-fill'"></i>
                   </div>
                   <div class="upload-zone__body">
                     <strong>Acte de mariage</strong>
-                    <small *ngIf="!pendingMariageFile">Document obligatoire pour valider le statut marital</small>
-                    <small *ngIf="pendingMariageFile" class="file-meta">
-                      <i class="pi pi-paperclip"></i> {{ pendingMariageFile.name }}
+                    <small *ngIf="!mariageIsSet()">Document obligatoire pour valider le statut marital</small>
+                    <small *ngIf="mariageIsSet()" class="file-meta">
+                      <i class="pi pi-paperclip"></i>
+                      <a *ngIf="existingMariage && !pendingMariageFile" [href]="existingMariage.url" target="_blank" rel="noopener noreferrer">{{ mariageDisplayName() }}</a>
+                      <span *ngIf="pendingMariageFile">{{ pendingMariageFile.name }}</span>
                     </small>
                   </div>
                   <div class="upload-zone__actions">
                     <label class="file-input-btn">
                       <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" [disabled]="locked()" (change)="onMariageFileSelected($event)" />
-                      <i [class]="pendingMariageFile ? 'pi pi-refresh' : 'pi pi-upload'"></i>
-                      <span>{{ pendingMariageFile ? 'Remplacer' : 'Televerser' }}</span>
+                      <i [class]="mariageIsSet() ? 'pi pi-refresh' : 'pi pi-upload'"></i>
+                      <span>{{ mariageIsSet() ? 'Remplacer' : 'Televerser' }}</span>
                     </label>
                   </div>
                 </div>
@@ -380,7 +387,9 @@
                         <strong>Acte de naissance</strong>
                         <small *ngIf="!hasActeNaissance(i)">Document obligatoire pour le bulletin de paie / CNSS</small>
                         <small *ngIf="hasActeNaissance(i)" class="file-meta">
-                          <i class="pi pi-paperclip"></i> {{ acteNaissanceName(i) }}
+                          <i class="pi pi-paperclip"></i>
+                          <a *ngIf="acteNaissanceUrl(i) && !pendingActesNaissance.has(i)" [href]="acteNaissanceUrl(i)" target="_blank" rel="noopener noreferrer">{{ acteNaissanceName(i) }}</a>
+                          <span *ngIf="pendingActesNaissance.has(i)">{{ acteNaissanceName(i) }}</span>
                         </small>
                       </div>
                       <div class="upload-zone__actions">
@@ -732,14 +741,14 @@
                     </li>
                     <li>
                       <span class="recap-list__label">Photo de profil</span>
-                      <p-tag [severity]="photoPreviewUrl ? 'success' : 'warn'"
-                             [value]="photoPreviewUrl ? 'Jointe' : 'Manquante'"
+                      <p-tag [severity]="photoIsSet() ? 'success' : 'warn'"
+                             [value]="photoIsSet() ? 'Jointe' : 'Manquante'"
                              [rounded]="true"></p-tag>
                     </li>
                     <li>
                       <span class="recap-list__label">Scan CIN</span>
-                      <p-tag [severity]="pendingCinFile ? 'success' : 'danger'"
-                             [value]="pendingCinFile ? 'Joint' : 'Manquant (obligatoire)'"
+                      <p-tag [severity]="cinFileIsSet() ? 'success' : 'danger'"
+                             [value]="cinFileIsSet() ? 'Joint' : 'Manquant (obligatoire)'"
                              [rounded]="true"></p-tag>
                     </li>
                   </ul>
@@ -811,8 +820,8 @@
                   <li><span class="recap-list__label">IBAN</span><span class="recap-list__value mono">{{ contactForm.value.coordonneesBancaires?.iban || '-' }}</span></li>
                   <li>
                     <span class="recap-list__label">Attestation RIB</span>
-                    <p-tag [severity]="pendingRibFile ? 'success' : 'secondary'"
-                           [value]="pendingRibFile ? 'Jointe' : 'Non fournie'"
+                    <p-tag [severity]="ribIsSet() ? 'success' : 'secondary'"
+                           [value]="ribIsSet() ? 'Jointe' : 'Non fournie'"
                            [rounded]="true"></p-tag>
                   </li>
                 </ul>
@@ -856,8 +865,8 @@
                   <li><span class="recap-list__label">Profession</span><span class="recap-list__value">{{ contactForm.value.conjoint?.profession || '-' }}</span></li>
                   <li>
                     <span class="recap-list__label">Acte de mariage</span>
-                    <p-tag [severity]="pendingMariageFile ? 'success' : 'warn'"
-                           [value]="pendingMariageFile ? 'Joint' : 'Manquant'"
+                    <p-tag [severity]="mariageIsSet() ? 'success' : 'warn'"
+                           [value]="mariageIsSet() ? 'Joint' : 'Manquant'"
                            [rounded]="true"></p-tag>
                   </li>
                 </ul>
