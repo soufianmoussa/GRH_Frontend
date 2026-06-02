@@ -7,6 +7,7 @@ import { ButtonModule } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { InputTextModule } from 'primeng/inputtext';
 import { MessageService } from 'primeng/api';
+import { MessageModule } from 'primeng/message';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { Select } from 'primeng/select';
 import { Toast } from 'primeng/toast';
@@ -60,6 +61,7 @@ interface GradeOptionGroup {
     ButtonModule,
     DatePicker,
     InputTextModule,
+    MessageModule,
     ProgressSpinnerModule,
     Select,
     Toast
@@ -130,7 +132,7 @@ export class AdminOnboardingInitializeComponent implements OnInit {
       .subscribe({
         next: (onboarding) => {
           this.createdOnboardingId = onboarding.id;
-          ToastHelper.showSuccess(this.messageService, 'Onboarding cree et invitation preparee.');
+          ToastHelper.showSuccess(this.messageService, 'Dossier cree. Un lien d\'activation a ete envoye a l\'agent par email.');
           this.form.reset();
           this.selectedGrade = undefined;
           this.echelleOptions = [...this.allEchelleOptions];
@@ -144,6 +146,15 @@ export class AdminOnboardingInitializeComponent implements OnInit {
     if (this.createdOnboardingId) {
       this.router.navigate(['/admin/onboarding', this.createdOnboardingId]);
     }
+  }
+
+  resetAndCreateAnother(): void {
+    this.createdOnboardingId = undefined;
+    this.form.reset();
+    this.selectedGrade = undefined;
+    this.echelleOptions = [...this.allEchelleOptions];
+    this.echelonOptions = [];
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   isInvalid(controlName: string): boolean {

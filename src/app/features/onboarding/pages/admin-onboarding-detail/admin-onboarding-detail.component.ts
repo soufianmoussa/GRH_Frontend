@@ -265,9 +265,12 @@ export class AdminOnboardingDetailComponent implements OnInit {
     this.onboardingService.resendInvitation(this.onboarding.id).subscribe({
       next: (status) => {
         if (this.onboarding) this.onboarding.invitation = status;
-        ToastHelper.showSuccess(this.messageService, 'Invitation renvoyee.');
+        ToastHelper.showSuccess(
+          this.messageService,
+          'Lien d\'activation envoye a l\'agent par email.'
+        );
       },
-      error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Renvoi impossible.')
+      error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Envoi de l\'invitation impossible.')
     });
   }
 
