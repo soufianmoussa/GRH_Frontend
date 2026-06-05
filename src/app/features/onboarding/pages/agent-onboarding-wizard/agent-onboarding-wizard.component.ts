@@ -24,14 +24,16 @@ import { OnboardingDetail } from '../../../../models/onboarding.model';
 import { AgentCreateRequest } from '../../../../models/agent-full.model';
 import { Diplome } from '../../../documents/models/diplomes/diplome.model';
 import { Formation } from '../../../../models/formation.model';
-import { AgentDocument } from '../../../../models/agent-document.model';
+import { AgentDocument, AgentDocumentType } from '../../../../models/agent-document.model';
 import {
   AgentOnboardingService,
   OnboardingCinRequest,
   OnboardingDiplomeRequest,
   OnboardingFormationRequest
 } from '../../services/agent-onboarding.service';
+import { AgentDocumentsService } from '../../../dossier-agent/services/dossiers-agents/agent-documents.service';
 import { ToastHelper } from '../../../../shared/utils/toast-helper';
+import { stripEmptyStrings } from '../../../../shared/utils/payload-utils';
 import { OnboardingStatusBadgeComponent } from '../../components/onboarding-status-badge/onboarding-status-badge.component';
 import { AutoCompleteModule } from 'primeng/autocomplete';
 import {
@@ -42,6 +44,20 @@ import {
 } from '../../constants/diplome-options.constants';
 
 type WizardStep = 1 | 2 | 3 | 4 | 5;
+
+/**
+ * Local-only certification draft (mirror admin).
+ * TODO(backend): create a Certification entity + endpoint to persist.
+ */
+export interface DraftCertification {
+  uid: string;
+  intitule: string;
+  organisme: string;
+  reference: string;
+  dateObtention: Date | null;
+  dateExpiration: Date | null;
+  file: File | null;
+}
 
 const ALLOWED_MIME = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -100,7 +116,31 @@ export class AgentOnboardingWizardComponent implements OnInit {
   editingFormation: Formation | null = null;
   pendingFormationFile: File | null = null;
 
+  // ----- Certifications (local-state only, mirror admin) -----
+  certifications: DraftCertification[] = [];
+  certificationForm: FormGroup;
+  showCertificationDialog = false;
+  editingCertificationUid: string | null = null;
+  pendingCertificationFile: File | null = null;
+
   pendingCinFile: File | null = null;
+
+  // Preview URL for the profile photo (object URL for pending file or remote URL when stored)
+  photoPreviewUrl: string | null = null;
+
+  // ----- AgentDocuments (Photo / RIB / Mariage / Acte naissance) -----
+  // Same hydrate-and-replace pattern used in the admin wizard so re-uploads
+  // overwrite the existing MinIO object instead of creating duplicates.
+  existingDocs: Map<AgentDocumentType, AgentDocument> = new Map();
+  existingActesNaissance: Map<string, AgentDocument> = new Map();
+  existingPhoto?: AgentDocument;
+  existingRib?: AgentDocument;
+  existingMariage?: AgentDocument;
+  existingActeNaissanceByIndex: Map<number, AgentDocument> = new Map();
+  pendingPhotoFile: File | null = null;
+  pendingRibFile: File | null = null;
+  pendingMariageFile: File | null = null;
+  pendingActeNaissanceByIndex: Map<number, File> = new Map();
 
   // Curated suggestion lists (free text allowed via p-autoComplete).
   readonly niveauxList: string[] = DIPLOME_NIVEAUX;
@@ -126,6 +166,7 @@ export class AgentOnboardingWizardComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private service: AgentOnboardingService,
+    private agentDocumentsService: AgentDocumentsService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private router: Router
@@ -191,6 +232,80 @@ export class AgentOnboardingWizardComponent implements OnInit {
       dateDebut: [null, Validators.required],
       dateFin: [null, Validators.required]
     });
+
+    this.certificationForm = this.fb.group({
+      intitule: ['', Validators.required],
+      organisme: [''],
+      reference: [''],
+      dateObtention: [null, Validators.required],
+      dateExpiration: [null]
+    });
+  }
+
+  // ---------- Certifications (local-only) ----------
+
+  openNewCertification(): void {
+    this.editingCertificationUid = null;
+    this.pendingCertificationFile = null;
+    this.certificationForm.reset();
+    this.showCertificationDialog = true;
+  }
+
+  openEditCertification(c: DraftCertification): void {
+    this.editingCertificationUid = c.uid;
+    this.pendingCertificationFile = c.file;
+    this.certificationForm.reset({
+      intitule: c.intitule,
+      organisme: c.organisme,
+      reference: c.reference,
+      dateObtention: c.dateObtention,
+      dateExpiration: c.dateExpiration
+    });
+    this.showCertificationDialog = true;
+  }
+
+  saveCertification(): void {
+    if (this.certificationForm.invalid) {
+      this.certificationForm.markAllAsTouched();
+      return;
+    }
+    const v = this.certificationForm.value;
+    const draft: DraftCertification = {
+      uid: this.editingCertificationUid ?? this.newUid(),
+      intitule: v.intitule,
+      organisme: v.organisme || '',
+      reference: v.reference || '',
+      dateObtention: v.dateObtention,
+      dateExpiration: v.dateExpiration,
+      file: this.pendingCertificationFile
+    };
+    if (this.editingCertificationUid) {
+      this.certifications = this.certifications.map(x => x.uid === this.editingCertificationUid ? draft : x);
+    } else {
+      this.certifications = [...this.certifications, draft];
+    }
+    this.showCertificationDialog = false;
+    ToastHelper.showSuccess(this.messageService, 'Certification enregistree (brouillon local).');
+  }
+
+  onCertificationFileSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file || !this.validateFile(file)) return;
+    this.pendingCertificationFile = file;
+  }
+
+  deleteCertification(c: DraftCertification): void {
+    this.confirmationService.confirm({
+      message: 'Supprimer cette certification ?',
+      accept: () => {
+        this.certifications = this.certifications.filter(x => x.uid !== c.uid);
+        ToastHelper.showSuccess(this.messageService, 'Certification supprimee.');
+      }
+    });
+  }
+
+  private newUid(): string {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
   }
 
   get enfants(): FormArray {
@@ -232,9 +347,303 @@ export class AgentOnboardingWizardComponent implements OnInit {
           this.patchFromOnboarding();
           this.patchCinForm();
           this.computeStartingStep();
+          this.loadExistingAgentDocuments();
         },
         error: (e) => ToastHelper.handleApiError(this.messageService, e, 'Chargement impossible.')
       });
+  }
+
+  /**
+   * Fetches every AgentDocument that already belongs to the current agent and indexes
+   * them by type so the UI shows what's already uploaded and re-uploads target the
+   * existing id instead of creating duplicates in MinIO.
+   */
+  private loadExistingAgentDocuments(): void {
+    const agentId = this.onboarding?.agent?.id;
+    if (!agentId) return;
+    this.agentDocumentsService.getByAgent(agentId)
+      .pipe(catchError(() => of([] as AgentDocument[])))
+      .subscribe((docs) => {
+        this.existingDocs.clear();
+        this.existingActesNaissance.clear();
+        for (const d of docs) {
+          if (d.documentType === 'ACTE_NAISSANCE') {
+            const key = (d.description ?? '').trim();
+            if (key) this.existingActesNaissance.set(key, d);
+          } else {
+            this.existingDocs.set(d.documentType, d);
+          }
+        }
+        this.hydrateSlotsFromExistingDocs();
+      });
+  }
+
+  private hydrateSlotsFromExistingDocs(): void {
+    this.existingPhoto = this.existingDocs.get('PHOTO_PROFIL');
+    this.existingRib = this.existingDocs.get('ATTESTATION_RIB');
+    this.existingMariage = this.existingDocs.get('ACTE_MARIAGE');
+    this.existingActeNaissanceByIndex.clear();
+    this.enfants.controls.forEach((_, i) => {
+      const key = this.acteNaissanceKey(i);
+      const match = key ? this.existingActesNaissance.get(key) : undefined;
+      if (match) this.existingActeNaissanceByIndex.set(i, match);
+    });
+    // Refresh the photo preview from the persisted file when no local pending file is set.
+    if (!this.pendingPhotoFile && this.existingPhoto?.fileUrl) {
+      this.photoPreviewUrl = this.existingPhoto.fileUrl;
+    }
+  }
+
+  /** Stable lookup key for a child's birth certificate: CIN if present, else "prenom nom". */
+  acteNaissanceKey(i: number): string {
+    const child = this.enfants.at(i)?.value as any;
+    if (!child) return '';
+    const cin = (child.cin ?? '').trim();
+    if (cin) return cin;
+    const fullName = `${(child.prenom ?? '').trim()} ${(child.nom ?? '').trim()}`.trim();
+    return fullName;
+  }
+
+  private cacheUploadedAgentDoc(doc: AgentDocument, matchKey?: string): void {
+    if (doc.documentType === 'ACTE_NAISSANCE') {
+      const key = matchKey ?? (doc.description ?? '').trim();
+      if (key) this.existingActesNaissance.set(key, doc);
+    } else {
+      this.existingDocs.set(doc.documentType, doc);
+    }
+    this.hydrateSlotsFromExistingDocs();
+  }
+
+  /**
+   * Replace-or-create upload for AgentDocument types (PHOTO / RIB / MARIAGE / ACTE_NAISSANCE).
+   * If a document of the given type (and matchKey for ACTE_NAISSANCE) already exists, the file
+   * is uploaded against its id — the backend deletes the previous MinIO object and stores the
+   * new one. Otherwise a new AgentDocument is created first.
+   */
+  private uploadAgentDocument(
+    type: AgentDocumentType,
+    file: File,
+    titleSuffix?: string,
+    matchKey?: string
+  ): void {
+    const agentId = this.onboarding?.agent?.id;
+    if (!agentId) {
+      ToastHelper.showError(this.messageService, 'Profil non charge.');
+      return;
+    }
+
+    let existing: AgentDocument | undefined;
+    if (type === 'ACTE_NAISSANCE') {
+      if (matchKey) existing = this.existingActesNaissance.get(matchKey);
+    } else {
+      existing = this.existingDocs.get(type);
+    }
+
+    this.saving.set(true);
+    if (existing) {
+      this.agentDocumentsService.uploadFile(existing.id, file)
+        .pipe(finalize(() => this.saving.set(false)))
+        .subscribe({
+          next: (updated) => {
+            this.cacheUploadedAgentDoc(updated, matchKey);
+            ToastHelper.showSuccess(this.messageService, 'Document televerse.');
+          },
+          error: (e) => ToastHelper.handleApiError(this.messageService, e, 'Televersement impossible.')
+        });
+      return;
+    }
+
+    const createPayload: any = {
+      agentId,
+      documentType: type,
+      title: titleSuffix ? `${type} - ${titleSuffix}` : type,
+      description: matchKey ?? undefined
+    };
+    this.agentDocumentsService.create(createPayload).subscribe({
+      next: (created) => {
+        this.agentDocumentsService.uploadFile(created.id, file)
+          .pipe(finalize(() => this.saving.set(false)))
+          .subscribe({
+            next: (withFile) => {
+              this.cacheUploadedAgentDoc(withFile, matchKey);
+              ToastHelper.showSuccess(this.messageService, 'Document televerse.');
+            },
+            error: (e) => {
+              this.saving.set(false);
+              ToastHelper.handleApiError(this.messageService, e, 'Televersement impossible.');
+            }
+          });
+      },
+      error: (e) => {
+        this.saving.set(false);
+        ToastHelper.handleApiError(this.messageService, e, 'Creation du document impossible.');
+      }
+    });
+  }
+
+  // ----- File pickers for new agent documents -----
+
+  onPhotoFileSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file || !this.validateFile(file)) return;
+    this.pendingPhotoFile = file;
+    if (this.photoPreviewUrl && this.photoPreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(this.photoPreviewUrl);
+    }
+    this.photoPreviewUrl = URL.createObjectURL(file);
+    this.uploadAgentDocument('PHOTO_PROFIL', file);
+  }
+
+  removePhoto(): void {
+    if (this.photoPreviewUrl && this.photoPreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(this.photoPreviewUrl);
+    }
+    this.photoPreviewUrl = null;
+    this.pendingPhotoFile = null;
+    // Note: backend deletion of an already-stored photo would require an extra DELETE call.
+    // Kept as visual-only reset; admin can validate/reject in the dossier detail.
+  }
+
+  onRibFileSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file || !this.validateFile(file)) return;
+    this.uploadAgentDocument('ATTESTATION_RIB', file);
+  }
+
+  onMariageFileSelected(event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file || !this.validateFile(file)) return;
+    this.uploadAgentDocument('ACTE_MARIAGE', file);
+  }
+
+  onActeNaissanceFileSelected(i: number, event: Event): void {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file || !this.validateFile(file)) return;
+    const key = this.acteNaissanceKey(i);
+    if (!key) {
+      ToastHelper.showError(this.messageService, 'Renseignez d\'abord le prenom/nom de l\'enfant.');
+      return;
+    }
+    this.uploadAgentDocument('ACTE_NAISSANCE', file, `Enfant #${i + 1}`, key);
+  }
+
+  // ----- Display helpers for the templates -----
+
+  photoIsSet(): boolean { return !!this.existingPhoto?.fileUrl || !!this.pendingPhotoFile; }
+  ribIsSet(): boolean { return !!this.existingRib?.fileUrl || !!this.pendingRibFile; }
+  mariageIsSet(): boolean { return !!this.existingMariage?.fileUrl || !!this.pendingMariageFile; }
+  cinFileIsSet(): boolean { return !!this.cin?.fileUrl || !!this.pendingCinFile; }
+  isMarried(): boolean { return this.identityForm.value.situation === 'M'; }
+
+  // ---------- Conditional sections (mirror admin showConjoint / showEnfants) ----------
+
+  showConjoint(): boolean {
+    return this.identityForm.get('situation')?.value === 'M';
+  }
+
+  showEnfants(): boolean {
+    return this.identityForm.get('situation')?.value !== 'C';
+  }
+
+  // ---------- Display labels ----------
+
+  sexeLabel(code?: string | null): string {
+    return this.sexeOptions.find(o => o.value === code)?.label || '-';
+  }
+
+  situationLabel(code?: string | null): string {
+    return this.situationOptions.find(o => o.value === code)?.label || '-';
+  }
+
+  // ---------- Recap validation (mirrors admin recapIssues / canSubmit) ----------
+
+  recapIssues(): Array<{ step: WizardStep; label: string; severity: 'error' | 'warn' }> {
+    const issues: Array<{ step: WizardStep; label: string; severity: 'error' | 'warn' }> = [];
+    const id = this.identityForm.value;
+    const c = this.contactForm.value;
+
+    // Step 2 — identite
+    if (!id.nom?.trim()) issues.push({ step: 2, label: 'Nom obligatoire', severity: 'error' });
+    if (!id.prenom?.trim()) issues.push({ step: 2, label: 'Prenom obligatoire', severity: 'error' });
+    if (!this.cinForm.value.numero?.trim()) issues.push({ step: 2, label: 'CIN obligatoire', severity: 'error' });
+    if (!id.sexe) issues.push({ step: 2, label: 'Sexe obligatoire', severity: 'error' });
+    if (!id.dateNaissance) issues.push({ step: 2, label: 'Date de naissance obligatoire', severity: 'error' });
+    if (!this.cinFileIsSet()) issues.push({ step: 2, label: 'Scan CIN manquant', severity: 'error' });
+    if (!this.photoIsSet()) issues.push({ step: 2, label: 'Photo de profil obligatoire', severity: 'error' });
+
+    // Step 3 — adresse
+    if (!c.adresse?.adresse?.trim()) issues.push({ step: 3, label: 'Adresse obligatoire', severity: 'error' });
+    if (!c.adresse?.ville?.trim()) issues.push({ step: 3, label: 'Ville obligatoire', severity: 'error' });
+
+    // Step 3 — RIB
+    if (!this.ribIsSet()) issues.push({ step: 3, label: 'Attestation RIB obligatoire', severity: 'error' });
+
+    // Step 3 — conjoint si marie
+    if (this.showConjoint()) {
+      if (!c.conjoint?.nom?.trim()) issues.push({ step: 3, label: 'Nom du conjoint obligatoire (situation : Marie/e)', severity: 'error' });
+      if (!c.conjoint?.prenom?.trim()) issues.push({ step: 3, label: 'Prenom du conjoint obligatoire', severity: 'error' });
+      if (!c.conjoint?.cin?.trim()) issues.push({ step: 3, label: 'CIN du conjoint obligatoire', severity: 'error' });
+      if (!this.mariageIsSet()) issues.push({ step: 3, label: 'Acte de mariage obligatoire', severity: 'error' });
+    }
+
+    // Step 3 — enfants + actes naissance
+    this.enfants.controls.forEach((_, i) => {
+      const enfant = this.enfants.at(i).value;
+      if (!enfant.nom?.trim() || !enfant.prenom?.trim()) {
+        issues.push({ step: 3, label: `Enfant #${i + 1} : nom et prenom obligatoires`, severity: 'error' });
+      }
+      if (!this.hasActeNaissance(i)) {
+        const childName = `${enfant.prenom || ''} ${enfant.nom || ''}`.trim() || `Enfant #${i + 1}`;
+        issues.push({ step: 3, label: `Acte de naissance manquant pour ${childName}`, severity: 'error' });
+      }
+    });
+
+    // Step 4 — diplomes
+    if (this.diplomes.length === 0) {
+      issues.push({ step: 4, label: 'Au moins un diplome est obligatoire', severity: 'error' });
+    }
+    if (this.diplomes.length > 0 && !this.diplomes.some(d => !!d.scanUrl)) {
+      issues.push({ step: 4, label: 'Au moins un diplome doit avoir un scan', severity: 'error' });
+    }
+
+    return issues;
+  }
+
+  recapErrors(): number {
+    return this.recapIssues().filter(i => i.severity === 'error').length;
+  }
+
+  recapWarnings(): number {
+    return this.recapIssues().filter(i => i.severity === 'warn').length;
+  }
+
+  canSubmit(): boolean {
+    return this.recapErrors() === 0;
+  }
+
+  hasActeNaissance(i: number): boolean {
+    return !!this.existingActeNaissanceByIndex.get(i)?.fileUrl
+        || !!this.pendingActeNaissanceByIndex.get(i);
+  }
+
+  acteNaissanceName(i: number): string {
+    const existing = this.existingActeNaissanceByIndex.get(i);
+    if (existing?.fileName) return existing.fileName;
+    const pending = this.pendingActeNaissanceByIndex.get(i);
+    return pending?.name ?? '';
+  }
+
+  acteNaissanceUrl(i: number): string | undefined {
+    return this.existingActeNaissanceByIndex.get(i)?.fileUrl;
+  }
+
+  /** Every child whose birth certificate is still missing. */
+  enfantsWithoutActe(): number[] {
+    const missing: number[] = [];
+    this.enfants.controls.forEach((_, i) => {
+      if (!this.hasActeNaissance(i)) missing.push(i + 1);
+    });
+    return missing;
   }
 
   private patchFromOnboarding(): void {
@@ -368,12 +777,17 @@ export class AgentOnboardingWizardComponent implements OnInit {
     const banqueSan = this.sanitizeObject(contact.coordonneesBancaires ?? {});
     const hasBanque = Object.keys(banqueSan).length > 0;
 
+    // Backend rejects situation='M' when conjoint is not yet provided.
+    // Since conjoint is filled in step 3, we defer sending situation='M' until then.
+    const conjointReady = this.hasConjoint(contact.conjoint);
+    const situationToSend = (id.situation === 'M' && !conjointReady) ? undefined : (id.situation || undefined);
+
     const payload: Partial<AgentCreateRequest> = {
       matriculeId: a.matricule?.id ?? null,
       nom: id.nom,
       prenom: id.prenom,
       sexe: id.sexe,
-      situation: id.situation || undefined,
+      situation: situationToSend,
       dateNaissance: this.toIsoDate(id.dateNaissance),
       nomTuteurAr: id.nomTuteurAr || undefined,
       prenomTuteurAr: id.prenomTuteurAr || undefined,
@@ -393,8 +807,12 @@ export class AgentOnboardingWizardComponent implements OnInit {
     if (cinValue) payload.cin = cinValue;
     if (hasAdresse) payload.adresses = [adresseSan as any];
     if (hasBanque) payload.coordonneesBancaires = banqueSan as any;
+
+    // Recursively strip empty strings so Jackson can coerce optional enums
+    // (situation, sexe, ...) to null instead of failing on empty values.
+    const cleanPayload = stripEmptyStrings(payload);
     this.saving.set(true);
-    this.service.updateProfile(payload)
+    this.service.updateProfile(cleanPayload)
       .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: (o) => {
@@ -438,10 +856,13 @@ export class AgentOnboardingWizardComponent implements OnInit {
       situation: [''],
       niveauScolaire: ['']
     }));
+    this.hydrateSlotsFromExistingDocs();
   }
 
   removeEnfant(i: number): void {
+    this.pendingActeNaissanceByIndex.delete(i);
     this.enfants.removeAt(i);
+    this.hydrateSlotsFromExistingDocs();
   }
 
   // ----- Step 4 - CIN -----
@@ -705,6 +1126,23 @@ export class AgentOnboardingWizardComponent implements OnInit {
       ToastHelper.showError(this.messageService, 'Identite : champs obligatoires manquants.');
       return false;
     }
+    if (!this.photoIsSet()) {
+      ToastHelper.showError(this.messageService, 'Photo de profil obligatoire.');
+      return false;
+    }
+    if (this.cinForm.invalid) {
+      this.cinForm.markAllAsTouched();
+      ToastHelper.showError(this.messageService, 'CIN : numero obligatoire.');
+      return false;
+    }
+    if (!this.cin?.fileUrl) {
+      ToastHelper.showError(this.messageService, 'Scan CIN obligatoire.');
+      return false;
+    }
+    if (this.isMarried() && !this.mariageIsSet()) {
+      ToastHelper.showError(this.messageService, 'Acte de mariage obligatoire pour les agents maries.');
+      return false;
+    }
     return true;
   }
 
@@ -714,12 +1152,44 @@ export class AgentOnboardingWizardComponent implements OnInit {
       ToastHelper.showError(this.messageService, 'Adresse principale obligatoire.');
       return false;
     }
+    if (!this.ribIsSet()) {
+      ToastHelper.showError(this.messageService, 'Attestation RIB obligatoire.');
+      return false;
+    }
+    const missingEnfants = this.enfantsWithoutActe();
+    if (missingEnfants.length) {
+      ToastHelper.showError(
+        this.messageService,
+        `Acte de naissance manquant pour l'enfant ${missingEnfants.join(', ')}.`
+      );
+      return false;
+    }
     return true;
   }
 
   private validateDocuments(): boolean {
+    if (!this.photoIsSet()) {
+      ToastHelper.showError(this.messageService, 'Photo de profil obligatoire.');
+      return false;
+    }
     if (!this.cin || !this.cin.fileUrl) {
       ToastHelper.showError(this.messageService, 'CIN : informations + scan obligatoires.');
+      return false;
+    }
+    if (!this.ribIsSet()) {
+      ToastHelper.showError(this.messageService, 'Attestation RIB obligatoire.');
+      return false;
+    }
+    if (this.isMarried() && !this.mariageIsSet()) {
+      ToastHelper.showError(this.messageService, 'Acte de mariage obligatoire pour les agents maries.');
+      return false;
+    }
+    const missingEnfants = this.enfantsWithoutActe();
+    if (missingEnfants.length) {
+      ToastHelper.showError(
+        this.messageService,
+        `Acte de naissance manquant pour l'enfant ${missingEnfants.join(', ')}.`
+      );
       return false;
     }
     if (this.diplomes.length === 0) {

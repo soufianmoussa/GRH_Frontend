@@ -61,7 +61,7 @@
       <p-step [value]="1">Administratif</p-step>
       <p-step [value]="2">Identite</p-step>
       <p-step [value]="3">Coordonnees</p-step>
-      <p-step [value]="4">Documents</p-step>
+      <p-step [value]="4">Etudes &amp; formations</p-step>
       <p-step [value]="5">Recapitulatif</p-step>
     </p-step-list>
 
@@ -157,6 +157,47 @@
             </header>
 
             <form [formGroup]="identityForm">
+              <!-- ============== Photo de profil (preview visuelle) ============== -->
+              <fieldset class="form-section profile-photo-section">
+                <legend><i class="pi pi-camera"></i> Photo de profil <span class="req">*</span></legend>
+
+                <div class="photo-zone">
+                  <div class="photo-zone__preview" [class.has-image]="!!photoPreviewUrl">
+                    <img *ngIf="photoPreviewUrl" [src]="photoPreviewUrl" alt="Photo de profil" />
+                    <i *ngIf="!photoPreviewUrl" class="pi pi-user placeholder-icon"></i>
+                  </div>
+
+                  <div class="photo-zone__body">
+                    <strong>Photo d'identite professionnelle</strong>
+                    <p class="photo-hint">
+                      <i class="pi pi-info-circle"></i>
+                      <span>
+                        Utilisez une photo <strong>recente</strong>, <strong>de face</strong>, sur fond <strong>neutre</strong>,
+                        avec une tenue <strong>professionnelle</strong>. Evitez les selfies, lunettes de soleil ou photos de groupe.
+                        Cette image apparaitra sur votre fiche et les documents officiels.
+                      </span>
+                    </p>
+                    <small class="muted">Formats acceptes : JPEG, PNG, WebP &mdash; 10&nbsp;Mo max.</small>
+
+                    <div class="photo-zone__actions">
+                      <label class="file-input-btn">
+                        <input type="file" accept="image/jpeg,image/png,image/webp" (change)="onPhotoFileSelected($event)" />
+                        <i [class]="photoPreviewUrl ? 'pi pi-refresh' : 'pi pi-camera'"></i>
+                        <span>{{ photoPreviewUrl ? 'Changer la photo' : 'Televerser une photo' }}</span>
+                      </label>
+                      <p-button *ngIf="photoPreviewUrl"
+                                label="Retirer l'apercu"
+                                icon="pi pi-times"
+                                severity="secondary"
+                                [text]="true"
+                                size="small"
+                                (onClick)="removePhoto()">
+                      </p-button>
+                    </div>
+                  </div>
+                </div>
+              </fieldset>
+
               <fieldset class="form-section">
                 <legend><i class="pi pi-user"></i> Informations personnelles</legend>
                 <div class="form-grid">
@@ -168,13 +209,17 @@
                     <label>Prenom <span class="req">*</span></label>
                     <input pInputText formControlName="prenom" placeholder="Votre prenom" />
                   </div>
+                  <div class="field" [formGroup]="cinForm">
+                    <label>CIN <span class="req">*</span></label>
+                    <input pInputText formControlName="numero" placeholder="Ex : AA123456" />
+                  </div>
                   <div class="field">
                     <label>Sexe <span class="req">*</span></label>
-                    <p-select formControlName="sexe" [options]="sexeOptions" optionLabel="label" optionValue="value" placeholder="Choisir"></p-select>
+                    <p-select formControlName="sexe" [options]="sexeOptions" optionLabel="label" optionValue="value" placeholder="Choisir" appendTo="body"></p-select>
                   </div>
                   <div class="field">
                     <label>Situation familiale</label>
-                    <p-select formControlName="situation" [options]="situationOptions" optionLabel="label" optionValue="value" placeholder="Choisir" [showClear]="true"></p-select>
+                    <p-select formControlName="situation" [options]="situationOptions" optionLabel="label" optionValue="value" placeholder="Choisir" [showClear]="true" appendTo="body"></p-select>
                   </div>
                   <div class="field">
                     <label>Date de naissance <span class="req">*</span></label>
@@ -183,7 +228,39 @@
                   <div class="field">
                     <label>Nombre d'enfants</label>
                     <p-inputnumber formControlName="numEnfant" [min]="0" [showButtons]="true" buttonLayout="horizontal"
+                      [disabled]="identityForm.value.situation === 'C'"
                       incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus"></p-inputnumber>
+                    <small *ngIf="identityForm.value.situation === 'C'" class="muted">
+                      <i class="pi pi-info-circle"></i> Force a 0 pour un agent celibataire.
+                    </small>
+                  </div>
+                </div>
+
+                <!-- Upload CIN scan (inside same fieldset, mirror admin) -->
+                <div class="upload-zone" [class.has-file]="cinFileIsSet()">
+                  <div class="upload-zone__icon">
+                    <i [class]="cinFileIsSet() ? 'pi pi-file-check' : 'pi pi-id-card'"></i>
+                  </div>
+                  <div class="upload-zone__body">
+                    <strong>Scan de la CIN <span class="req">*</span></strong>
+                    <small *ngIf="!cinFileIsSet()">PDF, JPG, PNG ou WebP &mdash; 10&nbsp;Mo max</small>
+                    <small *ngIf="cinFileIsSet()" class="file-meta">
+                      <i class="pi pi-paperclip"></i>
+                      <span *ngIf="pendingCinFile">{{ pendingCinFile.name }}</span>
+                      <a *ngIf="!pendingCinFile && cin?.fileUrl"
+                         [href]="cin?.fileUrl" target="_blank" rel="noopener noreferrer">
+                        {{ cin?.fileName || 'Ouvrir le fichier' }}
+                      </a>
+                    </small>
+                  </div>
+                  <div class="upload-zone__actions">
+                    <label class="file-input-btn">
+                      <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" (change)="onCinFileSelected($event)" />
+                      <i [class]="cinFileIsSet() ? 'pi pi-refresh' : 'pi pi-upload'"></i>
+                      <span>{{ cinFileIsSet() ? 'Remplacer' : 'Televerser' }}</span>
+                    </label>
+                    <p-button label="Enregistrer infos CIN" icon="pi pi-save" severity="secondary" [outlined]="true" size="small"
+                              [loading]="saving()" (onClick)="saveCin()"></p-button>
                   </div>
                 </div>
               </fieldset>
@@ -283,21 +360,54 @@
                     <input pInputText formControlName="iban" />
                   </div>
                 </div>
+
+                <!-- ============== Attestation RIB (scan) ============== -->
+                <div class="rib-attestation-block">
+                  <h4 class="subsection-title">
+                    <i class="pi pi-file-pdf"></i>
+                    Attestation RIB <span class="req">*</span>
+                  </h4>
+                  <p class="hint hint--small">
+                    <i class="pi pi-info-circle"></i>
+                    Document fourni par votre banque attestant de votre RIB. PDF, JPG, PNG ou WebP &mdash; 10&nbsp;Mo max.
+                  </p>
+                  <div class="upload-zone" [class.has-file]="ribIsSet()">
+                    <div class="upload-zone__icon">
+                      <i [class]="ribIsSet() ? 'pi pi-file-check' : 'pi pi-cloud-upload'"></i>
+                    </div>
+                    <div class="upload-zone__body">
+                      <strong *ngIf="!ribIsSet()">Televerser l'attestation RIB</strong>
+                      <strong *ngIf="ribIsSet()">Attestation RIB televersee</strong>
+                      <small *ngIf="!ribIsSet()">PDF, JPG, PNG ou WebP &mdash; 10&nbsp;Mo max</small>
+                      <a *ngIf="existingRib?.fileUrl" [href]="existingRib?.fileUrl" target="_blank" class="file-link">
+                        <i class="pi pi-external-link"></i> {{ existingRib?.fileName || 'Ouvrir le fichier' }}
+                      </a>
+                    </div>
+                    <div class="upload-zone__actions">
+                      <label class="file-input-btn">
+                        <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp"
+                               (change)="onRibFileSelected($event)" />
+                        <i [class]="ribIsSet() ? 'pi pi-refresh' : 'pi pi-upload'"></i>
+                        <span>{{ ribIsSet() ? 'Remplacer' : 'Televerser' }}</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
               </fieldset>
 
-              <fieldset class="form-section">
-                <legend><i class="pi pi-heart"></i> Conjoint (si marie/e)</legend>
+              <fieldset class="form-section" *ngIf="showConjoint()">
+                <legend><i class="pi pi-heart"></i> Conjoint <span class="req">*</span></legend>
                 <div class="form-grid" formGroupName="conjoint">
                   <div class="field">
-                    <label>Nom</label>
+                    <label>Nom <span class="req">*</span></label>
                     <input pInputText formControlName="nom" />
                   </div>
                   <div class="field">
-                    <label>Prenom</label>
+                    <label>Prenom <span class="req">*</span></label>
                     <input pInputText formControlName="prenom" />
                   </div>
                   <div class="field">
-                    <label>CIN</label>
+                    <label>CIN <span class="req">*</span></label>
                     <input pInputText formControlName="cin" />
                   </div>
                   <div class="field">
@@ -309,9 +419,42 @@
                     <input pInputText formControlName="profession" />
                   </div>
                 </div>
+
+                <!-- Acte de mariage upload INSIDE conjoint fieldset (mirror admin) -->
+                <div class="upload-zone" [class.has-file]="mariageIsSet()">
+                  <div class="upload-zone__icon">
+                    <i [class]="mariageIsSet() ? 'pi pi-file-check' : 'pi pi-heart-fill'"></i>
+                  </div>
+                  <div class="upload-zone__body">
+                    <strong>Acte de mariage <span class="req">*</span></strong>
+                    <small *ngIf="!mariageIsSet()">Document obligatoire pour valider le statut marital</small>
+                    <small *ngIf="mariageIsSet()" class="file-meta">
+                      <i class="pi pi-paperclip"></i>
+                      <a *ngIf="existingMariage?.fileUrl && !pendingMariageFile"
+                         [href]="existingMariage?.fileUrl" target="_blank" rel="noopener noreferrer">
+                        {{ existingMariage?.fileName || 'Ouvrir le fichier' }}
+                      </a>
+                      <span *ngIf="pendingMariageFile">{{ pendingMariageFile.name }}</span>
+                    </small>
+                  </div>
+                  <div class="upload-zone__actions">
+                    <label class="file-input-btn">
+                      <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp"
+                             (change)="onMariageFileSelected($event)" />
+                      <i [class]="mariageIsSet() ? 'pi pi-refresh' : 'pi pi-upload'"></i>
+                      <span>{{ mariageIsSet() ? 'Remplacer' : 'Televerser' }}</span>
+                    </label>
+                  </div>
+                </div>
               </fieldset>
 
-              <fieldset class="form-section">
+              <!-- Hint when conjoint hidden because of widow/divorced but enfants still visible -->
+              <div class="situation-hint" *ngIf="!showConjoint() && identityForm.value.situation && showEnfants()">
+                <i class="pi pi-info-circle"></i>
+                <span>Aucune information de conjoint a renseigner pour cette situation familiale.</span>
+              </div>
+
+              <fieldset class="form-section" *ngIf="showEnfants()">
                 <legend><i class="pi pi-users"></i> Enfants</legend>
 
                 <div class="children-list">
@@ -346,6 +489,39 @@
                         <input pInputText formControlName="niveauScolaire" />
                       </div>
                     </div>
+
+                    <!-- Acte de naissance enfant -->
+                    <div class="child-row__acte">
+                      <div class="child-row__acte-head">
+                        <h5>
+                          <i class="pi pi-file"></i>
+                          Acte de naissance <span class="req">*</span>
+                        </h5>
+                        <p-tag *ngIf="hasActeNaissance(i)" severity="success" value="Televerse" [rounded]="true"></p-tag>
+                        <p-tag *ngIf="!hasActeNaissance(i)" severity="warn" value="Manquant" [rounded]="true"></p-tag>
+                      </div>
+                      <div class="upload-zone upload-zone--compact" [class.has-file]="hasActeNaissance(i)">
+                        <div class="upload-zone__icon">
+                          <i [class]="hasActeNaissance(i) ? 'pi pi-file-check' : 'pi pi-cloud-upload'"></i>
+                        </div>
+                        <div class="upload-zone__body">
+                          <strong *ngIf="!hasActeNaissance(i)">Televerser l'acte de naissance</strong>
+                          <strong *ngIf="hasActeNaissance(i)">{{ acteNaissanceName(i) || 'Fichier televerse' }}</strong>
+                          <small *ngIf="!hasActeNaissance(i)">Renseignez d'abord le prenom/nom de l'enfant</small>
+                          <a *ngIf="acteNaissanceUrl(i)" [href]="acteNaissanceUrl(i)" target="_blank" class="file-link">
+                            <i class="pi pi-external-link"></i> Ouvrir le fichier
+                          </a>
+                        </div>
+                        <div class="upload-zone__actions">
+                          <label class="file-input-btn">
+                            <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp"
+                                   (change)="onActeNaissanceFileSelected(i, $event)" />
+                            <i [class]="hasActeNaissance(i) ? 'pi pi-refresh' : 'pi pi-upload'"></i>
+                            <span>{{ hasActeNaissance(i) ? 'Remplacer' : 'Televerser' }}</span>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
                   </div>
 
                   <div class="children-empty" *ngIf="!enfants.controls.length">
@@ -358,6 +534,15 @@
                           styleClass="mt-2"
                           (onClick)="addEnfant()"></p-button>
               </fieldset>
+
+              <!-- Hint when both conjoint AND enfants are hidden (single) -->
+              <div class="situation-hint situation-hint--single" *ngIf="!showConjoint() && !showEnfants()">
+                <i class="pi pi-info-circle"></i>
+                <span>
+                  Vous etes <strong>celibataire</strong> : les sections "Conjoint" et "Enfants" ne sont pas applicables.
+                  Si la situation familiale est incorrecte, modifiez-la a l'etape "Identite".
+                </span>
+              </div>
             </form>
 
             <footer class="step-card__actions">
@@ -370,72 +555,21 @@
         </ng-template>
       </p-step-panel>
 
-      <!-- ================= STEP 4 — Documents ================= -->
+      <!-- ================= STEP 4 — Etudes & formations ================= -->
       <p-step-panel [value]="4">
         <ng-template #content let-activate="activateCallback">
           <section class="step-card">
             <header class="step-card__head">
               <div class="step-card__head-text">
                 <span class="step-tag">Etape 4 sur 5</span>
-                <h3>Documents justificatifs</h3>
+                <h3>Etudes et formations</h3>
                 <p class="hint">
                   <i class="pi pi-info-circle"></i>
-                  CIN obligatoire (informations + scan). Au moins un diplome avec scan est requis. Les formations sont optionnelles.
+                  Au moins un diplome avec scan est obligatoire. Les formations et certifications complementaires sont optionnelles.
                   Formats acceptes&nbsp;: PDF, JPG, PNG, WebP &mdash; 10&nbsp;Mo max.
                 </p>
               </div>
             </header>
-
-            <!-- ============== CIN ============== -->
-            <fieldset class="form-section">
-              <legend>
-                <i class="pi pi-id-card"></i>
-                Carte Nationale d'Identite <span class="req">*</span>
-              </legend>
-
-              <form [formGroup]="cinForm" class="form-grid">
-                <div class="field">
-                  <label>Numero CIN <span class="req">*</span></label>
-                  <input pInputText formControlName="numero" />
-                </div>
-                <div class="field">
-                  <label>Date de delivrance</label>
-                  <p-datepicker formControlName="dateDelivrance" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
-                </div>
-                <div class="field">
-                  <label>Date d'expiration</label>
-                  <p-datepicker formControlName="dateExpiration" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
-                </div>
-                <div class="field">
-                  <label>Lieu de delivrance</label>
-                  <input pInputText formControlName="lieuDelivrance" />
-                </div>
-              </form>
-
-              <!-- Upload zone -->
-              <div class="upload-zone" [class.has-file]="!!cin?.fileUrl">
-                <div class="upload-zone__icon">
-                  <i [class]="cin?.fileUrl ? 'pi pi-file-check' : 'pi pi-cloud-upload'"></i>
-                </div>
-                <div class="upload-zone__body">
-                  <strong *ngIf="!cin?.fileUrl">Televerser le scan de la CIN</strong>
-                  <strong *ngIf="cin?.fileUrl">Scan CIN televerse</strong>
-                  <small *ngIf="!cin?.fileUrl">PDF, JPG, PNG ou WebP &mdash; 10&nbsp;Mo max</small>
-                  <a *ngIf="cin?.fileUrl" [href]="cin?.fileUrl" target="_blank" class="file-link">
-                    <i class="pi pi-external-link"></i> {{ cin?.fileName || 'Ouvrir le fichier' }}
-                  </a>
-                </div>
-                <div class="upload-zone__actions">
-                  <label class="file-input-btn">
-                    <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" (change)="onCinFileSelected($event)" />
-                    <i [class]="cin?.fileUrl ? 'pi pi-refresh' : 'pi pi-upload'"></i>
-                    <span>{{ cin?.fileUrl ? 'Remplacer' : 'Televerser' }}</span>
-                  </label>
-                  <p-button label="Enregistrer les informations" icon="pi pi-save" severity="secondary" [outlined]="true" size="small"
-                            [loading]="saving()" (onClick)="saveCin()"></p-button>
-                </div>
-              </div>
-            </fieldset>
 
             <!-- ============== Diplomes ============== -->
             <fieldset class="form-section">
@@ -499,11 +633,68 @@
               </div>
             </fieldset>
 
+            <!-- ============== Certifications (local-only) ============== -->
+            <fieldset class="form-section">
+              <legend><i class="pi pi-verified"></i> Certifications <span class="muted">(optionnel)</span></legend>
+
+              <div class="section-toolbar">
+                <span class="muted">
+                  <i class="pi pi-list"></i>
+                  {{ certifications.length }} certification(s) enregistree(s)
+                </span>
+                <p-button label="Ajouter une certification" icon="pi pi-plus" size="small" (onClick)="openNewCertification()"></p-button>
+              </div>
+
+              <div class="primTable">
+                <p-table [value]="certifications" responsiveLayout="scroll" styleClass="p-datatable-sm">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>Intitule</th>
+                      <th>Organisme</th>
+                      <th>Reference</th>
+                      <th>Date obtention</th>
+                      <th>Date expiration</th>
+                      <th>Certificat</th>
+                      <th style="width: 110px;">Actions</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-c>
+                    <tr>
+                      <td><strong>{{ c.intitule }}</strong></td>
+                      <td>{{ c.organisme || '-' }}</td>
+                      <td>{{ c.reference || '-' }}</td>
+                      <td>{{ c.dateObtention | date:'dd/MM/yyyy' }}</td>
+                      <td>{{ (c.dateExpiration | date:'dd/MM/yyyy') || '-' }}</td>
+                      <td>
+                        <span *ngIf="c.file" class="file-link"><i class="pi pi-paperclip"></i> {{ c.file.name }}</span>
+                        <p-tag *ngIf="!c.file" severity="warn" value="Aucun certificat" [rounded]="true"></p-tag>
+                      </td>
+                      <td class="row-actions">
+                        <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" pTooltip="Modifier" (onClick)="openEditCertification(c)"></p-button>
+                        <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" pTooltip="Supprimer" (onClick)="deleteCertification(c)"></p-button>
+                      </td>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="emptymessage">
+                    <tr>
+                      <td colspan="7" class="empty">
+                        <div class="empty-state">
+                          <i class="pi pi-verified"></i>
+                          <strong>Aucune certification enregistree</strong>
+                          <small>Ajoutez vos certifications professionnelles si vous en possedez.</small>
+                        </div>
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </div>
+            </fieldset>
+
             <!-- ============== Formations ============== -->
             <fieldset class="form-section">
               <legend>
                 <i class="pi pi-book"></i>
-                Formations / certificats <span class="muted">(optionnel)</span>
+                Formations / stages <span class="muted">(optionnel)</span>
               </legend>
 
               <div class="section-toolbar">
@@ -583,94 +774,371 @@
               </div>
             </header>
 
+            <!-- ====== Validation summary panel ====== -->
+            <div class="validation-panel"
+                 [class.validation-panel--ok]="recapErrors() === 0 && recapWarnings() === 0"
+                 [class.validation-panel--warn]="recapErrors() === 0 && recapWarnings() > 0"
+                 [class.validation-panel--error]="recapErrors() > 0">
+
+              <div class="validation-panel__head">
+                <i class="pi"
+                   [ngClass]="recapErrors() === 0
+                     ? (recapWarnings() === 0 ? 'pi-check-circle' : 'pi-info-circle')
+                     : 'pi-exclamation-triangle'"></i>
+                <div class="validation-panel__title">
+                  <strong *ngIf="recapErrors() === 0 && recapWarnings() === 0">Tout est en ordre, vous pouvez soumettre votre dossier.</strong>
+                  <strong *ngIf="recapErrors() === 0 && recapWarnings() > 0">Dossier soumissible — {{ recapWarnings() }} avertissement(s) optionnel(s).</strong>
+                  <strong *ngIf="recapErrors() > 0">{{ recapErrors() }} erreur(s) bloquante(s) a corriger avant soumission.</strong>
+                  <small *ngIf="recapWarnings() > 0 && recapErrors() > 0">+ {{ recapWarnings() }} avertissement(s)</small>
+                </div>
+              </div>
+
+              <ul class="validation-list" *ngIf="recapIssues().length">
+                <li *ngFor="let issue of recapIssues()"
+                    class="validation-item"
+                    [class.validation-item--error]="issue.severity === 'error'"
+                    [class.validation-item--warn]="issue.severity === 'warn'">
+                  <i class="pi" [ngClass]="issue.severity === 'error' ? 'pi-times-circle' : 'pi-exclamation-circle'"></i>
+                  <span class="validation-item__label">{{ issue.label }}</span>
+                  <button type="button" class="validation-item__jump" (click)="goTo(issue.step, activate)">
+                    <i class="pi pi-arrow-right"></i>
+                    Etape {{ issue.step }}
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            <!-- ====== Detailed sections ====== -->
             <div class="recap-grid">
 
-              <!-- Identite recap -->
-              <div class="recap-card">
+              <!-- === Identite === -->
+              <div class="recap-card recap-card--full">
                 <div class="recap-card__head">
                   <span class="recap-card__icon recap-card__icon--blue"><i class="pi pi-user"></i></span>
                   <div>
-                    <strong>Identite</strong>
-                    <small>Informations personnelles</small>
+                    <strong>Identite et etat civil</strong>
+                    <small>Renseigne a l'etape 2</small>
                   </div>
+                  <button type="button" class="recap-card__edit" (click)="goTo(2, activate)" pTooltip="Modifier">
+                    <i class="pi pi-pencil"></i>
+                  </button>
                 </div>
-                <ul class="recap-list">
-                  <li>
-                    <span class="recap-list__label">Nom complet</span>
-                    <span class="recap-list__value">{{ identityForm.value.prenom }} {{ identityForm.value.nom }}</span>
-                  </li>
-                  <li>
-                    <span class="recap-list__label">CIN</span>
-                    <span class="recap-list__value">{{ cinForm.value.numero || onboarding?.agent?.cin || '-' }}</span>
-                  </li>
-                  <li>
-                    <span class="recap-list__label">Date de naissance</span>
-                    <span class="recap-list__value">{{ (identityForm.value.dateNaissance | date:'dd/MM/yyyy') || '-' }}</span>
-                  </li>
-                  <li>
-                    <span class="recap-list__label">Situation</span>
-                    <span class="recap-list__value">{{ identityForm.value.situation || '-' }}</span>
-                  </li>
-                </ul>
+
+                <div class="recap-card__body recap-card__body--cols">
+                  <div class="recap-photo" *ngIf="photoPreviewUrl">
+                    <img [src]="photoPreviewUrl" alt="Photo de profil" />
+                  </div>
+
+                  <ul class="recap-list recap-list--two-col">
+                    <li>
+                      <span class="recap-list__label">Nom</span>
+                      <span class="recap-list__value" [class.is-missing]="!identityForm.value.nom">
+                        {{ identityForm.value.nom || 'Non renseigne' }}
+                      </span>
+                    </li>
+                    <li>
+                      <span class="recap-list__label">Prenom</span>
+                      <span class="recap-list__value" [class.is-missing]="!identityForm.value.prenom">
+                        {{ identityForm.value.prenom || 'Non renseigne' }}
+                      </span>
+                    </li>
+                    <li>
+                      <span class="recap-list__label">CIN</span>
+                      <span class="recap-list__value mono" [class.is-missing]="!cinForm.value.numero">
+                        {{ cinForm.value.numero || 'Non renseigne' }}
+                      </span>
+                    </li>
+                    <li>
+                      <span class="recap-list__label">Sexe</span>
+                      <span class="recap-list__value" [class.is-missing]="!identityForm.value.sexe">
+                        {{ sexeLabel(identityForm.value.sexe) }}
+                      </span>
+                    </li>
+                    <li>
+                      <span class="recap-list__label">Date de naissance</span>
+                      <span class="recap-list__value" [class.is-missing]="!identityForm.value.dateNaissance">
+                        {{ (identityForm.value.dateNaissance | date:'dd/MM/yyyy') || 'Non renseigne' }}
+                      </span>
+                    </li>
+                    <li>
+                      <span class="recap-list__label">Situation familiale</span>
+                      <span class="recap-list__value">{{ situationLabel(identityForm.value.situation) }}</span>
+                    </li>
+                    <li>
+                      <span class="recap-list__label">Nombre d'enfants</span>
+                      <span class="recap-list__value">{{ identityForm.value.numEnfant ?? 0 }}</span>
+                    </li>
+                    <li>
+                      <span class="recap-list__label">Photo de profil</span>
+                      <p-tag [severity]="photoIsSet() ? 'success' : 'danger'"
+                             [value]="photoIsSet() ? 'Jointe' : 'Manquante'"
+                             [rounded]="true"></p-tag>
+                    </li>
+                    <li>
+                      <span class="recap-list__label">Scan CIN</span>
+                      <p-tag [severity]="cinFileIsSet() ? 'success' : 'danger'"
+                             [value]="cinFileIsSet() ? 'Joint' : 'Manquant (obligatoire)'"
+                             [rounded]="true"></p-tag>
+                    </li>
+                  </ul>
+                </div>
+
+                <!-- Tuteur sub-section (only if filled) -->
+                <div *ngIf="identityForm.value.nomTuteurAr || identityForm.value.prenomTuteurAr || identityForm.value.pprTuteur || identityForm.value.dateTutorat"
+                     class="recap-subsection">
+                  <h5><i class="pi pi-users"></i> Tuteur</h5>
+                  <ul class="recap-list recap-list--two-col">
+                    <li><span class="recap-list__label">Nom (Ar)</span><span class="recap-list__value">{{ identityForm.value.nomTuteurAr || '-' }}</span></li>
+                    <li><span class="recap-list__label">Prenom (Ar)</span><span class="recap-list__value">{{ identityForm.value.prenomTuteurAr || '-' }}</span></li>
+                    <li><span class="recap-list__label">PPR</span><span class="recap-list__value">{{ identityForm.value.pprTuteur || '-' }}</span></li>
+                    <li><span class="recap-list__label">Date du tutorat</span><span class="recap-list__value">{{ (identityForm.value.dateTutorat | date:'dd/MM/yyyy') || '-' }}</span></li>
+                  </ul>
+                </div>
               </div>
 
-              <!-- Coordonnees recap -->
+              <!-- === Adresse === -->
               <div class="recap-card">
                 <div class="recap-card__head">
                   <span class="recap-card__icon recap-card__icon--green"><i class="pi pi-map-marker"></i></span>
                   <div>
-                    <strong>Coordonnees</strong>
-                    <small>Adresse & banque</small>
+                    <strong>Adresse principale</strong>
+                    <small>Renseignee a l'etape 3</small>
                   </div>
+                  <button type="button" class="recap-card__edit" (click)="goTo(3, activate)" pTooltip="Modifier">
+                    <i class="pi pi-pencil"></i>
+                  </button>
                 </div>
                 <ul class="recap-list">
                   <li>
                     <span class="recap-list__label">Adresse</span>
-                    <span class="recap-list__value">{{ contactForm.value.adresse?.adresse || '-' }}</span>
+                    <span class="recap-list__value" [class.is-missing]="!contactForm.value.adresse?.adresse">
+                      {{ contactForm.value.adresse?.adresse || 'Non renseigne' }}
+                    </span>
+                  </li>
+                  <li>
+                    <span class="recap-list__label">Code postal</span>
+                    <span class="recap-list__value">{{ contactForm.value.adresse?.codePostal || '-' }}</span>
                   </li>
                   <li>
                     <span class="recap-list__label">Ville</span>
-                    <span class="recap-list__value">{{ contactForm.value.adresse?.ville || '-' }}</span>
-                  </li>
-                  <li>
-                    <span class="recap-list__label">Telephone</span>
-                    <span class="recap-list__value">{{ contactForm.value.adresse?.telephone || '-' }}</span>
-                  </li>
-                  <li>
-                    <span class="recap-list__label">Banque / RIB</span>
-                    <span class="recap-list__value">
-                      {{ contactForm.value.coordonneesBancaires?.banque || '-' }}
-                      <small *ngIf="contactForm.value.coordonneesBancaires?.rib"> &middot; {{ contactForm.value.coordonneesBancaires?.rib }}</small>
+                    <span class="recap-list__value" [class.is-missing]="!contactForm.value.adresse?.ville">
+                      {{ contactForm.value.adresse?.ville || 'Non renseigne' }}
                     </span>
+                  </li>
+                  <li><span class="recap-list__label">Pays</span><span class="recap-list__value">{{ contactForm.value.adresse?.pays || '-' }}</span></li>
+                  <li><span class="recap-list__label">Telephone</span><span class="recap-list__value">{{ contactForm.value.adresse?.telephone || '-' }}</span></li>
+                </ul>
+              </div>
+
+              <!-- === Banque === -->
+              <div class="recap-card">
+                <div class="recap-card__head">
+                  <span class="recap-card__icon recap-card__icon--blue"><i class="pi pi-credit-card"></i></span>
+                  <div>
+                    <strong>Coordonnees bancaires</strong>
+                    <small>Renseigne a l'etape 3</small>
+                  </div>
+                  <button type="button" class="recap-card__edit" (click)="goTo(3, activate)" pTooltip="Modifier">
+                    <i class="pi pi-pencil"></i>
+                  </button>
+                </div>
+                <ul class="recap-list">
+                  <li><span class="recap-list__label">Banque</span><span class="recap-list__value">{{ contactForm.value.coordonneesBancaires?.banque || '-' }}</span></li>
+                  <li><span class="recap-list__label">Compte</span><span class="recap-list__value">{{ contactForm.value.coordonneesBancaires?.compte || '-' }}</span></li>
+                  <li><span class="recap-list__label">RIB</span><span class="recap-list__value mono">{{ contactForm.value.coordonneesBancaires?.rib || '-' }}</span></li>
+                  <li><span class="recap-list__label">IBAN</span><span class="recap-list__value mono">{{ contactForm.value.coordonneesBancaires?.iban || '-' }}</span></li>
+                  <li>
+                    <span class="recap-list__label">Attestation RIB</span>
+                    <p-tag [severity]="ribIsSet() ? 'success' : 'danger'"
+                           [value]="ribIsSet() ? 'Jointe' : 'Manquante (obligatoire)'"
+                           [rounded]="true"></p-tag>
                   </li>
                 </ul>
               </div>
 
-              <!-- Documents recap -->
-              <div class="recap-card recap-card--full">
+              <!-- === Conjoint (only if married) === -->
+              <div class="recap-card" *ngIf="showConjoint()">
                 <div class="recap-card__head">
-                  <span class="recap-card__icon recap-card__icon--purple"><i class="pi pi-folder"></i></span>
+                  <span class="recap-card__icon recap-card__icon--purple"><i class="pi pi-heart"></i></span>
                   <div>
-                    <strong>Documents</strong>
-                    <small>Pieces justificatives</small>
+                    <strong>Conjoint</strong>
+                    <small>Situation : Marie(e)</small>
                   </div>
+                  <button type="button" class="recap-card__edit" (click)="goTo(3, activate)" pTooltip="Modifier">
+                    <i class="pi pi-pencil"></i>
+                  </button>
                 </div>
-                <ul class="recap-list recap-list--inline">
+                <ul class="recap-list">
+                  <li>
+                    <span class="recap-list__label">Nom</span>
+                    <span class="recap-list__value" [class.is-missing]="!contactForm.value.conjoint?.nom">
+                      {{ contactForm.value.conjoint?.nom || 'Non renseigne' }}
+                    </span>
+                  </li>
+                  <li>
+                    <span class="recap-list__label">Prenom</span>
+                    <span class="recap-list__value" [class.is-missing]="!contactForm.value.conjoint?.prenom">
+                      {{ contactForm.value.conjoint?.prenom || 'Non renseigne' }}
+                    </span>
+                  </li>
                   <li>
                     <span class="recap-list__label">CIN</span>
-                    <p-tag *ngIf="cin?.fileUrl" severity="success" value="Scan televerse" [rounded]="true"></p-tag>
-                    <p-tag *ngIf="!cin?.fileUrl" severity="warn" value="Scan manquant" [rounded]="true"></p-tag>
+                    <span class="recap-list__value mono" [class.is-missing]="!contactForm.value.conjoint?.cin">
+                      {{ contactForm.value.conjoint?.cin || 'Non renseigne' }}
+                    </span>
                   </li>
                   <li>
-                    <span class="recap-list__label">Diplomes</span>
-                    <p-tag [severity]="diplomes.length ? 'success' : 'warn'" [value]="diplomes.length + ' enregistre(s)'" [rounded]="true"></p-tag>
+                    <span class="recap-list__label">Date de naissance</span>
+                    <span class="recap-list__value">{{ (contactForm.value.conjoint?.dateNaissance | date:'dd/MM/yyyy') || '-' }}</span>
                   </li>
+                  <li><span class="recap-list__label">Profession</span><span class="recap-list__value">{{ contactForm.value.conjoint?.profession || '-' }}</span></li>
                   <li>
-                    <span class="recap-list__label">Formations</span>
-                    <p-tag severity="info" [value]="formations.length + ' enregistree(s)'" [rounded]="true"></p-tag>
+                    <span class="recap-list__label">Acte de mariage</span>
+                    <p-tag [severity]="mariageIsSet() ? 'success' : 'danger'"
+                           [value]="mariageIsSet() ? 'Joint' : 'Manquant (obligatoire)'"
+                           [rounded]="true"></p-tag>
                   </li>
                 </ul>
               </div>
+
+              <!-- === Enfants === -->
+              <div class="recap-card recap-card--full" *ngIf="enfants.length">
+                <div class="recap-card__head">
+                  <span class="recap-card__icon recap-card__icon--green"><i class="pi pi-users"></i></span>
+                  <div>
+                    <strong>Enfants ({{ enfants.length }})</strong>
+                    <small>Detail de chaque enfant</small>
+                  </div>
+                  <button type="button" class="recap-card__edit" (click)="goTo(3, activate)" pTooltip="Modifier">
+                    <i class="pi pi-pencil"></i>
+                  </button>
+                </div>
+
+                <div class="recap-children">
+                  <div *ngFor="let _ of enfants.controls; let i = index" class="recap-child"
+                       [class.is-incomplete]="!enfants.at(i).value.nom || !enfants.at(i).value.prenom">
+                    <div class="recap-child__head">
+                      <strong>
+                        <i class="pi pi-user"></i>
+                        Enfant #{{ i + 1 }}
+                      </strong>
+                      <p-tag *ngIf="hasActeNaissance(i)" severity="success" value="Acte de naissance joint" [rounded]="true"></p-tag>
+                      <p-tag *ngIf="!hasActeNaissance(i)" severity="danger" value="Acte de naissance manquant" [rounded]="true"></p-tag>
+                    </div>
+                    <ul class="recap-list recap-list--two-col">
+                      <li>
+                        <span class="recap-list__label">Nom</span>
+                        <span class="recap-list__value" [class.is-missing]="!enfants.at(i).value.nom">
+                          {{ enfants.at(i).value.nom || 'Non renseigne' }}
+                        </span>
+                      </li>
+                      <li>
+                        <span class="recap-list__label">Prenom</span>
+                        <span class="recap-list__value" [class.is-missing]="!enfants.at(i).value.prenom">
+                          {{ enfants.at(i).value.prenom || 'Non renseigne' }}
+                        </span>
+                      </li>
+                      <li><span class="recap-list__label">Date naissance</span><span class="recap-list__value">{{ (enfants.at(i).value.dateNaissance | date:'dd/MM/yyyy') || '-' }}</span></li>
+                      <li><span class="recap-list__label">Sexe</span><span class="recap-list__value">{{ sexeLabel(enfants.at(i).value.sexe) }}</span></li>
+                      <li><span class="recap-list__label">Niveau scolaire</span><span class="recap-list__value">{{ enfants.at(i).value.niveauScolaire || '-' }}</span></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <!-- === Diplomes === -->
+              <div class="recap-card recap-card--full">
+                <div class="recap-card__head">
+                  <span class="recap-card__icon recap-card__icon--purple"><i class="pi pi-graduation-cap"></i></span>
+                  <div>
+                    <strong>Diplomes ({{ diplomes.length }})</strong>
+                    <small>Au moins un avec scan est obligatoire</small>
+                  </div>
+                  <button type="button" class="recap-card__edit" (click)="goTo(4, activate)" pTooltip="Modifier">
+                    <i class="pi pi-pencil"></i>
+                  </button>
+                </div>
+
+                <div *ngIf="diplomes.length === 0" class="recap-empty">
+                  <i class="pi pi-exclamation-triangle"></i>
+                  <span>Aucun diplome enregistre — au moins un est obligatoire.</span>
+                </div>
+
+                <ul *ngIf="diplomes.length" class="recap-items-list">
+                  <li *ngFor="let d of diplomes" class="recap-item">
+                    <div class="recap-item__head">
+                      <strong>{{ d.niveau || 'Niveau inconnu' }}</strong>
+                      <span class="recap-item__sub" *ngIf="d.specialite">— {{ d.specialite }}</span>
+                    </div>
+                    <div class="recap-item__meta">
+                      <span *ngIf="d.etablissement"><i class="pi pi-building"></i> {{ d.etablissement }}</span>
+                      <span *ngIf="d.dateObtention"><i class="pi pi-calendar"></i> {{ d.dateObtention | date:'dd/MM/yyyy' }}</span>
+                      <span *ngIf="d.mention"><i class="pi pi-star"></i> {{ d.mention }}</span>
+                      <span *ngIf="d.moyenne"><i class="pi pi-percentage"></i> {{ d.moyenne }}/20</span>
+                    </div>
+                    <p-tag *ngIf="d.scanUrl" severity="success" value="Scan joint" [rounded]="true"></p-tag>
+                    <p-tag *ngIf="!d.scanUrl" severity="warn" value="Scan manquant" [rounded]="true"></p-tag>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- === Certifications === -->
+              <div class="recap-card" *ngIf="certifications.length">
+                <div class="recap-card__head">
+                  <span class="recap-card__icon recap-card__icon--blue"><i class="pi pi-verified"></i></span>
+                  <div>
+                    <strong>Certifications ({{ certifications.length }})</strong>
+                    <small>Optionnel</small>
+                  </div>
+                  <button type="button" class="recap-card__edit" (click)="goTo(4, activate)" pTooltip="Modifier">
+                    <i class="pi pi-pencil"></i>
+                  </button>
+                </div>
+                <ul class="recap-items-list">
+                  <li *ngFor="let c of certifications" class="recap-item">
+                    <div class="recap-item__head">
+                      <strong>{{ c.intitule }}</strong>
+                      <span class="recap-item__sub" *ngIf="c.organisme">— {{ c.organisme }}</span>
+                    </div>
+                    <div class="recap-item__meta">
+                      <span *ngIf="c.reference"><i class="pi pi-hashtag"></i> {{ c.reference }}</span>
+                      <span *ngIf="c.dateObtention"><i class="pi pi-calendar"></i> {{ c.dateObtention | date:'dd/MM/yyyy' }}</span>
+                      <span *ngIf="c.dateExpiration"><i class="pi pi-clock"></i> Expire {{ c.dateExpiration | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                    <p-tag *ngIf="c.file" severity="success" value="Certificat joint" [rounded]="true"></p-tag>
+                    <p-tag *ngIf="!c.file" severity="secondary" value="Pas de certificat" [rounded]="true"></p-tag>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- === Formations === -->
+              <div class="recap-card" *ngIf="formations.length">
+                <div class="recap-card__head">
+                  <span class="recap-card__icon recap-card__icon--green"><i class="pi pi-book"></i></span>
+                  <div>
+                    <strong>Formations &amp; stages ({{ formations.length }})</strong>
+                    <small>Optionnel</small>
+                  </div>
+                  <button type="button" class="recap-card__edit" (click)="goTo(4, activate)" pTooltip="Modifier">
+                    <i class="pi pi-pencil"></i>
+                  </button>
+                </div>
+                <ul class="recap-items-list">
+                  <li *ngFor="let f of formations" class="recap-item">
+                    <div class="recap-item__head">
+                      <strong>{{ f.intituleFormation }}</strong>
+                      <span class="recap-item__sub" *ngIf="f.intituleStage">— Stage : {{ f.intituleStage }}</span>
+                    </div>
+                    <div class="recap-item__meta">
+                      <span *ngIf="f.dateDebut"><i class="pi pi-calendar"></i> Du {{ f.dateDebut | date:'dd/MM/yyyy' }}</span>
+                      <span *ngIf="f.dateFin"><i class="pi pi-calendar-times"></i> au {{ f.dateFin | date:'dd/MM/yyyy' }}</span>
+                    </div>
+                    <p-tag *ngIf="f.certificateUrl" severity="success" value="Certificat joint" [rounded]="true"></p-tag>
+                    <p-tag *ngIf="!f.certificateUrl" severity="secondary" value="Pas de certificat" [rounded]="true"></p-tag>
+                  </li>
+                </ul>
+              </div>
+
             </div>
 
             <!-- Submission notice -->
@@ -685,7 +1153,11 @@
               <p-button label="Precedent" icon="pi pi-arrow-left" [outlined]="true" (onClick)="goTo(4, activate)"></p-button>
               <span class="spacer"></span>
               <p-button label="Soumettre mon dossier" icon="pi pi-send" severity="success"
-                        [loading]="submitting()" [disabled]="locked()" (onClick)="submit()"></p-button>
+                        [loading]="submitting()"
+                        [disabled]="locked() || !canSubmit()"
+                        [pTooltip]="!canSubmit() ? 'Corrigez les ' + recapErrors() + ' erreur(s) bloquante(s) ci-dessus' : 'Soumettre mon dossier'"
+                        tooltipPosition="top"
+                        (onClick)="submit()"></p-button>
             </footer>
           </section>
         </ng-template>
@@ -742,6 +1214,42 @@
   <ng-template pTemplate="footer">
     <p-button label="Annuler" severity="secondary" [outlined]="true" (onClick)="showDiplomeDialog=false"></p-button>
     <p-button label="Enregistrer" icon="pi pi-save" [loading]="saving()" (onClick)="saveDiplome()"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- =============== Certification dialog =============== -->
+<p-dialog header="Certification" [(visible)]="showCertificationDialog" [modal]="true" [draggable]="false"
+          [style]="{ width: '680px' }" styleClass="pdialogfon">
+  <form [formGroup]="certificationForm">
+    <div class="form-grid">
+      <div class="field col-span-2">
+        <label>Intitule <span class="req">*</span></label>
+        <input pInputText formControlName="intitule" placeholder="ex: PMP, AWS Solutions Architect..." />
+      </div>
+      <div class="field"><label>Organisme</label><input pInputText formControlName="organisme" placeholder="ex: PMI, AWS, Cisco..." /></div>
+      <div class="field"><label>Reference / numero</label><input pInputText formControlName="reference" /></div>
+      <div class="field">
+        <label>Date d'obtention <span class="req">*</span></label>
+        <p-datepicker formControlName="dateObtention" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+      </div>
+      <div class="field">
+        <label>Date d'expiration</label>
+        <p-datepicker formControlName="dateExpiration" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+      </div>
+      <div class="field col-span-2">
+        <label>Certificat</label>
+        <label class="file-input-btn file-input-btn--block">
+          <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" (change)="onCertificationFileSelected($event)" />
+          <i class="pi pi-upload"></i>
+          <span *ngIf="!pendingCertificationFile">Choisir un fichier (PDF, JPG, PNG, WebP)</span>
+          <span *ngIf="pendingCertificationFile">{{ pendingCertificationFile.name }}</span>
+        </label>
+      </div>
+    </div>
+  </form>
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" severity="secondary" [outlined]="true" (onClick)="showCertificationDialog=false"></p-button>
+    <p-button label="Enregistrer" icon="pi pi-save" (onClick)="saveCertification()"></p-button>
   </ng-template>
 </p-dialog>
 

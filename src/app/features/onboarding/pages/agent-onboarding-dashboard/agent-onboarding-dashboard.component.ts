@@ -189,6 +189,46 @@ export class AgentOnboardingDashboardComponent implements OnInit {
     return !!this.onboarding && ['PENDING_VALIDATION', 'VALIDATED', 'ACTIVE'].includes(this.onboarding.status);
   }
 
+  // --- KPI computed properties used in the hero strip ---
+
+  agentInitials(): string {
+    const a = this.onboarding?.agent;
+    const first = (a?.prenom ?? '').trim()[0] ?? '';
+    const last = (a?.nom ?? '').trim()[0] ?? '';
+    return (first + last).toUpperCase() || 'A';
+  }
+
+  completedStepsCount(): number {
+    return (this.onboarding?.steps ?? []).filter(s => s.status === 'COMPLETED').length;
+  }
+
+  totalStepsCount(): number {
+    return (this.onboarding?.steps ?? []).length || 6;
+  }
+
+  uploadedDocsCount(): number {
+    const docs = this.onboarding?.documents ?? [];
+    return docs.filter(d => !!d.fileName).length;
+  }
+
+  requiredDocsCount(): number {
+    return (this.onboarding?.documents ?? []).filter(d => d.required).length;
+  }
+
+  /** Whether the next primary action button should be shown as the main CTA. */
+  hasNextAction(): boolean {
+    return !this.locked() && this.onboarding?.status !== 'REJECTED';
+  }
+
+  /** Short, action-oriented label for the primary CTA button. */
+  primaryCtaLabel(): string {
+    if (this.onboarding?.status === 'REJECTED') return 'Corriger et resoumettre';
+    if (this.locked()) return 'Consulter mon dossier';
+    if (this.progress === 0) return 'Commencer mon onboarding';
+    if (this.progress >= 100) return 'Soumettre mon dossier';
+    return 'Continuer mon dossier';
+  }
+
   private isStepDone(type: OnboardingStepType): boolean {
     const s = this.onboarding?.steps ?? [];
     return s.some(step => (step.stepType === type || step.stepKey === type) && step.status === 'COMPLETED');

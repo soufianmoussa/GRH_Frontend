@@ -1,4 +1,23 @@
 {
+  "ASSISTANT": {
+    "TITLE": "HRIS Assistant",
+    "SUBTITLE": "Powered by AI",
+    "OPEN": "Open the assistant",
+    "CLOSE": "Close",
+    "CLEAR": "Clear conversation",
+    "SEND": "Send",
+    "RETRY": "Retry",
+    "PLACEHOLDER": "Ask your question…",
+    "EMPTY_TITLE": "How can I help you?",
+    "EMPTY_TEXT": "Ask about leave, your documents, your career, or how to use the application.",
+    "SUGGESTIONS": {
+      "LEAVE": "How do I submit a leave request?",
+      "DOCUMENTS": "Where can I find my administrative documents?",
+      "CAREER": "How do I view my career status?"
+    },
+    "ERROR_GENERIC": "Something went wrong. Please try again.",
+    "ERROR_NETWORK": "Cannot connect. Check your network and try again."
+  },
   "GLOBAL": {
     "MATRICULE": "Registration Number",
     "AGENT": "Agent",

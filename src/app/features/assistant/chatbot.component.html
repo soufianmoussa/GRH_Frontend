@@ -1,0 +1,123 @@
+<!-- ============================================================
+     Floating AI assistant — bubble + chat panel.
+     Themed with the global RH design tokens (styles.scss).
+     ============================================================ -->
+
+<!-- Launcher bubble -->
+<button
+  type="button"
+  class="chatbot-fab"
+  [class.is-open]="open()"
+  (click)="toggle()"
+  [attr.aria-label]="'ASSISTANT.OPEN' | translate"
+  [attr.aria-expanded]="open()"
+  [title]="'ASSISTANT.TITLE' | translate">
+  <i class="pi" [class.pi-comments]="!open()" [class.pi-times]="open()"></i>
+</button>
+
+<!-- Chat panel -->
+<div class="chatbot-panel" *ngIf="open()" role="dialog" aria-modal="false"
+     [attr.aria-label]="'ASSISTANT.TITLE' | translate">
+
+  <!-- Header -->
+  <header class="chatbot-panel__header">
+    <div class="chatbot-panel__title">
+      <span class="chatbot-panel__avatar"><i class="pi pi-sparkles"></i></span>
+      <div class="chatbot-panel__title-text">
+        <strong>{{ 'ASSISTANT.TITLE' | translate }}</strong>
+        <small>{{ 'ASSISTANT.SUBTITLE' | translate }}</small>
+      </div>
+    </div>
+    <div class="chatbot-panel__actions">
+      <button
+        type="button"
+        class="chatbot-icon-btn"
+        *ngIf="messages().length"
+        (click)="clear()"
+        [attr.aria-label]="'ASSISTANT.CLEAR' | translate"
+        [title]="'ASSISTANT.CLEAR' | translate">
+        <i class="pi pi-trash"></i>
+      </button>
+      <button
+        type="button"
+        class="chatbot-icon-btn"
+        (click)="close()"
+        [attr.aria-label]="'ASSISTANT.CLOSE' | translate"
+        [title]="'ASSISTANT.CLOSE' | translate">
+        <i class="pi pi-times"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- Messages / empty state -->
+  <div class="chatbot-panel__body" #scrollArea>
+
+    <!-- Empty state -->
+    <div class="chatbot-empty" *ngIf="!messages().length">
+      <span class="chatbot-empty__icon"><i class="pi pi-sparkles"></i></span>
+      <p class="chatbot-empty__title">{{ 'ASSISTANT.EMPTY_TITLE' | translate }}</p>
+      <p class="chatbot-empty__text">{{ 'ASSISTANT.EMPTY_TEXT' | translate }}</p>
+      <div class="chatbot-empty__suggestions">
+        <button
+          type="button"
+          class="chatbot-suggestion"
+          *ngFor="let s of suggestions"
+          (click)="useSuggestion(s)">
+          {{ s | translate }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Conversation -->
+    <ng-container *ngFor="let msg of messages()">
+      <div class="chatbot-msg"
+           [class.chatbot-msg--user]="msg.role === 'user'"
+           [class.chatbot-msg--bot]="msg.role === 'model'"
+           [class.is-failed]="msg.failed">
+        <span class="chatbot-msg__avatar" *ngIf="msg.role === 'model'">
+          <i class="pi pi-sparkles"></i>
+        </span>
+        <div class="chatbot-msg__bubble">{{ msg.content }}</div>
+      </div>
+    </ng-container>
+
+    <!-- Typing indicator -->
+    <div class="chatbot-msg chatbot-msg--bot" *ngIf="loading()">
+      <span class="chatbot-msg__avatar"><i class="pi pi-sparkles"></i></span>
+      <div class="chatbot-msg__bubble chatbot-typing">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <!-- Error banner with retry -->
+    <div class="chatbot-error" *ngIf="errorMessage()">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span class="chatbot-error__text">{{ errorMessage() }}</span>
+      <button type="button" class="chatbot-error__retry" (click)="retry()">
+        {{ 'ASSISTANT.RETRY' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Composer -->
+  <footer class="chatbot-panel__footer">
+    <textarea
+      #input
+      class="chatbot-input"
+      rows="1"
+      [(ngModel)]="draft"
+      (keydown)="onKeydown($event)"
+      [disabled]="loading()"
+      [attr.placeholder]="'ASSISTANT.PLACEHOLDER' | translate"
+      [attr.aria-label]="'ASSISTANT.PLACEHOLDER' | translate"></textarea>
+    <button
+      type="button"
+      class="chatbot-send"
+      [disabled]="!canSend"
+      (click)="send()"
+      [attr.aria-label]="'ASSISTANT.SEND' | translate"
+      [title]="'ASSISTANT.SEND' | translate">
+      <i class="pi pi-send"></i>
+    </button>
+  </footer>
+</div>

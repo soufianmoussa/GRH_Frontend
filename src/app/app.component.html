@@ -17,3 +17,6 @@
 <div *ngIf="isPublicLayoutPage()">
   <router-outlet></router-outlet>
 </div>
+
+<!-- Assistant IA flottant (visible uniquement dans l'app authentifiée) -->
+<app-chatbot *ngIf="showChatbot()"></app-chatbot>

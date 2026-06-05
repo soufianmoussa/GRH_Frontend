@@ -5,10 +5,11 @@ import {SidebarComponent} from './core/layout/sidebar/sidebar.component';
 import {NgIf} from '@angular/common';
 import {AuthService} from './core/auth/auth.service';
 import { LanguageService } from './core/services/language.service';
+import { ChatbotComponent } from './features/assistant/chatbot.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, TopbarComponent, SidebarComponent, NgIf],
+  imports: [RouterOutlet, TopbarComponent, SidebarComponent, NgIf, ChatbotComponent],
   templateUrl: './app.component.html',
   styleUrl: './app.component.scss'
 })
@@ -38,5 +39,10 @@ export class AppComponent implements OnInit {
       || path === '/activation'
       || path === '/mon-onboarding'
       || path.startsWith('/mon-onboarding/');
+  }
+
+  /** Show the assistant only inside the authenticated app shell (not on public/auth pages). */
+  showChatbot(): boolean {
+    return !this.isPublicLayoutPage() && this.authService.isAuthenticated();
   }
 }

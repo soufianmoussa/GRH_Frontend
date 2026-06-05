@@ -1,174 +1,285 @@
 <p-toast position="top-center"></p-toast>
 
-<div class="content agent-onboarding-hub">
+<div class="hub-host" *ngIf="!loading; else loadingTpl">
 
-  <!-- Loading -->
-  <div *ngIf="loading" class="loading-card">
-    <i class="pi pi-spin pi-spinner"></i>
-    <span>Chargement de votre onboarding...</span>
-  </div>
+  <ng-container *ngIf="onboarding">
 
-  <ng-container *ngIf="!loading && onboarding">
+    <!-- ============== Hero header (matches wizard-header) ============== -->
+    <header class="hub-header" [class.hub-header--locked]="locked()">
+      <div class="hub-header__top">
+        <span class="hub-header__welcome">
+          <i class="pi pi-sparkles"></i>
+          Espace personnel
+        </span>
+        <app-onboarding-status-badge [status]="onboarding.status"></app-onboarding-status-badge>
+      </div>
 
-    <!-- Hero banner -->
-    <section class="hero-card" [class.hero-card--locked]="locked()">
-      <div class="hero-card__bg"></div>
-      <div class="hero-card__content">
-        <div class="hero-card__left">
-          <span class="hero-card__hello">Bienvenue,</span>
-          <h2 class="hero-card__name">{{ agentFullName() }}</h2>
-          <div class="hero-card__meta">
-            <span class="meta-chip" *ngIf="onboarding.matricule?.matricule">
-              <i class="pi pi-id-card"></i>
-              Matricule&nbsp;: <strong>{{ onboarding.matricule?.matricule }}</strong>
-            </span>
-            <span class="meta-chip" *ngIf="onboarding.agent?.grade?.libelle">
-              <i class="pi pi-briefcase"></i>
-              {{ onboarding.agent?.grade?.libelle }}
-            </span>
+      <div class="hub-header__main">
+        <div class="hub-header__identity">
+          <span class="hub-header__avatar">{{ agentInitials() }}</span>
+          <div class="hub-header__identity-text">
+            <small class="hub-header__hello">Bienvenue,</small>
+            <h2>{{ agentFullName() }}</h2>
+            <div class="hub-header__meta">
+              <span *ngIf="onboarding.matricule?.matricule">
+                <i class="pi pi-hashtag"></i> Matricule : <b>{{ onboarding.matricule?.matricule }}</b>
+              </span>
+              <span *ngIf="onboarding.agent?.grade?.libelle">
+                <i class="pi pi-briefcase"></i> {{ onboarding.agent?.grade?.libelle }}
+              </span>
+              <span *ngIf="onboarding.matricule?.dateRecrutement">
+                <i class="pi pi-calendar"></i> Recrute le {{ onboarding.matricule?.dateRecrutement | date:'dd/MM/yyyy' }}
+              </span>
+            </div>
           </div>
         </div>
-        <div class="hero-card__right">
-          <app-onboarding-status-badge [status]="onboarding.status"></app-onboarding-status-badge>
-          <span class="hero-card__hint">{{ nextActionHint() }}</span>
+
+        <div class="hub-header__progress">
+          <div class="progress-pill">
+            <span class="progress-pill__value">{{ progress }}%</span>
+            <small>complete</small>
+          </div>
+          <p-progressBar [value]="progress" [showValue]="false"></p-progressBar>
+          <small class="hub-header__progress-hint">
+            <i class="pi pi-info-circle"></i>
+            {{ nextActionHint() }}
+          </small>
         </div>
       </div>
-    </section>
+    </header>
 
-    <!-- Rejection banner -->
+    <!-- ============== Status banners ============== -->
     <p-message
       *ngIf="onboarding.status === 'REJECTED' && onboarding.rejectionReason"
       severity="error"
       [text]="'Votre dossier a ete rejete. Motif : ' + onboarding.rejectionReason"
-      styleClass="reject-banner">
+      styleClass="hub-banner">
     </p-message>
 
-    <!-- Progress strip -->
-    <section class="progress-card card">
-      <div class="progress-card__head">
-        <div class="progress-card__head-text">
-          <h3>Progression du dossier</h3>
-          <small>{{ progress }}% complete &mdash; mis a jour automatiquement a chaque etape validee.</small>
-        </div>
-        <div class="progress-card__metric">
-          <span class="progress-card__value">{{ progress }}<small>%</small></span>
+    <p-message
+      *ngIf="onboarding.status === 'PENDING_VALIDATION'"
+      severity="info"
+      text="Votre dossier est en cours de validation par l'administration. Vous serez notifie des qu'une decision est prise."
+      styleClass="hub-banner">
+    </p-message>
+
+    <p-message
+      *ngIf="onboarding.status === 'VALIDATED' || onboarding.status === 'ACTIVE'"
+      severity="success"
+      text="Felicitations ! Votre dossier est valide et votre compte est actif. Bienvenue dans l'equipe."
+      styleClass="hub-banner">
+    </p-message>
+
+    <!-- ============== KPI tiles (at-a-glance metrics) ============== -->
+    <div class="kpi-grid">
+      <div class="kpi-tile kpi-tile--progress">
+        <div class="kpi-tile__icon"><i class="pi pi-chart-line"></i></div>
+        <div class="kpi-tile__body">
+          <span class="kpi-tile__label">Progression globale</span>
+          <span class="kpi-tile__value">{{ progress }}<small>%</small></span>
+          <p-progressBar [value]="progress" [showValue]="false"></p-progressBar>
         </div>
       </div>
-      <p-progressBar [value]="progress" [showValue]="false"></p-progressBar>
+
+      <div class="kpi-tile kpi-tile--steps">
+        <div class="kpi-tile__icon"><i class="pi pi-flag"></i></div>
+        <div class="kpi-tile__body">
+          <span class="kpi-tile__label">Etapes franchies</span>
+          <span class="kpi-tile__value">{{ completedStepsCount() }}<small>/ {{ totalStepsCount() }}</small></span>
+          <small class="kpi-tile__hint">terminees sur le parcours</small>
+        </div>
+      </div>
+
+      <div class="kpi-tile kpi-tile--docs">
+        <div class="kpi-tile__icon"><i class="pi pi-file-check"></i></div>
+        <div class="kpi-tile__body">
+          <span class="kpi-tile__label">Documents fournis</span>
+          <span class="kpi-tile__value">{{ uploadedDocsCount() }}<small *ngIf="requiredDocsCount()">/ {{ requiredDocsCount() }}</small></span>
+          <small class="kpi-tile__hint">{{ requiredDocsCount() ? 'requis televerses' : 'pieces televersees' }}</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============== Primary CTA (most prominent action) ============== -->
+    <section *ngIf="hasNextAction()" class="primary-cta">
+      <div class="primary-cta__visual">
+        <i class="pi pi-bolt"></i>
+      </div>
+      <div class="primary-cta__body">
+        <span class="primary-cta__eyebrow">Prochaine action</span>
+        <h3 class="primary-cta__title">{{ nextActionHint() }}</h3>
+        <p class="primary-cta__desc">
+          Reprenez votre dossier la ou vous l'avez laisse. Vous pouvez enregistrer un brouillon a tout moment.
+        </p>
+      </div>
+      <a class="primary-cta__btn" routerLink="/mon-onboarding/wizard">
+        <span>{{ primaryCtaLabel() }}</span>
+        <i class="pi pi-arrow-right"></i>
+      </a>
     </section>
 
-    <!-- 2-col layout: actions + side -->
+    <!-- ============== 2-col grid: journey + side ============== -->
     <div class="hub-grid">
 
-      <!-- Main: journey cards -->
-      <div class="hub-grid__main">
-        <h3 class="section-title">
-          <i class="pi pi-compass"></i>
-          Votre parcours d'integration
-        </h3>
+      <main class="hub-grid__main">
 
-        <div class="actions-grid">
-          <a
-            *ngFor="let card of actionCards(); let i = index"
-            class="action-card"
-            [routerLink]="card.route"
-            [class.done]="card.state === 'done'"
-            [class.in-progress]="card.state === 'in-progress'"
-            [class.locked]="card.state === 'locked'"
-            [class.todo]="card.state === 'todo'">
+        <!-- Journey cards -->
+        <section class="hub-section">
+          <header class="hub-section__head">
+            <h3>
+              <i class="pi pi-compass"></i>
+              Votre parcours d'integration
+            </h3>
+            <small>Cliquez sur une carte pour ouvrir l'etape correspondante du formulaire.</small>
+          </header>
 
-            <div class="action-card__step">{{ i + 1 }}</div>
+          <div class="journey-grid">
+            <a
+              *ngFor="let card of actionCards(); let i = index"
+              class="journey-card"
+              [routerLink]="card.route"
+              [class.done]="card.state === 'done'"
+              [class.in-progress]="card.state === 'in-progress'"
+              [class.locked]="card.state === 'locked'"
+              [class.todo]="card.state === 'todo'"
+              [attr.aria-label]="card.title + ' - ' + (cardBadge(card)?.value || '')">
 
-            <div class="action-card__icon">
-              <i [class]="card.icon"></i>
-            </div>
-
-            <div class="action-card__body">
-              <div class="action-card__head">
-                <h4>{{ card.title }}</h4>
-                <p-tag
-                  *ngIf="cardBadge(card) as badge"
-                  [value]="badge.value"
-                  [severity]="badge.severity"
-                  [rounded]="true">
-                </p-tag>
+              <div class="journey-card__step">
+                <span>{{ i + 1 }}</span>
               </div>
-              <p class="action-card__desc">{{ card.description }}</p>
-              <span class="action-card__cta">
-                <span>{{ cardCtaLabel(card) }}</span>
-                <i class="pi pi-arrow-right"></i>
+
+              <div class="journey-card__icon">
+                <i [class]="card.icon"></i>
+              </div>
+
+              <div class="journey-card__body">
+                <div class="journey-card__head">
+                  <h4>{{ card.title }}</h4>
+                  <p-tag
+                    *ngIf="cardBadge(card) as badge"
+                    [value]="badge.value"
+                    [severity]="badge.severity"
+                    [rounded]="true">
+                  </p-tag>
+                </div>
+                <p class="journey-card__desc">{{ card.description }}</p>
+                <span class="journey-card__cta">
+                  <span>{{ cardCtaLabel(card) }}</span>
+                  <i class="pi pi-arrow-right"></i>
+                </span>
+              </div>
+
+              <span class="journey-card__overlay" *ngIf="card.state === 'locked'" aria-hidden="true">
+                <i class="pi pi-lock"></i>
               </span>
+            </a>
+          </div>
+        </section>
+
+        <!-- Help / tips block -->
+        <section class="hub-section">
+          <header class="hub-section__head">
+            <h3>
+              <i class="pi pi-lightbulb"></i>
+              Conseils pour reussir votre onboarding
+            </h3>
+          </header>
+
+          <div class="tips-grid">
+            <div class="tip">
+              <span class="tip__icon"><i class="pi pi-id-card"></i></span>
+              <div>
+                <strong>Preparez vos pieces</strong>
+                <p>CIN, RIB, diplomes, certificats. Formats PDF, JPG, PNG ou WebP (10 Mo max).</p>
+              </div>
             </div>
-
-            <span class="action-card__overlay" *ngIf="card.state === 'locked'">
-              <i class="pi pi-lock"></i>
-            </span>
-          </a>
-        </div>
-
-        <!-- Submit reminder -->
-        <div class="cta-banner" *ngIf="!locked()">
-          <div class="cta-banner__icon">
-            <i class="pi pi-send"></i>
+            <div class="tip">
+              <span class="tip__icon"><i class="pi pi-save"></i></span>
+              <div>
+                <strong>Sauvegarde automatique</strong>
+                <p>Chaque etape s'enregistre individuellement. Revenez quand vous voulez sans rien perdre.</p>
+              </div>
+            </div>
+            <div class="tip">
+              <span class="tip__icon"><i class="pi pi-shield"></i></span>
+              <div>
+                <strong>Donnees securisees</strong>
+                <p>Vos documents sont stockes sur un serveur dedie. Seule l'administration RH y accede.</p>
+              </div>
+            </div>
+            <div class="tip">
+              <span class="tip__icon"><i class="pi pi-clock"></i></span>
+              <div>
+                <strong>Soumission unique</strong>
+                <p>Apres soumission, votre dossier est verrouille en attente de validation. Verifiez bien avant d'envoyer.</p>
+              </div>
+            </div>
           </div>
-          <div class="cta-banner__text">
-            <strong>Pret a soumettre&nbsp;?</strong>
-            <span>Completez chaque etape puis envoyez votre dossier a l'administration depuis le recapitulatif.</span>
-          </div>
-          <a class="p-button p-button-sm" routerLink="/mon-onboarding/wizard">
-            <i class="pi pi-arrow-right"></i>
-            <span>Ouvrir le formulaire</span>
-          </a>
-        </div>
-      </div>
+        </section>
+      </main>
 
-      <!-- Side: timeline + help -->
+      <!-- Side: timeline + contact -->
       <aside class="hub-grid__side">
+        <section class="hub-section" *ngIf="timeline().length">
+          <header class="hub-section__head">
+            <h3>
+              <i class="pi pi-history"></i>
+              Historique du dossier
+            </h3>
+          </header>
 
-        <!-- Timeline -->
-        <div class="card timeline-card" *ngIf="timeline().length">
-          <h3 class="section-title">
-            <i class="pi pi-history"></i>
-            Historique du dossier
-          </h3>
-          <ul class="timeline">
+          <ol class="timeline">
             <li *ngFor="let entry of timeline(); let last = last"
+                class="timeline__item"
                 [class.done]="entry.status === 'done'"
                 [class.last]="last">
-              <span class="dot">
+              <span class="timeline__dot" aria-hidden="true">
                 <i *ngIf="entry.status === 'done'" class="pi pi-check"></i>
               </span>
               <div class="timeline__content">
                 <strong>{{ entry.label }}</strong>
-                <small *ngIf="entry.at">{{ entry.at | date:'dd/MM/yyyy HH:mm' }}</small>
-                <small *ngIf="!entry.at" class="muted">En attente</small>
+                <small *ngIf="entry.at">
+                  <i class="pi pi-calendar"></i>
+                  {{ entry.at | date:'dd/MM/yyyy a HH:mm' }}
+                </small>
+                <small *ngIf="!entry.at" class="muted">
+                  <i class="pi pi-hourglass"></i>
+                  En attente
+                </small>
               </div>
             </li>
-          </ul>
-        </div>
+          </ol>
+        </section>
 
-        <!-- Help card -->
-        <div class="card help-card">
-          <h3 class="section-title">
-            <i class="pi pi-info-circle"></i>
-            Conseils utiles
-          </h3>
-          <ul class="help-list">
-            <li>
-              <i class="pi pi-check-circle"></i>
-              <span>Preparez votre <strong>CIN</strong>, vos <strong>diplomes</strong> et certificats au format PDF, JPG ou PNG (10&nbsp;Mo max).</span>
-            </li>
-            <li>
-              <i class="pi pi-check-circle"></i>
-              <span>Vous pouvez enregistrer un brouillon a tout moment et reprendre plus tard.</span>
-            </li>
-            <li>
-              <i class="pi pi-check-circle"></i>
-              <span>Votre dossier sera verrouille apres soumission, en attendant la validation de l'administration.</span>
-            </li>
+        <section class="hub-section contact-card">
+          <header class="hub-section__head">
+            <h3>
+              <i class="pi pi-comments"></i>
+              Une question ?
+            </h3>
+          </header>
+          <p class="contact-card__text">
+            L'equipe RH est a votre disposition pour vous accompagner pendant votre integration.
+          </p>
+          <ul class="contact-card__list">
+            <li><i class="pi pi-envelope"></i> rh&#64;organisation.ma</li>
+            <li><i class="pi pi-phone"></i> +212 5 22 00 00 00</li>
           </ul>
-        </div>
+        </section>
       </aside>
     </div>
+
   </ng-container>
 </div>
+
+<ng-template #loadingTpl>
+  <div class="hub-host hub-host--loading">
+    <div class="loading-skeleton loading-skeleton--header"></div>
+    <div class="loading-skeleton loading-skeleton--kpi"></div>
+    <div class="loading-skeleton loading-skeleton--grid"></div>
+    <div class="loading-state">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Chargement de votre espace onboarding...</span>
+    </div>
+  </div>
+</ng-template>
