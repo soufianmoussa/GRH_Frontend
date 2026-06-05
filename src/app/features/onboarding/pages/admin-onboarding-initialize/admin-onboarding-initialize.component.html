@@ -1,0 +1,314 @@
+<p-toast position="top-center"></p-toast>
+
+<div class="init-host">
+
+  <!-- ============== Sticky branded header ============== -->
+  <header class="init-header">
+    <div class="init-header__top">
+      <a class="init-header__back" routerLink="/admin/onboarding">
+        <i class="pi pi-arrow-left"></i>
+        <span>Suivi onboarding</span>
+      </a>
+      <span class="init-header__step-badge">
+        <i class="pi pi-bolt"></i>
+        Etape 1 - Initialisation
+      </span>
+    </div>
+
+    <div class="init-header__main">
+      <div class="init-header__title">
+        <span class="title-icon"><i class="pi pi-user-plus"></i></span>
+        <div>
+          <h2>Initialiser un agent</h2>
+          <p class="init-header__subtitle">
+            Renseignez les informations administratives initiales. Un lien d'activation
+            sera automatiquement envoye a l'agent par email apres la creation.
+          </p>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============== Helpful guidance banner ============== -->
+  <p-message
+    *ngIf="!createdOnboardingId && !loadingReferentials"
+    severity="info"
+    styleClass="init-banner"
+    text="Les champs marques d'un asterisque sont obligatoires. L'agent recevra par email un lien securise (valide 48h) pour activer son compte et completer son dossier.">
+  </p-message>
+
+  <!-- ============== Loading skeleton ============== -->
+  <div *ngIf="loadingReferentials" class="init-card init-card--loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <span>Chargement des referentiels (grades, echelles, postes)...</span>
+  </div>
+
+  <!-- ============== Success state (after creation) ============== -->
+  <section *ngIf="createdOnboardingId" class="init-success">
+    <div class="init-success__icon">
+      <i class="pi pi-check-circle"></i>
+    </div>
+    <div class="init-success__body">
+      <h3>Dossier cree avec succes</h3>
+      <p>
+        Le lien d'activation a ete envoye a l'agent par email. Vous pouvez suivre l'avancement
+        depuis la fiche onboarding ou completer le dossier en mode assiste.
+      </p>
+      <div class="init-success__actions">
+        <button pButton type="button" icon="pi pi-eye" label="Voir le dossier"
+                (click)="viewCreated()"></button>
+        <button pButton type="button" icon="pi pi-plus" label="Initialiser un autre agent"
+                class="p-button-outlined" (click)="resetAndCreateAnother()"></button>
+        <a pButton routerLink="/admin/onboarding"
+           icon="pi pi-list" label="Retour au tableau de bord"
+           class="p-button-text"></a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== Main form ============== -->
+  <form *ngIf="!loadingReferentials && !createdOnboardingId"
+        [formGroup]="form"
+        (ngSubmit)="submit()"
+        novalidate
+        class="init-form">
+
+    <!-- ---------- Identification ---------- -->
+    <fieldset class="init-section">
+      <legend>
+        <i class="pi pi-id-card"></i>
+        Identification administrative
+      </legend>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="matricule">Matricule <span class="req">*</span></label>
+          <input pInputText id="matricule" formControlName="matricule"
+                 placeholder="Ex : AG-2024-0042"
+                 [class.ng-invalid-touched]="isInvalid('matricule')" />
+          <small *ngIf="!isInvalid('matricule')" class="field-hint">
+            <i class="pi pi-info-circle"></i>
+            Identifiant unique attribue a l'agent.
+          </small>
+          <small *ngIf="isInvalid('matricule')" class="field-error">
+            <i class="pi pi-exclamation-circle"></i>
+            Le matricule est obligatoire.
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="dateRecrutement">Date de recrutement <span class="req">*</span></label>
+          <p-datepicker id="dateRecrutement" formControlName="dateRecrutement"
+                        dateFormat="dd/mm/yy"
+                        placeholder="JJ/MM/AAAA"
+                        [showIcon]="true"
+                        appendTo="body"
+                        styleClass="w-full">
+          </p-datepicker>
+          <small *ngIf="isInvalid('dateRecrutement')" class="field-error">
+            <i class="pi pi-exclamation-circle"></i>
+            La date de recrutement est obligatoire.
+          </small>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- ---------- Classification ---------- -->
+    <fieldset class="init-section">
+      <legend>
+        <i class="pi pi-briefcase"></i>
+        Classification &amp; poste
+      </legend>
+
+      <div class="form-grid">
+        <div class="field col-span-2">
+          <label for="posteId">Poste <span class="req">*</span></label>
+          <p-select id="posteId" formControlName="posteId"
+                    [options]="posteOptions"
+                    optionLabel="label" optionValue="value"
+                    [filter]="true"
+                    appendTo="body"
+                    styleClass="w-full"
+                    placeholder="Rechercher un poste...">
+          </p-select>
+          <small *ngIf="isInvalid('posteId')" class="field-error">
+            <i class="pi pi-exclamation-circle"></i>
+            Le poste est obligatoire.
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="domaine">Domaine <span class="req">*</span></label>
+          <input pInputText id="domaine" formControlName="domaine"
+                 placeholder="Ex : Ressources humaines" />
+          <small *ngIf="isInvalid('domaine')" class="field-error">
+            <i class="pi pi-exclamation-circle"></i>
+            Le domaine est obligatoire.
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="sousDomaine">Sous-domaine <span class="req">*</span></label>
+          <input pInputText id="sousDomaine" formControlName="sousDomaine"
+                 placeholder="Ex : Gestion administrative" />
+          <small *ngIf="isInvalid('sousDomaine')" class="field-error">
+            <i class="pi pi-exclamation-circle"></i>
+            Le sous-domaine est obligatoire.
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="categorie">Categorie <span class="req">*</span></label>
+          <input pInputText id="categorie" formControlName="categorie"
+                 placeholder="Ex : Cadre" />
+          <small *ngIf="isInvalid('categorie')" class="field-error">
+            <i class="pi pi-exclamation-circle"></i>
+            La categorie est obligatoire.
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="typeContrat">Type de contrat <span class="req">*</span></label>
+          <input pInputText id="typeContrat" formControlName="typeContrat"
+                 placeholder="Ex : CDI" />
+          <small *ngIf="isInvalid('typeContrat')" class="field-error">
+            <i class="pi pi-exclamation-circle"></i>
+            Le type de contrat est obligatoire.
+          </small>
+        </div>
+
+        <div class="field col-span-2">
+          <label for="gradeId">Grade <span class="req">*</span></label>
+          <p-select id="gradeId" formControlName="gradeId"
+                    [options]="gradeGroups"
+                    [group]="true"
+                    optionLabel="label" optionValue="value"
+                    optionGroupLabel="label" optionGroupChildren="items"
+                    [filter]="true"
+                    appendTo="body"
+                    styleClass="w-full"
+                    panelStyleClass="onboarding-neutral-select-panel"
+                    placeholder="Rechercher un grade...">
+            <ng-template #group let-group>
+              <span class="select-group-label">{{ group.label }}</span>
+            </ng-template>
+            <ng-template #item let-option>
+              <div class="classification-option">
+                <span>{{ option.label }}</span>
+                <small>{{ option.echelleLabel }}</small>
+              </div>
+            </ng-template>
+          </p-select>
+          <small *ngIf="isInvalid('gradeId')" class="field-error">
+            <i class="pi pi-exclamation-circle"></i>
+            Le grade est obligatoire.
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="echelleId">Echelle <span class="req">*</span></label>
+          <p-select id="echelleId" formControlName="echelleId"
+                    [options]="echelleOptions"
+                    optionLabel="label" optionValue="value"
+                    [filter]="true"
+                    appendTo="body"
+                    styleClass="w-full"
+                    panelStyleClass="onboarding-neutral-select-panel"
+                    placeholder="Selectionner une echelle">
+          </p-select>
+          <small *ngIf="selectedGrade?.echelleKeys?.length === 1" class="field-hint">
+            <i class="pi pi-check"></i>
+            Pre-remplie automatiquement selon le grade.
+          </small>
+          <small *ngIf="selectedGrade && selectedGrade.echelleKeys.length > 1" class="field-hint">
+            <i class="pi pi-info-circle"></i>
+            Ce grade autorise plusieurs echelles. Choisissez la bonne.
+          </small>
+          <small *ngIf="isInvalid('echelleId')" class="field-error">
+            <i class="pi pi-exclamation-circle"></i>
+            L'echelle est obligatoire.
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="echelonId">Echelon <span class="req">*</span></label>
+          <p-select id="echelonId" formControlName="echelonId"
+                    [options]="echelonOptions"
+                    optionLabel="label" optionValue="value"
+                    [filter]="true"
+                    appendTo="body"
+                    styleClass="w-full"
+                    panelStyleClass="onboarding-neutral-select-panel"
+                    placeholder="Selectionner un echelon">
+          </p-select>
+          <small *ngIf="isInvalid('echelonId')" class="field-error">
+            <i class="pi pi-exclamation-circle"></i>
+            L'echelon est obligatoire.
+          </small>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- ---------- Contact ---------- -->
+    <fieldset class="init-section">
+      <legend>
+        <i class="pi pi-envelope"></i>
+        Coordonnees de contact
+      </legend>
+
+      <div class="form-grid">
+        <div class="field">
+          <label for="email">Email professionnel <span class="req">*</span></label>
+          <span class="input-icon-wrap">
+            <i class="pi pi-envelope input-icon-wrap__icon"></i>
+            <input pInputText id="email" formControlName="email" type="email"
+                   placeholder="prenom.nom@organisation.com"
+                   autocomplete="off" />
+          </span>
+          <small *ngIf="!isInvalid('email')" class="field-hint">
+            <i class="pi pi-send"></i>
+            Le lien d'activation sera envoye a cette adresse.
+          </small>
+          <small *ngIf="isInvalid('email')" class="field-error">
+            <i class="pi pi-exclamation-circle"></i>
+            Un email valide est obligatoire.
+          </small>
+        </div>
+
+        <div class="field">
+          <label for="telephone">Telephone <span class="req">*</span></label>
+          <span class="input-icon-wrap">
+            <i class="pi pi-phone input-icon-wrap__icon"></i>
+            <input pInputText id="telephone" formControlName="telephone"
+                   placeholder="+212 6 12 34 56 78"
+                   autocomplete="off" />
+          </span>
+          <small *ngIf="isInvalid('telephone')" class="field-error">
+            <i class="pi pi-exclamation-circle"></i>
+            Le telephone est obligatoire.
+          </small>
+        </div>
+      </div>
+    </fieldset>
+
+    <!-- ---------- Sticky action bar ---------- -->
+    <footer class="init-actions">
+      <div class="init-actions__hint">
+        <i class="pi pi-shield"></i>
+        Les donnees sont conservees de facon securisee. L'agent peut completer ulterieurement.
+      </div>
+      <div class="init-actions__buttons">
+        <button pButton type="button" routerLink="/admin/onboarding"
+                label="Annuler" icon="pi pi-times"
+                class="p-button-text"></button>
+        <button pButton type="submit"
+                [label]="submitting ? 'Creation en cours...' : 'Creer et inviter'"
+                [icon]="submitting ? 'pi pi-spin pi-spinner' : 'pi pi-send'"
+                iconPos="right"
+                [disabled]="submitting"
+                class="init-actions__primary"></button>
+      </div>
+    </footer>
+  </form>
+
+</div>

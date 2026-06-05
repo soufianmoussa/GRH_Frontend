@@ -1,4 +1,23 @@
 {
+  "ASSISTANT": {
+    "TITLE": "Assistant SIRH",
+    "SUBTITLE": "Propulsé par l'IA",
+    "OPEN": "Ouvrir l'assistant",
+    "CLOSE": "Fermer",
+    "CLEAR": "Effacer la conversation",
+    "SEND": "Envoyer",
+    "RETRY": "Réessayer",
+    "PLACEHOLDER": "Posez votre question…",
+    "EMPTY_TITLE": "Comment puis-je vous aider ?",
+    "EMPTY_TEXT": "Posez une question sur les congés, vos documents, votre carrière ou l'utilisation de l'application.",
+    "SUGGESTIONS": {
+      "LEAVE": "Comment déposer une demande de congé ?",
+      "DOCUMENTS": "Où trouver mes documents administratifs ?",
+      "CAREER": "Comment consulter ma situation de carrière ?"
+    },
+    "ERROR_GENERIC": "Une erreur est survenue. Veuillez réessayer.",
+    "ERROR_NETWORK": "Connexion impossible. Vérifiez votre réseau et réessayez."
+  },
   "GLOBAL": {
     "MATRICULE": "Matricule",
     "AGENT": "Agent",

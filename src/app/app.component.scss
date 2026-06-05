@@ -16,7 +16,9 @@
   background: #f4f8fc;
   min-height: calc(100vh - 60px);
 
+  /* Sidebar fixed at left:16px with width 290px (right edge = 306px).
+     16px gap mirrors the sidebar's left offset for a symmetric floating-card feel. */
   &.sidebar-open {
-    margin-left: 284px;
+    margin-left: 322px;
   }
 }

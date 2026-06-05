@@ -9,7 +9,7 @@ const refreshTokenSubject: BehaviorSubject<string | null> = new BehaviorSubject<
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
 
-  if (req.url.includes('/auth/login') || req.url.includes('/auth/refresh')) {
+  if (req.url.includes('/auth/login') || req.url.includes('/auth/refresh') || req.url.includes('/onboarding-invitations')) {
     return next(req);
   }
 

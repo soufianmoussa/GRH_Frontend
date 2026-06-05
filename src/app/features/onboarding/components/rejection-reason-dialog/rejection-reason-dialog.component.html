@@ -1,0 +1,25 @@
+<p-dialog
+  [header]="header"
+  [(visible)]="visible"
+  (visibleChange)="visibleChange.emit($event)"
+  [modal]="true"
+  [style]="{ width: '500px' }"
+  [closable]="true"
+  [draggable]="false"
+  styleClass="rejection-reason-dialog">
+
+  <p class="subject">{{ subject }}</p>
+
+  <textarea
+    pInputTextarea
+    [(ngModel)]="reason"
+    rows="5"
+    class="w-full"
+    placeholder="Decrivez precisement le motif du rejet (ex: piece illisible, document non conforme, etc.)">
+  </textarea>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Annuler" icon="pi pi-times" class="p-button-text" (click)="hide()"></button>
+    <button pButton type="button" [label]="confirmLabel" icon="pi pi-check" class="p-button-danger" (click)="onConfirm()" [disabled]="!reason.trim()"></button>
+  </ng-template>
+</p-dialog>

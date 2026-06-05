@@ -1,15 +1,27 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
-import { NgIf } from '@angular/common';
+import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../auth/auth.service';
+import { UserInfo } from '../../auth/auth.models';
 import { TranslateModule } from '@ngx-translate/core';
+import { filter } from 'rxjs';
 
+/**
+ * Sidebar component — single source of truth for the navigation tree.
+ *
+ * Sections are collapsible; their open/closed state is held in a Set so we
+ * never end up with N booleans drifting out of sync. When the user navigates
+ * into a sub-route, the parent section auto-expands so they can see where
+ * they are.
+ */
 @Component({
   selector: 'app-sidebar',
   imports: [
+    CommonModule,
+    FormsModule,
     RouterLinkActive,
     RouterLink,
-    NgIf,
     TranslateModule
   ],
   templateUrl: './sidebar.component.html',
@@ -18,36 +30,173 @@ import { TranslateModule } from '@ngx-translate/core';
 export class SidebarComponent implements OnInit {
   @Input() opened = false;
 
-  logoInovat = "assets/inovat-logo.png";
-  logoProject = "assets/MastechRh-Logo.png";
+  logoProject = 'assets/MastechRh-Logo.png';
 
-  /** The single active mode — drives which menu block is shown */
+  /** The single active mode — drives which menu block is shown. */
   activeMode: string | null = null;
 
-  constructor(private authService: AuthService) {}
+  currentUser: UserInfo | null = null;
+
+  /** Free-text search to filter visible items in long admin menus. */
+  searchTerm = '';
+
+  /** Sections currently expanded — key is a stable identifier per section. */
+  private openSections = new Set<string>();
+
+  /**
+   * Maps each child route to its parent section key so we can auto-expand
+   * the right section when the user navigates from elsewhere (e.g. clicking
+   * a topbar link or refreshing on a deep route).
+   */
+  private readonly routeToSection: Record<string, string> = {
+    // ADMIN
+    '/admin/onboarding': 'admin-agents',
+    '/admin/onboarding/initialiser': 'admin-agents',
+    '/InitialisationMatricules': 'admin-agents',
+    '/GestionUtilisateurs': 'admin-agents',
+    '/GestionComptes': 'admin-agents',
+    '/ApprobationModifications': 'admin-agents',
+
+    '/Organigramme': 'admin-org',
+    '/UniteStructurelle': 'admin-org',
+    '/ResponsableUs': 'admin-org',
+    '/Postes': 'admin-org',
+    '/AffectationAgentPoste': 'admin-org',
+    '/HistoriqueAffectations': 'admin-org',
+
+    '/Sanction': 'admin-actes',
+    '/Reintegration': 'admin-actes',
+    '/StageFormation': 'admin-actes',
+    '/Detachement': 'admin-actes',
+    '/Radiation': 'admin-actes',
+    '/Suspension': 'admin-actes',
+    '/PriseEnCharge': 'admin-actes',
+    '/MiseEnDisponibilite': 'admin-actes',
+
+    '/Avencement': 'admin-carriere',
+    '/DatesDanciennete': 'admin-carriere',
+    '/ServicesAnterieurs': 'admin-carriere',
+    '/echelon': 'admin-carriere',
+    '/echelle': 'admin-carriere',
+
+    '/evaluationEtCompetence': 'admin-competences',
+    '/referentielDesGroupesDeCompetences': 'admin-competences',
+    '/Diplomes': 'admin-competences',
+
+    '/FichierPrimes': 'admin-remu',
+    '/indemnitesComponent': 'admin-remu',
+    '/CaissesRetraite': 'admin-remu',
+    '/PretFinancier': 'admin-remu',
+    '/DistinctionsHonorifiques': 'admin-remu',
+
+    '/AccidentsMaladies': 'admin-sante',
+    '/maternite': 'admin-sante',
+
+    '/GestionCongesAgents': 'admin-conges',
+    '/TypesConge': 'admin-conges',
+    '/JoursFeries': 'admin-conges',
+
+    '/Fonctions': 'admin-ref',
+    '/PostesActivites': 'admin-ref',
+    '/situationFamille': 'admin-ref',
+    '/familleEtEmploi': 'admin-ref',
+
+    '/ActesVisa': 'admin-visa',
+    '/HistoriqueActesVises': 'admin-visa',
+
+    // AGENT
+    '/Agent': 'agent-profil',
+    '/myData': 'agent-profil',
+    '/dataAdministrative': 'agent-profil',
+    '/SituationActuelle': 'agent-profil',
+    '/mon-onboarding': 'agent-profil',
+
+    '/carriere': 'agent-carriere',
+    '/competences': 'agent-carriere',
+    '/formations': 'agent-carriere',
+    '/ConsultationDesDiplomes': 'agent-carriere',
+
+    '/conge': 'agent-demandes',
+    '/mes-demandes-conge': 'agent-demandes',
+    '/AttestationDeTravail': 'agent-demandes',
+
+    '/posteTravail': 'agent-docs',
+    '/HistoriqueDesActes': 'agent-docs',
+  };
+
+  constructor(private authService: AuthService, private router: Router) {}
 
   ngOnInit() {
-    this.authService.activeRole$.subscribe(role => {
-      this.activeMode = role;
-    });
+    this.authService.activeRole$.subscribe(role => this.activeMode = role);
+    this.authService.currentUser$.subscribe(user => this.currentUser = user);
+
+    // Auto-expand the section containing the route we land on / navigate to.
+    this.expandSectionForUrl(this.router.url);
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+      .subscribe(e => this.expandSectionForUrl(e.urlAfterRedirects));
   }
 
-  // =================================
-  gestionOrganisationelle = false;
-  gestionPersonnelle = false;
-  posteEtEmploi = false;
-  evaluationEtCompetences = false;
-  acteAdministratifs = false;
-  congesAbsences = false;
-  diplomeMenu = false;
-  gestionConges = false;
+  private expandSectionForUrl(url: string): void {
+    // Match the longest prefix (so /admin/onboarding/initialiser beats /admin/onboarding)
+    const match = Object.keys(this.routeToSection)
+      .filter(prefix => url === prefix || url.startsWith(prefix + '/') || url.startsWith(prefix + '?'))
+      .sort((a, b) => b.length - a.length)[0];
+    if (match) {
+      this.openSections.add(this.routeToSection[match]);
+    }
+  }
 
-  toggleGestionOrganisationelle() { this.gestionOrganisationelle = !this.gestionOrganisationelle; }
-  toggleGestionPersonnelle()      { this.gestionPersonnelle      = !this.gestionPersonnelle; }
-  togglePosteEtEmploi()           { this.posteEtEmploi           = !this.posteEtEmploi; }
-  toggleEvaluationEtCompetences() { this.evaluationEtCompetences = !this.evaluationEtCompetences; }
-  toggleActeAdministratifs()      { this.acteAdministratifs      = !this.acteAdministratifs; }
-  toggleDiplomeMenu()             { this.diplomeMenu             = !this.diplomeMenu; }
-  toggleCongesAbsences()          { this.congesAbsences          = !this.congesAbsences; }
-  toggleGestionConges()           { this.gestionConges           = !this.gestionConges; }
+  toggle(key: string): void {
+    if (this.openSections.has(key)) {
+      this.openSections.delete(key);
+    } else {
+      this.openSections.add(key);
+    }
+  }
+
+  isOpen(key: string): boolean {
+    return this.openSections.has(key);
+  }
+
+  /** Display name for the user info card. */
+  get userDisplayName(): string {
+    return this.currentUser?.username || 'Utilisateur';
+  }
+
+  get userInitials(): string {
+    const name = this.currentUser?.username?.trim() || '';
+    if (!name) return '?';
+    const parts = name.split(/[\s._@-]+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  /**
+   * Returns true when the search term matches the given label (case-insensitive
+   * and accent-insensitive). Used by the admin menu to filter items live.
+   */
+  matchesSearch(label: string): boolean {
+    if (!this.searchTerm?.trim()) return true;
+    return this.normalize(label).includes(this.normalize(this.searchTerm));
+  }
+
+  /**
+   * Returns true when at least one of the labels passes the search filter.
+   * Used to keep a section visible if any of its children match.
+   */
+  sectionMatches(...labels: string[]): boolean {
+    if (!this.searchTerm?.trim()) return true;
+    return labels.some(l => this.matchesSearch(l));
+  }
+
+  private normalize(value: string): string {
+    return value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  }
+
+  clearSearch(): void {
+    this.searchTerm = '';
+  }
 }

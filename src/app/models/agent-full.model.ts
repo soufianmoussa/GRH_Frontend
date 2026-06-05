@@ -1,4 +1,5 @@
 import { Matricule } from './initialisation-matricules.model';
+import type { AgentStatus, EchelleReferential, EchelonReferential, Grade } from './onboarding.model';
 
 export type TypeAdresse = 'PRINCIPALE' | 'SECONDAIRE' | 'TRAVAIL' | 'AUTRE';
 
@@ -67,6 +68,12 @@ export interface AgentCreateRequest {
   sousDomaine?: string;
   categorie?: string;
   typeContrat?: string;
+  posteId?: number;
+  gradeId?: number;
+  echelleId?: number;
+  echelonId?: number;
+  email?: string;
+  telephone?: string;
 
   nom: string;
   prenom: string;
@@ -115,6 +122,14 @@ export interface AgentTravailDto {
 export interface AgentFullDto {
   id: number;
   matricule: Matricule;
+  status?: AgentStatus;
+  grade?: Grade;
+  echelle?: EchelleReferential;
+  echelon?: EchelonReferential;
+  posteId?: number;
+  posteLibelle?: string;
+  email?: string;
+  telephone?: string;
 
   nom: string;
   prenom: string;

@@ -20,6 +20,13 @@ export class DossiersAgentsService {
     return this.http.get<Matricule[]>(`${this.apiMatricules}/available`);
   }
 
+  /**
+   * @deprecated For NEW agents prefer `POST /api/admin/onboardings/initialize`
+   * (AdminOnboardingService.initialize), which allocates the matricule, creates
+   * the agent + user account, and issues the activation invitation atomically.
+   * The dossier-agent wizard still calls this endpoint to keep the legacy
+   * one-shot creation flow working until a follow-up slice migrates the wizard.
+   */
   createFull(payload: AgentCreateRequest): Observable<AgentFullDto> {
     return this.http.post<AgentFullDto>(`${this.apiAgents}/full`, payload);
   }

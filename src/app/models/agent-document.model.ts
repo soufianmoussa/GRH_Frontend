@@ -6,8 +6,14 @@ export type AgentDocumentType =
   | 'FICHE_POSTE'
   | 'ATTESTATION_SALAIRE'
   | 'ATTESTATION_TRAVAIL'
+  | 'ATTESTATION_RIB'
+  | 'ACTE_MARIAGE'
+  | 'ACTE_NAISSANCE'
+  | 'PHOTO_PROFIL'
   | 'CV'
   | 'AUTRE';
+
+export type AgentDocumentStatus = 'PENDING_REVIEW' | 'VALIDATED' | 'REJECTED';
 
 export interface AgentDocument {
   id: number;
@@ -18,6 +24,12 @@ export interface AgentDocument {
   description?: string | null;
   issuedAt?: string | null;
   expiresAt?: string | null;
+
+  /** Review lifecycle. */
+  status?: AgentDocumentStatus;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
+  rejectionReason?: string | null;
 
   createdAt?: string;
   updatedAt?: string;
@@ -37,7 +49,10 @@ export interface AgentDocumentCreateUpdateRequest {
   expiresAt?: string | null;
 }
 
-/** User-facing label for each document type. */
+export interface AgentDocumentRejectRequest {
+  reason: string;
+}
+
 export const AGENT_DOCUMENT_TYPE_LABELS: Record<AgentDocumentType, string> = {
   CARTE_NATIONALE: 'Carte nationale',
   PASSEPORT: 'Passeport',
@@ -46,8 +61,34 @@ export const AGENT_DOCUMENT_TYPE_LABELS: Record<AgentDocumentType, string> = {
   FICHE_POSTE: 'Fiche de poste',
   ATTESTATION_SALAIRE: 'Attestation de salaire',
   ATTESTATION_TRAVAIL: 'Attestation de travail',
+  ATTESTATION_RIB: 'Attestation de RIB',
+  ACTE_MARIAGE: 'Acte de mariage',
+  ACTE_NAISSANCE: 'Acte de naissance',
+  PHOTO_PROFIL: 'Photo de profil',
   CV: 'CV',
   AUTRE: 'Autre',
+};
+
+export const AGENT_DOCUMENT_TYPE_ICONS: Record<AgentDocumentType, string> = {
+  CARTE_NATIONALE: 'pi pi-id-card',
+  PASSEPORT: 'pi pi-id-card',
+  PERMIS_CONDUIRE: 'pi pi-id-card',
+  CONTRAT_TRAVAIL: 'pi pi-file-edit',
+  FICHE_POSTE: 'pi pi-briefcase',
+  ATTESTATION_SALAIRE: 'pi pi-money-bill',
+  ATTESTATION_TRAVAIL: 'pi pi-building',
+  ATTESTATION_RIB: 'pi pi-credit-card',
+  ACTE_MARIAGE: 'pi pi-heart-fill',
+  ACTE_NAISSANCE: 'pi pi-baby',
+  PHOTO_PROFIL: 'pi pi-camera',
+  CV: 'pi pi-file',
+  AUTRE: 'pi pi-paperclip',
+};
+
+export const AGENT_DOCUMENT_STATUS_LABELS: Record<AgentDocumentStatus, string> = {
+  PENDING_REVIEW: 'En attente de validation',
+  VALIDATED: 'Validé',
+  REJECTED: 'Rejeté',
 };
 
 export const AGENT_DOCUMENT_TYPES: { value: AgentDocumentType; label: string }[] =

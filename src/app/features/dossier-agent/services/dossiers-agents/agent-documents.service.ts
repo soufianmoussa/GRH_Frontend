@@ -5,6 +5,7 @@ import { environment } from '../../../../../../environment';
 import {
   AgentDocument,
   AgentDocumentCreateUpdateRequest,
+  AgentDocumentRejectRequest,
 } from '../../../../models/agent-document.model';
 
 @Injectable({ providedIn: 'root' })
@@ -41,5 +42,14 @@ export class AgentDocumentsService {
 
   deleteFile(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}/file`);
+  }
+
+  validate(id: number): Observable<AgentDocument> {
+    return this.http.post<AgentDocument>(`${this.baseUrl}/${id}/validate`, {});
+  }
+
+  reject(id: number, reason: string): Observable<AgentDocument> {
+    const payload: AgentDocumentRejectRequest = { reason };
+    return this.http.post<AgentDocument>(`${this.baseUrl}/${id}/reject`, payload);
   }
 }

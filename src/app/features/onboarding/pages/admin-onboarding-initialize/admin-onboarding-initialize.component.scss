@@ -1,0 +1,538 @@
+/* ============================================================
+   Admin Onboarding - Initialize
+   Mirrors the wizard (assisted-complete) design language so the
+   admin onboarding flow speaks one consistent visual story.
+   ============================================================ */
+
+:host {
+  display: block;
+  padding: 1.5rem;
+  background: transparent;
+}
+
+.init-host {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ---------------------------------------------------------
+   Header
+   --------------------------------------------------------- */
+.init-header {
+  position: relative;
+  overflow: hidden;
+  background: var(--rh-header-grad);
+  color: #fff;
+  border-radius: 16px;
+  padding: 1.25rem 1.75rem 1.5rem;
+  margin-bottom: 1.25rem;
+  box-shadow: 0 10px 28px rgba(31, 60, 136, 0.25);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.18) 0%, transparent 55%);
+  }
+
+  &__top {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    gap: .45rem;
+    padding: .35rem .85rem;
+    color: #fff;
+    text-decoration: none;
+    font-size: .85rem;
+    font-weight: 500;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    transition: background 0.2s ease, transform 0.15s ease;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.22);
+      transform: translateX(-2px);
+    }
+  }
+
+  &__step-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .35rem .85rem;
+    background: rgba(15, 139, 157, 0.85);
+    color: #fff;
+    border-radius: 999px;
+    font-size: .75rem;
+    font-weight: 700;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    box-shadow: 0 4px 12px rgba(15, 139, 157, 0.35);
+
+    i {
+      font-size: .7rem;
+    }
+  }
+
+  &__main {
+    position: relative;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+
+    .title-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      backdrop-filter: blur(6px);
+    }
+
+    h2 {
+      margin: 0 0 .35rem;
+      font-size: 1.55rem;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+  }
+
+  &__subtitle {
+    margin: 0;
+    max-width: 720px;
+    color: rgba(255, 255, 255, 0.88);
+    font-size: .92rem;
+    line-height: 1.5;
+  }
+}
+
+/* ---------------------------------------------------------
+   Banner & success
+   --------------------------------------------------------- */
+::ng-deep .init-banner {
+  display: block;
+  margin-bottom: 1.25rem;
+
+  .p-message {
+    border-radius: 12px;
+    border-left: 4px solid var(--rh-primary);
+  }
+}
+
+.init-success {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.25rem;
+  background: linear-gradient(135deg, #f0fdf4, #ecfdf5);
+  border: 1px solid #86efac;
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.12);
+
+  &__icon {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: #10b981;
+    color: #fff;
+    font-size: 1.75rem;
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+
+    h3 {
+      margin: 0 0 .5rem;
+      color: #065f46;
+      font-size: 1.2rem;
+      font-weight: 700;
+    }
+
+    p {
+      margin: 0 0 1rem;
+      color: #047857;
+      line-height: 1.55;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: .75rem;
+    flex-wrap: wrap;
+  }
+}
+
+/* ---------------------------------------------------------
+   Loading card
+   --------------------------------------------------------- */
+.init-card {
+  background: var(--rh-surface);
+  border-radius: 16px;
+  border: 1px solid #eef2f7;
+  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.06);
+
+  &--loading {
+    min-height: 240px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    color: var(--rh-text-muted);
+
+    i {
+      font-size: 2rem;
+      color: var(--rh-primary);
+    }
+  }
+}
+
+/* ---------------------------------------------------------
+   Form
+   --------------------------------------------------------- */
+.init-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.init-section {
+  background: var(--rh-surface);
+  border: 1px solid #e6ebf2;
+  border-radius: 14px;
+  padding: 1.25rem 1.5rem 1.5rem;
+  margin: 0;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+
+  legend {
+    padding: .4rem .85rem;
+    background: linear-gradient(135deg, #1f3c88, #2a52be);
+    color: #fff;
+    border-radius: 999px;
+    font-weight: 600;
+    font-size: .82rem;
+    letter-spacing: .01em;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    box-shadow: 0 4px 12px rgba(31, 60, 136, 0.28);
+
+    i {
+      font-size: .8rem;
+    }
+  }
+}
+
+/* ---------- Form grid ---------- */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem 1.25rem;
+  margin-top: 1rem;
+}
+
+.col-span-2 {
+  grid-column: span 2;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  min-width: 0;
+
+  label {
+    font-size: .85rem;
+    font-weight: 600;
+    color: var(--rh-text);
+
+    .req {
+      color: #dc2626;
+      margin-left: .15rem;
+    }
+  }
+
+  .field-hint,
+  .field-error {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: .35rem;
+    margin-top: .15rem;
+    font-size: .78rem;
+    line-height: 1.4;
+
+    i {
+      margin-top: .15rem;
+      font-size: .72rem;
+      flex-shrink: 0;
+    }
+  }
+
+  .field-hint {
+    color: var(--rh-text-muted);
+
+    i {
+      color: var(--rh-primary);
+    }
+  }
+
+  .field-error {
+    color: #dc2626;
+
+    i {
+      color: #dc2626;
+    }
+  }
+
+  ::ng-deep .p-select,
+  ::ng-deep .p-datepicker,
+  ::ng-deep .p-datepicker-input-icon-container {
+    width: 100%;
+  }
+
+  ::ng-deep .p-inputtext,
+  input[pInputText] {
+    width: 100%;
+    height: 44px;
+    border-radius: 10px;
+    border: 1px solid var(--rh-border);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+    &:hover {
+      border-color: var(--rh-border-hover);
+    }
+
+    &:focus {
+      border-color: var(--rh-primary);
+      box-shadow: 0 0 0 3px rgba(35, 122, 210, 0.15);
+    }
+
+    &.ng-invalid-touched {
+      border-color: #fca5a5;
+      box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.08);
+    }
+
+    &::placeholder {
+      color: #94a3b8;
+    }
+  }
+}
+
+/* ---------- Icon-prefix inputs ---------- */
+.input-icon-wrap {
+  position: relative;
+  display: block;
+
+  &__icon {
+    position: absolute;
+    left: .85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    font-size: .9rem;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  input[pInputText] {
+    padding-left: 2.4rem;
+  }
+}
+
+/* ---------------------------------------------------------
+   Sticky action bar
+   --------------------------------------------------------- */
+.init-actions {
+  position: sticky;
+  bottom: 0;
+  background: var(--rh-surface);
+  border: 1px solid #e6ebf2;
+  border-radius: 14px;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  box-shadow: 0 -2px 16px rgba(15, 23, 42, 0.06);
+  z-index: 10;
+
+  &__hint {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    color: var(--rh-text-muted);
+    font-size: .82rem;
+
+    i {
+      color: var(--rh-primary);
+    }
+  }
+
+  &__buttons {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+  }
+
+  &__primary {
+    ::ng-deep & {
+      background: linear-gradient(135deg, #1E3A8A, #0F8B9D);
+      border: none;
+      color: #fff;
+      padding: .65rem 1.25rem;
+      font-weight: 600;
+      border-radius: 10px;
+      box-shadow: 0 4px 14px rgba(30, 58, 138, 0.35);
+      transition: transform 0.15s ease, box-shadow 0.2s ease;
+
+      &:hover:not(:disabled) {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 20px rgba(30, 58, 138, 0.45);
+        background: linear-gradient(135deg, #1E3A8A, #0F8B9D);
+      }
+
+      &:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+    }
+  }
+}
+
+/* ---------------------------------------------------------
+   Select panel theming (inherited from existing utility)
+   --------------------------------------------------------- */
+:host ::ng-deep .classification-option {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  color: var(--rh-text);
+
+  span,
+  small {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  small {
+    color: var(--rh-text-muted);
+  }
+}
+
+:host ::ng-deep .select-group-label {
+  color: #475569;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+:host ::ng-deep .onboarding-neutral-select-panel {
+  .p-select-option {
+    color: var(--rh-text);
+  }
+
+  .p-select-option:not(.p-select-option-selected):not(.p-disabled).p-focus,
+  .p-select-option:not(.p-select-option-selected):not(.p-disabled):hover {
+    background: #f8fafc;
+    color: var(--rh-text);
+  }
+
+  .p-select-option-selected,
+  .p-select-option-selected.p-focus {
+    background: #eef2ff;
+    color: var(--rh-text);
+  }
+}
+
+/* ---------------------------------------------------------
+   Responsive
+   --------------------------------------------------------- */
+@media (max-width: 900px) {
+  :host {
+    padding: 1rem;
+  }
+
+  .init-header {
+    padding: 1rem 1.25rem 1.25rem;
+
+    &__title {
+      gap: .75rem;
+
+      .title-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.25rem;
+      }
+
+      h2 {
+        font-size: 1.25rem;
+      }
+    }
+  }
+
+  .init-section {
+    padding: 1rem 1.1rem 1.25rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .col-span-2 {
+    grid-column: span 1;
+  }
+
+  .init-actions {
+    flex-direction: column;
+    align-items: stretch;
+
+    &__hint {
+      justify-content: center;
+      text-align: center;
+    }
+
+    &__buttons {
+      justify-content: space-between;
+      width: 100%;
+    }
+  }
+
+  .init-success {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+
+    &__actions {
+      justify-content: center;
+    }
+  }
+}

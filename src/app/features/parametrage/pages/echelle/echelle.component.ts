@@ -5,13 +5,12 @@ import { InputText } from 'primeng/inputtext';
 import { FormsModule, NgForm } from '@angular/forms';
 import { TooltipModule } from 'primeng/tooltip';
 import { Dialog } from 'primeng/dialog';
-import { NgIf, CommonModule, NgClass } from '@angular/common';
+import { NgIf, CommonModule } from '@angular/common';
 import { Echelle } from '../../../../models/Echelle.model';
 import { EchelleService } from '../../services/echelle/echelle.service';
 import { PageResponse } from '../../../../models/PageResponse.model';
 import { DropdownModule } from 'primeng/dropdown';
-import { NiveauDiplome } from '../../../documents/models/diplomes/niveau-diplome.model';
-import { NiveauDiplomeService } from '../../../documents/services/diplomes/niveau-diplome.service';
+import { AutoCompleteModule } from 'primeng/autocomplete';
 import { Textarea } from "primeng/textarea";
 import { MessageService, ConfirmationService, PrimeTemplate } from 'primeng/api';
 import { Toast } from 'primeng/toast';
@@ -19,6 +18,7 @@ import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { FloatLabelModule } from 'primeng/floatlabel';
 import { ToastHelper } from '../../../../shared/utils/toast-helper';
 import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'primeng/tabs';
+import { DIPLOME_NIVEAUX } from '../../../onboarding/constants/diplome-options.constants';
 
 @Component({
   selector: 'app-echelle',
@@ -35,6 +35,7 @@ import { Tabs, TabList, Tab, TabPanels, TabPanel } from 'primeng/tabs';
     Dialog,
     NgIf,
     DropdownModule,
+    AutoCompleteModule,
     Textarea,
     Toast,
     ConfirmDialogModule,
@@ -59,7 +60,9 @@ export class EchelleComponent implements OnInit {
   @ViewChild('addForm') addForm?: NgForm;
 
   situationEchelle: Echelle[] = [];
-  niveauxDiplome: NiveauDiplome[] = [];
+
+  readonly niveauxList: string[] = DIPLOME_NIVEAUX;
+  niveauSuggestions: string[] = [];
 
   totalRecords = 0;
   pageSize = 5;
@@ -67,23 +70,19 @@ export class EchelleComponent implements OnInit {
 
   constructor(
     private echelleService: EchelleService,
-    private niveauDiplomeService: NiveauDiplomeService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) {}
 
   ngOnInit(): void {
     this.loadPage(0, this.pageSize);
-    this.loadNiveauxDiplome();
   }
 
-  loadNiveauxDiplome() {
-    this.niveauDiplomeService.getAll(0, 100).subscribe({
-      next: (res) => {
-        this.niveauxDiplome = res.content || [];
-      },
-      error: (err) => console.error('Erreur chargement niveaux diplome', err)
-    });
+  filterNiveau(event: { query: string }) {
+    const q = (event.query || '').trim().toLowerCase();
+    this.niveauSuggestions = q
+      ? this.niveauxList.filter(v => v.toLowerCase().includes(q))
+      : this.niveauxList.slice();
   }
 
   loadPage(page: number, size: number) {
@@ -146,7 +145,7 @@ export class EchelleComponent implements OnInit {
       id: item.id,
       echelle: item.echelle,
       description: item.description || '',
-      niveauDiplomeId: item.niveauDiplome?.id || null
+      niveauDiplome: item.niveauDiplome || ''
     };
     this.displayDialog = true;
     setTimeout(() => {
@@ -156,15 +155,15 @@ export class EchelleComponent implements OnInit {
 
   save(): void {
     const f = this.form;
-    if (!f.echelle?.trim() || !f.niveauDiplomeId) {
+    if (!f.echelle?.trim()) {
       ToastHelper.showFormError(this.messageService);
       return;
     }
 
     const payload: any = {
-      ...f,
       echelle: f.echelle.trim(),
-      description: (f.description || '').trim()
+      description: (f.description || '').trim(),
+      niveauDiplome: (f.niveauDiplome || '').trim() || null
     };
 
     if (this.dialogMode === 'add') {
