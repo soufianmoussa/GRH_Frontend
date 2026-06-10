@@ -11,6 +11,8 @@ export interface ChatMessage {
 export interface ChatRequest {
   message: string;
   history: ChatMessage[];
+  /** Live navigation context (role, current screen, accessible screens). */
+  context?: import('../../../core/navigation/navigation.models').AssistantContext;
 }
 
 /** Response returned by the backend. */

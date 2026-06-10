@@ -49,6 +49,12 @@
     </div>
   </header>
 
+  <!-- Context bar: "you are here" -->
+  <div class="chatbot-context" *ngIf="currentScreenLabel()">
+    <i class="pi pi-map-marker"></i>
+    <span>{{ 'ASSISTANT.CONTEXT_HERE' | translate }} <strong>{{ currentScreenLabel() }}</strong></span>
+  </div>
+
   <!-- Messages / empty state -->
   <div class="chatbot-panel__body" #scrollArea>
 
@@ -61,9 +67,9 @@
         <button
           type="button"
           class="chatbot-suggestion"
-          *ngFor="let s of suggestions"
+          *ngFor="let s of suggestions()"
           (click)="useSuggestion(s)">
-          {{ s | translate }}
+          {{ s }}
         </button>
       </div>
     </div>
@@ -77,7 +83,26 @@
         <span class="chatbot-msg__avatar" *ngIf="msg.role === 'model'">
           <i class="pi pi-sparkles"></i>
         </span>
-        <div class="chatbot-msg__bubble">{{ msg.content }}</div>
+        <div class="chatbot-msg__content">
+          <!-- User text is rendered as plain text; assistant text as safe HTML. -->
+          <div class="chatbot-msg__bubble" *ngIf="msg.role === 'user'">{{ msg.content }}</div>
+          <div class="chatbot-msg__bubble chatbot-msg__bubble--rich"
+               *ngIf="msg.role === 'model'"
+               [innerHTML]="msg.html"></div>
+
+          <!-- Validated navigation chips -->
+          <div class="chatbot-navchips" *ngIf="msg.chips?.length">
+            <button
+              type="button"
+              class="chatbot-navchip"
+              *ngFor="let chip of msg.chips"
+              (click)="openScreen(chip)"
+              [title]="('ASSISTANT.GO_TO' | translate) + ' ' + chip.label">
+              <i class="pi pi-arrow-right"></i>
+              <span>{{ chip.label }}</span>
+            </button>
+          </div>
+        </div>
       </div>
     </ng-container>
 

@@ -1,0 +1,651 @@
+import { AppRole, NavScreen } from './navigation.models';
+
+/**
+ * SINGLE SOURCE OF TRUTH for the assistant's navigation knowledge.
+ *
+ * Each entry must mirror a real route declared in a `*.routes.ts` file and carry
+ * the SAME roles as that route's `data.roles` guard. A spec
+ * (`app-navigation.catalog.spec.ts`) enforces route consistency so the catalog
+ * cannot silently drift from the application.
+ *
+ * To expose a new screen to the assistant: add ONE entry here. No prompt, service
+ * or backend change is required — the assistant adapts automatically.
+ */
+export const APP_NAVIGATION_CATALOG: NavScreen[] = [
+
+  // ============================ AGENT ============================
+  {
+    id: 'agent-accueil',
+    route: '/accueil',
+    label: { fr: 'Accueil', en: 'Home' },
+    module: { fr: 'Espace agent', en: 'Employee space' },
+    description: { fr: "Page d'accueil de l'agent : aperçu et accès rapides.", en: 'Employee landing page with overview and quick links.' },
+    actions: [{ fr: 'Voir les raccourcis', en: 'See quick links' }],
+    roles: ['AGENT'],
+    keywords: ['home', 'accueil', 'tableau'],
+  },
+  {
+    id: 'agent-fiche',
+    route: '/Agent',
+    label: { fr: 'Ma fiche agent', en: 'My profile' },
+    module: { fr: 'Mon profil', en: 'My profile' },
+    description: { fr: "Fiche principale de l'agent : identité et informations générales.", en: 'Main employee record: identity and general information.' },
+    actions: [{ fr: 'Consulter sa fiche', en: 'View profile' }],
+    roles: ['AGENT'],
+    keywords: ['profil', 'fiche', 'identité'],
+  },
+  {
+    id: 'agent-mydata',
+    route: '/myData',
+    label: { fr: 'Mes données personnelles', en: 'My personal data' },
+    module: { fr: 'Mon profil', en: 'My profile' },
+    description: { fr: 'Données personnelles : adresse, contacts, situation familiale, coordonnées bancaires.', en: 'Personal data: address, contacts, family, bank details.' },
+    actions: [
+      { fr: 'Consulter ses données', en: 'View personal data' },
+      { fr: 'Demander une modification', en: 'Request a change' },
+    ],
+    roles: ['AGENT'],
+    keywords: ['adresse', 'contact', 'rib', 'banque', 'famille', 'conjoint', 'enfant'],
+  },
+  {
+    id: 'agent-data-admin',
+    route: '/dataAdministrative',
+    label: { fr: 'Données administratives', en: 'Administrative data' },
+    module: { fr: 'Mon profil', en: 'My profile' },
+    description: { fr: 'Informations administratives de carrière (grade, échelle, échelon, matricule).', en: 'Administrative career data (grade, scale, step, employee number).' },
+    actions: [{ fr: 'Consulter ses données administratives', en: 'View administrative data' }],
+    roles: ['AGENT'],
+    keywords: ['grade', 'échelle', 'échelon', 'matricule', 'statut'],
+  },
+  {
+    id: 'agent-situation',
+    route: '/SituationActuelle',
+    label: { fr: 'Situation actuelle', en: 'Current status' },
+    module: { fr: 'Mon profil', en: 'My profile' },
+    description: { fr: 'Situation administrative et professionnelle actuelle de l\'agent.', en: 'Current administrative and professional status.' },
+    actions: [{ fr: 'Consulter sa situation', en: 'View current status' }],
+    roles: ['AGENT', 'ADMIN'],
+    keywords: ['situation', 'affectation', 'poste actuel'],
+  },
+  {
+    id: 'agent-onboarding',
+    route: '/mon-onboarding',
+    label: { fr: 'Mon onboarding', en: 'My onboarding' },
+    module: { fr: 'Mon profil', en: 'My profile' },
+    description: { fr: 'Suivi de son intégration : étapes, documents à fournir, état d\'avancement.', en: 'Onboarding tracking: steps, required documents, progress.' },
+    actions: [
+      { fr: "Compléter le formulaire d'intégration", en: 'Complete the onboarding wizard' },
+      { fr: 'Téléverser les documents requis', en: 'Upload required documents' },
+    ],
+    roles: ['AGENT'],
+    keywords: ['onboarding', 'intégration', 'accueil', 'documents', 'activation'],
+  },
+  {
+    id: 'agent-carriere',
+    route: '/carriere',
+    label: { fr: 'Consultation de carrière', en: 'Career overview' },
+    module: { fr: 'Ma carrière', en: 'My career' },
+    description: { fr: 'Historique et évolution de carrière de l\'agent.', en: 'Employee career history and progression.' },
+    actions: [{ fr: 'Consulter sa carrière', en: 'View career' }],
+    roles: ['AGENT'],
+    keywords: ['carrière', 'avancement', 'historique'],
+  },
+  {
+    id: 'agent-competences',
+    route: '/competences',
+    label: { fr: 'Mes compétences', en: 'My skills' },
+    module: { fr: 'Ma carrière', en: 'My career' },
+    description: { fr: 'Compétences évaluées et niveaux de l\'agent.', en: 'Assessed skills and levels.' },
+    actions: [{ fr: 'Consulter ses compétences', en: 'View skills' }],
+    roles: ['AGENT', 'ADMIN'],
+    keywords: ['compétences', 'évaluation', 'skills'],
+  },
+  {
+    id: 'agent-formations',
+    route: '/formations',
+    label: { fr: 'Consultation des formations', en: 'Training overview' },
+    module: { fr: 'Ma carrière', en: 'My career' },
+    description: { fr: 'Formations suivies et certifications de l\'agent.', en: 'Completed trainings and certifications.' },
+    actions: [{ fr: 'Consulter ses formations', en: 'View trainings' }],
+    roles: ['AGENT'],
+    keywords: ['formation', 'training', 'certificat'],
+  },
+  {
+    id: 'agent-diplomes',
+    route: '/ConsultationDesDiplomes',
+    label: { fr: 'Consultation des diplômes', en: 'Diplomas overview' },
+    module: { fr: 'Ma carrière', en: 'My career' },
+    description: { fr: 'Diplômes enregistrés au dossier de l\'agent.', en: 'Diplomas recorded in the employee file.' },
+    actions: [{ fr: 'Consulter ses diplômes', en: 'View diplomas' }],
+    roles: ['AGENT'],
+    keywords: ['diplôme', 'diploma', 'études'],
+  },
+  {
+    id: 'agent-conge-new',
+    route: '/conge',
+    label: { fr: 'Nouvelle demande de congé', en: 'New leave request' },
+    module: { fr: 'Mes demandes', en: 'My requests' },
+    description: { fr: 'Déposer une nouvelle demande de congé ou d\'absence.', en: 'Submit a new leave or absence request.' },
+    actions: [
+      { fr: 'Créer une demande de congé', en: 'Create a leave request' },
+      { fr: 'Joindre un justificatif', en: 'Attach a supporting document' },
+    ],
+    roles: ['AGENT'],
+    keywords: ['congé', 'leave', 'absence', 'demande', 'vacances', 'solde'],
+  },
+  {
+    id: 'agent-conge-list',
+    route: '/mes-demandes-conge',
+    label: { fr: 'Mes demandes de congé', en: 'My leave requests' },
+    module: { fr: 'Mes demandes', en: 'My requests' },
+    description: { fr: 'Suivre l\'état de ses demandes de congé (en attente, validé, rejeté).', en: 'Track leave requests status (pending, approved, rejected).' },
+    actions: [
+      { fr: 'Suivre l\'état des demandes', en: 'Track request status' },
+      { fr: 'Annuler une demande en attente', en: 'Cancel a pending request' },
+    ],
+    roles: ['AGENT'],
+    keywords: ['congé', 'suivi', 'statut', 'solde'],
+  },
+  {
+    id: 'agent-attestation',
+    route: '/AttestationDeTravail',
+    label: { fr: 'Attestation de travail', en: 'Work certificate' },
+    module: { fr: 'Mes demandes', en: 'My requests' },
+    description: { fr: 'Demander et télécharger une attestation de travail.', en: 'Request and download a work certificate.' },
+    actions: [
+      { fr: 'Demander une attestation', en: 'Request a certificate' },
+      { fr: 'Télécharger le PDF', en: 'Download the PDF' },
+    ],
+    roles: ['AGENT'],
+    keywords: ['attestation', 'certificat', 'travail', 'pdf'],
+  },
+  {
+    id: 'agent-poste-travail',
+    route: '/posteTravail',
+    label: { fr: 'Fiche de poste (PDF)', en: 'Job sheet (PDF)' },
+    module: { fr: 'Documents', en: 'Documents' },
+    description: { fr: 'Télécharger la fiche de son poste de travail.', en: 'Download the job/position sheet.' },
+    actions: [{ fr: 'Télécharger la fiche de poste', en: 'Download job sheet' }],
+    roles: ['AGENT'],
+    keywords: ['poste', 'fiche', 'pdf', 'travail'],
+  },
+  {
+    id: 'agent-historique-actes',
+    route: '/HistoriqueDesActes',
+    label: { fr: 'Historique des actes', en: 'Acts history' },
+    module: { fr: 'Documents', en: 'Documents' },
+    description: { fr: 'Historique des actes administratifs concernant l\'agent.', en: 'History of administrative acts concerning the employee.' },
+    actions: [{ fr: 'Consulter l\'historique', en: 'View history' }],
+    roles: ['AGENT'],
+    keywords: ['actes', 'historique', 'documents'],
+  },
+
+  // Actes administratifs — vue agent (consultation de ses propres actes)
+  ...actesScreens('AGENT', 'Mes actes administratifs', 'My administrative acts',
+    'Consulter cet acte administratif le concernant.', 'View this administrative act.'),
+
+  // ====================== RESPONSABLE_UNITE ======================
+  {
+    id: 'ru-demandes',
+    route: '/DemandesCongeAttestation',
+    label: { fr: 'Demandes RH à valider', en: 'HR requests to approve' },
+    module: { fr: 'Validation RH', en: 'HR validation' },
+    description: { fr: 'Valider ou rejeter les demandes de congé et d\'attestation de son unité.', en: 'Approve or reject leave and certificate requests for the unit.' },
+    actions: [
+      { fr: 'Valider une demande', en: 'Approve a request' },
+      { fr: 'Rejeter une demande', en: 'Reject a request' },
+    ],
+    roles: ['RESPONSABLE_UNITE', 'ADMIN'],
+    keywords: ['validation', 'congé', 'attestation', 'responsable', 'approuver'],
+  },
+  {
+    id: 'ru-notes',
+    route: '/NoteAnnuelles',
+    label: { fr: 'Notes annuelles', en: 'Annual ratings' },
+    module: { fr: 'Évaluation', en: 'Appraisal' },
+    description: { fr: 'Saisir et gérer les notes annuelles d\'évaluation des agents.', en: 'Enter and manage employees\' annual appraisal ratings.' },
+    actions: [{ fr: 'Saisir une note annuelle', en: 'Enter an annual rating' }],
+    roles: ['RESPONSABLE_UNITE', 'ADMIN'],
+    keywords: ['note', 'évaluation', 'annuelle', 'notation'],
+  },
+
+  // ============================ ADMIN ============================
+  {
+    id: 'admin-dashboard',
+    route: '/dashboard',
+    label: { fr: 'Tableau de bord', en: 'Dashboard' },
+    module: { fr: 'Pilotage', en: 'Overview' },
+    description: { fr: 'Indicateurs et vue d\'ensemble RH pour l\'administrateur.', en: 'HR KPIs and overview for administrators.' },
+    actions: [{ fr: 'Consulter les indicateurs', en: 'View KPIs' }],
+    roles: ['ADMIN'],
+    keywords: ['dashboard', 'tableau de bord', 'kpi', 'indicateurs'],
+  },
+
+  // -- Gestion des agents --
+  {
+    id: 'admin-onboarding-init',
+    route: '/admin/onboarding/initialiser',
+    label: { fr: 'Initialiser un agent', en: 'Initialize an employee' },
+    module: { fr: 'Gestion des agents', en: 'Employee management' },
+    description: { fr: 'Démarrer l\'onboarding d\'un nouvel agent et l\'inviter.', en: 'Start a new employee\'s onboarding and invite them.' },
+    actions: [
+      { fr: 'Créer un dossier d\'onboarding', en: 'Create an onboarding case' },
+      { fr: 'Envoyer l\'invitation', en: 'Send the invitation' },
+    ],
+    roles: ['ADMIN'],
+    keywords: ['onboarding', 'initialiser', 'nouvel agent', 'invitation', 'recrutement'],
+  },
+  {
+    id: 'admin-onboarding-list',
+    route: '/admin/onboarding',
+    label: { fr: 'Suivi onboarding', en: 'Onboarding tracking' },
+    module: { fr: 'Gestion des agents', en: 'Employee management' },
+    description: { fr: 'Suivre et traiter les onboardings en cours, valider les dossiers.', en: 'Track ongoing onboardings and validate cases.' },
+    actions: [
+      { fr: 'Consulter un dossier d\'onboarding', en: 'Open an onboarding case' },
+      { fr: 'Valider ou compléter un dossier', en: 'Validate or complete a case' },
+    ],
+    roles: ['ADMIN'],
+    keywords: ['onboarding', 'suivi', 'validation', 'intégration'],
+  },
+  {
+    id: 'admin-matricules',
+    route: '/InitialisationMatricules',
+    label: { fr: 'Initialisation des matricules', en: 'Employee number setup' },
+    module: { fr: 'Gestion des agents', en: 'Employee management' },
+    description: { fr: 'Attribuer et initialiser les matricules des agents.', en: 'Assign and initialize employee numbers.' },
+    actions: [{ fr: 'Attribuer un matricule', en: 'Assign an employee number' }],
+    roles: ['ADMIN'],
+    keywords: ['matricule', 'numéro', 'initialisation'],
+  },
+  {
+    id: 'admin-dossiers',
+    route: '/GestionUtilisateurs',
+    label: { fr: 'Dossiers des agents', en: 'Employee files' },
+    module: { fr: 'Gestion des agents', en: 'Employee management' },
+    description: { fr: 'Consulter, créer et gérer les dossiers complets des agents.', en: 'View, create and manage complete employee files.' },
+    actions: [
+      { fr: 'Rechercher un agent', en: 'Search an employee' },
+      { fr: 'Créer / ouvrir un dossier agent', en: 'Create / open an employee file' },
+    ],
+    roles: ['ADMIN'],
+    keywords: ['dossier', 'agent', 'utilisateurs', 'fiche', 'créer'],
+  },
+  {
+    id: 'admin-comptes',
+    route: '/GestionComptes',
+    label: { fr: 'Gestion des comptes', en: 'Account management' },
+    module: { fr: 'Gestion des agents', en: 'Employee management' },
+    description: { fr: 'Gérer les comptes utilisateurs, rôles, activation et réinitialisation de mot de passe.', en: 'Manage user accounts, roles, activation and password reset.' },
+    actions: [
+      { fr: 'Créer un compte', en: 'Create an account' },
+      { fr: 'Modifier les rôles', en: 'Change roles' },
+      { fr: 'Réinitialiser un mot de passe', en: 'Reset a password' },
+    ],
+    roles: ['ADMIN'],
+    keywords: ['compte', 'utilisateur', 'rôle', 'mot de passe', 'accès', 'sécurité'],
+  },
+  {
+    id: 'admin-approbation',
+    route: '/ApprobationModifications',
+    label: { fr: 'Approbation des modifications', en: 'Change approvals' },
+    module: { fr: 'Gestion des agents', en: 'Employee management' },
+    description: { fr: 'Examiner et approuver les demandes de modification de données des agents.', en: 'Review and approve employees\' data change requests.' },
+    actions: [
+      { fr: 'Approuver une modification', en: 'Approve a change' },
+      { fr: 'Rejeter une modification', en: 'Reject a change' },
+    ],
+    roles: ['ADMIN'],
+    keywords: ['approbation', 'modification', 'demande', 'validation données'],
+  },
+
+  // -- Organisation --
+  {
+    id: 'admin-organigramme',
+    route: '/Organigramme',
+    label: { fr: 'Organigramme', en: 'Org chart' },
+    module: { fr: 'Organisation', en: 'Organization' },
+    description: { fr: 'Hub central : gérer unités, postes, affectations et responsables via l\'organigramme.', en: 'Central hub: manage units, positions, assignments and managers from the org chart.' },
+    actions: [
+      { fr: 'Créer / modifier une unité', en: 'Create / edit a unit' },
+      { fr: 'Affecter un agent à un poste', en: 'Assign an employee to a position' },
+      { fr: 'Désigner un responsable d\'unité', en: 'Designate a unit manager' },
+    ],
+    roles: ['ADMIN'],
+    keywords: ['organigramme', 'unité', 'poste', 'affectation', 'responsable', 'structure'],
+  },
+  {
+    id: 'admin-hist-affectations',
+    route: '/HistoriqueAffectations',
+    label: { fr: 'Historique des affectations', en: 'Assignment history' },
+    module: { fr: 'Organisation', en: 'Organization' },
+    description: { fr: 'Consulter l\'historique des affectations des agents aux postes.', en: 'View the history of employee-to-position assignments.' },
+    actions: [{ fr: 'Consulter l\'historique', en: 'View history' }],
+    roles: ['ADMIN'],
+    keywords: ['affectation', 'historique', 'mutation'],
+  },
+  {
+    id: 'admin-fonctions',
+    route: '/Fonctions',
+    label: { fr: 'Fonctions', en: 'Functions' },
+    module: { fr: 'Organisation', en: 'Organization' },
+    description: { fr: 'Référentiel des fonctions (prérequis des postes).', en: 'Functions reference data (prerequisite for positions).' },
+    actions: [{ fr: 'Gérer les fonctions', en: 'Manage functions' }],
+    roles: ['ADMIN'],
+    keywords: ['fonction', 'référentiel', 'métier'],
+  },
+  {
+    id: 'admin-postes-activites',
+    route: '/PostesActivites',
+    label: { fr: 'Postes & activités', en: 'Positions & activities' },
+    module: { fr: 'Organisation', en: 'Organization' },
+    description: { fr: 'Gérer les postes de travail et leurs activités.', en: 'Manage workstations and their activities.' },
+    actions: [{ fr: 'Gérer les postes et activités', en: 'Manage positions and activities' }],
+    roles: ['ADMIN'],
+    keywords: ['poste', 'activité', 'travail'],
+  },
+  {
+    id: 'admin-familles-pro',
+    route: '/situationFamille',
+    label: { fr: 'Familles professionnelles', en: 'Professional families' },
+    module: { fr: 'Organisation', en: 'Organization' },
+    description: { fr: 'Référentiel des familles et sous-familles professionnelles.', en: 'Professional families and sub-families reference data.' },
+    actions: [{ fr: 'Gérer les familles professionnelles', en: 'Manage professional families' }],
+    roles: ['ADMIN'],
+    keywords: ['famille', 'professionnelle', 'sous-famille', 'référentiel'],
+  },
+  {
+    id: 'admin-familles-emploi',
+    route: '/familleEtEmploi',
+    label: { fr: 'Familles & emplois', en: 'Families & jobs' },
+    module: { fr: 'Organisation', en: 'Organization' },
+    description: { fr: 'Référentiel des familles d\'emplois et des emplois.', en: 'Job families and jobs reference data.' },
+    actions: [{ fr: 'Gérer les familles et emplois', en: 'Manage job families and jobs' }],
+    roles: ['ADMIN'],
+    keywords: ['emploi', 'famille', 'référentiel'],
+  },
+
+  // -- Carrière & situation administrative : Actes administratifs (admin) --
+  {
+    id: 'admin-sanctions',
+    route: '/admin/actes/sanctions',
+    label: { fr: 'Sanctions', en: 'Sanctions' },
+    module: { fr: 'Actes administratifs', en: 'Administrative acts' },
+    description: { fr: 'Gérer les sanctions disciplinaires des agents.', en: 'Manage employees\' disciplinary sanctions.' },
+    actions: [
+      { fr: 'Créer une sanction', en: 'Create a sanction' },
+      { fr: 'Consulter / modifier une sanction', en: 'View / edit a sanction' },
+    ],
+    roles: ['ADMIN'],
+    keywords: ['sanction', 'discipline', 'acte'],
+  },
+  ...actesScreens('ADMIN', 'Actes administratifs', 'Administrative acts',
+    'Gérer cet acte administratif des agents.', 'Manage this administrative act.'),
+
+  // -- Carrière & situation administrative : Gestion de carrière --
+  {
+    id: 'admin-avancement',
+    route: '/Avencement',
+    label: { fr: 'Avancement', en: 'Advancement' },
+    module: { fr: 'Gestion de carrière', en: 'Career management' },
+    description: { fr: 'Gérer les avancements d\'échelon et de grade des agents.', en: 'Manage employees\' step and grade advancements.' },
+    actions: [{ fr: 'Traiter un avancement', en: 'Process an advancement' }],
+    roles: ['ADMIN'],
+    keywords: ['avancement', 'échelon', 'grade', 'promotion'],
+  },
+  {
+    id: 'admin-anciennete',
+    route: '/DatesDanciennete',
+    label: { fr: 'Dates d\'ancienneté', en: 'Seniority dates' },
+    module: { fr: 'Gestion de carrière', en: 'Career management' },
+    description: { fr: 'Gérer les dates d\'ancienneté des agents.', en: 'Manage employees\' seniority dates.' },
+    actions: [{ fr: 'Mettre à jour l\'ancienneté', en: 'Update seniority' }],
+    roles: ['ADMIN'],
+    keywords: ['ancienneté', 'date', 'carrière'],
+  },
+  {
+    id: 'admin-services-anterieurs',
+    route: '/ServicesAnterieurs',
+    label: { fr: 'Services antérieurs', en: 'Prior service' },
+    module: { fr: 'Gestion de carrière', en: 'Career management' },
+    description: { fr: 'Saisir les services antérieurs pris en compte dans la carrière.', en: 'Record prior service counted toward the career.' },
+    actions: [{ fr: 'Saisir un service antérieur', en: 'Record prior service' }],
+    roles: ['ADMIN'],
+    keywords: ['service antérieur', 'carrière', 'reprise'],
+  },
+  {
+    id: 'admin-echelon',
+    route: '/echelon',
+    label: { fr: 'Échelons', en: 'Steps' },
+    module: { fr: 'Gestion de carrière', en: 'Career management' },
+    description: { fr: 'Paramétrer les échelons de la grille indiciaire.', en: 'Configure salary-scale steps.' },
+    actions: [{ fr: 'Gérer les échelons', en: 'Manage steps' }],
+    roles: ['ADMIN'],
+    keywords: ['échelon', 'grille', 'indiciaire'],
+  },
+  {
+    id: 'admin-echelle',
+    route: '/echelle',
+    label: { fr: 'Échelles', en: 'Scales' },
+    module: { fr: 'Gestion de carrière', en: 'Career management' },
+    description: { fr: 'Paramétrer les échelles de la grille indiciaire.', en: 'Configure salary scales.' },
+    actions: [{ fr: 'Gérer les échelles', en: 'Manage scales' }],
+    roles: ['ADMIN'],
+    keywords: ['échelle', 'grille', 'indiciaire'],
+  },
+
+  // -- Compétences & formation --
+  {
+    id: 'admin-evaluation',
+    route: '/evaluationEtCompetence',
+    label: { fr: 'Évaluation des compétences', en: 'Skills assessment' },
+    module: { fr: 'Compétences & formation', en: 'Skills & training' },
+    description: { fr: 'Évaluer et noter les compétences des agents.', en: 'Assess and rate employees\' skills.' },
+    actions: [{ fr: 'Évaluer un agent', en: 'Assess an employee' }],
+    roles: ['ADMIN'],
+    keywords: ['évaluation', 'compétence', 'notation'],
+  },
+  {
+    id: 'admin-ref-competences',
+    route: '/referentielDesGroupesDeCompetences',
+    label: { fr: 'Référentiel des compétences', en: 'Skills reference' },
+    module: { fr: 'Compétences & formation', en: 'Skills & training' },
+    description: { fr: 'Gérer les groupes et référentiels de compétences.', en: 'Manage skill groups and reference data.' },
+    actions: [{ fr: 'Gérer les groupes de compétences', en: 'Manage skill groups' }],
+    roles: ['ADMIN'],
+    keywords: ['référentiel', 'compétence', 'groupe'],
+  },
+  {
+    id: 'admin-diplomes',
+    route: '/Diplomes',
+    label: { fr: 'Diplômes', en: 'Diplomas' },
+    module: { fr: 'Compétences & formation', en: 'Skills & training' },
+    description: { fr: 'Gérer le référentiel et les diplômes des agents.', en: 'Manage diplomas and their reference data.' },
+    actions: [{ fr: 'Gérer les diplômes', en: 'Manage diplomas' }],
+    roles: ['ADMIN'],
+    keywords: ['diplôme', 'études', 'référentiel'],
+  },
+
+  // -- Rémunération & avantages --
+  {
+    id: 'admin-primes',
+    route: '/FichierPrimes',
+    label: { fr: 'Fichier des primes', en: 'Bonuses file' },
+    module: { fr: 'Rémunération & avantages', en: 'Compensation & benefits' },
+    description: { fr: 'Gérer les primes extra-budgétaires des agents.', en: 'Manage employees\' extra-budgetary bonuses.' },
+    actions: [{ fr: 'Gérer les primes', en: 'Manage bonuses' }],
+    roles: ['ADMIN'],
+    keywords: ['prime', 'rémunération', 'bonus'],
+  },
+  {
+    id: 'admin-indemnites',
+    route: '/indemnitesComponent',
+    label: { fr: 'Indemnités', en: 'Allowances' },
+    module: { fr: 'Rémunération & avantages', en: 'Compensation & benefits' },
+    description: { fr: 'Gérer les indemnités permanentes et complémentaires.', en: 'Manage permanent and complementary allowances.' },
+    actions: [{ fr: 'Gérer les indemnités', en: 'Manage allowances' }],
+    roles: ['ADMIN'],
+    keywords: ['indemnité', 'rémunération', 'allocation'],
+  },
+  {
+    id: 'admin-retraite',
+    route: '/CaissesRetraite',
+    label: { fr: 'Caisses de retraite', en: 'Pension funds' },
+    module: { fr: 'Rémunération & avantages', en: 'Compensation & benefits' },
+    description: { fr: 'Gérer les caisses de retraite des agents.', en: 'Manage employees\' pension funds.' },
+    actions: [{ fr: 'Gérer les caisses de retraite', en: 'Manage pension funds' }],
+    roles: ['ADMIN'],
+    keywords: ['retraite', 'caisse', 'pension'],
+  },
+  {
+    id: 'admin-prets',
+    route: '/PretFinancier',
+    label: { fr: 'Prêts financiers', en: 'Financial loans' },
+    module: { fr: 'Rémunération & avantages', en: 'Compensation & benefits' },
+    description: { fr: 'Gérer les prêts financiers accordés aux agents.', en: 'Manage financial loans granted to employees.' },
+    actions: [{ fr: 'Gérer les prêts', en: 'Manage loans' }],
+    roles: ['ADMIN'],
+    keywords: ['prêt', 'financier', 'crédit'],
+  },
+  {
+    id: 'admin-distinctions',
+    route: '/DistinctionsHonorifiques',
+    label: { fr: 'Distinctions honorifiques', en: 'Honorary distinctions' },
+    module: { fr: 'Rémunération & avantages', en: 'Compensation & benefits' },
+    description: { fr: 'Gérer les distinctions honorifiques des agents.', en: 'Manage employees\' honorary distinctions.' },
+    actions: [{ fr: 'Gérer les distinctions', en: 'Manage distinctions' }],
+    roles: ['ADMIN'],
+    keywords: ['distinction', 'honorifique', 'médaille'],
+  },
+
+  // -- Santé & social --
+  {
+    id: 'admin-accidents',
+    route: '/AccidentsMaladies',
+    label: { fr: 'Accidents & maladies', en: 'Accidents & illnesses' },
+    module: { fr: 'Santé & social', en: 'Health & welfare' },
+    description: { fr: 'Gérer les accidents de travail et maladies des agents.', en: 'Manage work accidents and illnesses.' },
+    actions: [{ fr: 'Enregistrer un accident / une maladie', en: 'Record an accident / illness' }],
+    roles: ['ADMIN'],
+    keywords: ['accident', 'maladie', 'santé', 'arrêt'],
+  },
+  {
+    id: 'admin-maternite',
+    route: '/maternite',
+    label: { fr: 'Maternité', en: 'Maternity' },
+    module: { fr: 'Santé & social', en: 'Health & welfare' },
+    description: { fr: 'Gérer les congés de maternité des agents.', en: 'Manage maternity leaves.' },
+    actions: [{ fr: 'Gérer un congé de maternité', en: 'Manage a maternity leave' }],
+    roles: ['ADMIN'],
+    keywords: ['maternité', 'congé', 'naissance'],
+  },
+
+  // -- Congés & absences (admin) --
+  {
+    id: 'admin-conges-agents',
+    route: '/GestionCongesAgents',
+    label: { fr: 'Congés des agents', en: 'Employees\' leaves' },
+    module: { fr: 'Congés & absences', en: 'Leave & absence' },
+    description: { fr: 'Gérer les congés et soldes de l\'ensemble des agents.', en: 'Manage all employees\' leaves and balances.' },
+    actions: [
+      { fr: 'Consulter les soldes', en: 'View balances' },
+      { fr: 'Gérer une demande de congé', en: 'Manage a leave request' },
+    ],
+    roles: ['ADMIN'],
+    keywords: ['congé', 'solde', 'absence', 'gestion'],
+  },
+  {
+    id: 'admin-types-conge',
+    route: '/TypesConge',
+    label: { fr: 'Types de congé', en: 'Leave types' },
+    module: { fr: 'Congés & absences', en: 'Leave & absence' },
+    description: { fr: 'Paramétrer les types de congé et leurs règles.', en: 'Configure leave types and their rules.' },
+    actions: [{ fr: 'Gérer les types de congé', en: 'Manage leave types' }],
+    roles: ['ADMIN'],
+    keywords: ['type de congé', 'paramétrage', 'règle'],
+  },
+  {
+    id: 'admin-jours-feries',
+    route: '/JoursFeries',
+    label: { fr: 'Jours fériés', en: 'Public holidays' },
+    module: { fr: 'Congés & absences', en: 'Leave & absence' },
+    description: { fr: 'Paramétrer le calendrier des jours fériés.', en: 'Configure the public-holidays calendar.' },
+    actions: [{ fr: 'Gérer les jours fériés', en: 'Manage public holidays' }],
+    roles: ['ADMIN'],
+    keywords: ['jour férié', 'calendrier', 'fête'],
+  },
+
+  // -- Validation & visa --
+  {
+    id: 'admin-actes-visa',
+    route: '/ActesVisa',
+    label: { fr: 'Actes en visa', en: 'Acts for visa' },
+    module: { fr: 'Validation & visa', en: 'Validation & visa' },
+    description: { fr: 'Viser (valider officiellement) les actes administratifs en attente.', en: 'Officially visa (validate) pending administrative acts.' },
+    actions: [{ fr: 'Viser un acte', en: 'Visa an act' }],
+    roles: ['ADMIN'],
+    keywords: ['visa', 'validation', 'acte', 'signature'],
+  },
+  {
+    id: 'admin-hist-visas',
+    route: '/HistoriqueActesVises',
+    label: { fr: 'Historique des actes visés', en: 'Visa history' },
+    module: { fr: 'Validation & visa', en: 'Validation & visa' },
+    description: { fr: 'Consulter l\'historique des actes déjà visés.', en: 'View the history of already-visaed acts.' },
+    actions: [{ fr: 'Consulter l\'historique des visas', en: 'View visa history' }],
+    roles: ['ADMIN'],
+    keywords: ['visa', 'historique', 'acte'],
+  },
+
+  // -- Communication --
+  {
+    id: 'admin-communication',
+    route: '/Communication',
+    label: { fr: 'Communication', en: 'Communication' },
+    module: { fr: 'Communication', en: 'Communication' },
+    description: { fr: 'Diffuser des communications et annonces aux agents.', en: 'Broadcast communications and announcements to employees.' },
+    actions: [{ fr: 'Publier une communication', en: 'Publish a communication' }],
+    roles: ['ADMIN'],
+    keywords: ['communication', 'annonce', 'message', 'diffusion'],
+  },
+];
+
+/**
+ * The shared administrative-act screens. Routes are guarded for ['ADMIN','AGENT'];
+ * we generate per-role entries so labels/descriptions match the audience while the
+ * roles array reflects the real route guard.
+ */
+function actesScreens(
+  role: 'ADMIN' | 'AGENT',
+  moduleFr: string,
+  moduleEn: string,
+  descFr: string,
+  descEn: string,
+): NavScreen[] {
+  const acts: Array<{ id: string; route: string; fr: string; en: string; kw: string[] }> = [
+    { id: 'reintegration', route: '/Reintegration', fr: 'Réintégration', en: 'Reinstatement', kw: ['réintégration', 'retour'] },
+    { id: 'stage-formation', route: '/StageFormation', fr: 'Stage & formation', en: 'Internship & training', kw: ['stage', 'formation'] },
+    { id: 'detachement', route: '/Detachement', fr: 'Détachement', en: 'Secondment', kw: ['détachement'] },
+    { id: 'radiation', route: '/Radiation', fr: 'Radiation', en: 'Removal', kw: ['radiation'] },
+    { id: 'suspension', route: '/Suspension', fr: 'Suspension', en: 'Suspension', kw: ['suspension'] },
+    { id: 'prise-en-charge', route: '/PriseEnCharge', fr: 'Prise en charge', en: 'Coverage', kw: ['prise en charge'] },
+    { id: 'mise-en-disponibilite', route: '/MiseEnDisponibilite', fr: 'Mise en disponibilité', en: 'Leave of availability', kw: ['disponibilité'] },
+  ];
+  // AGENT also sees "Sanction" under /Sanction (admin uses /admin/actes/sanctions instead).
+  const agentExtra = role === 'AGENT'
+    ? [{ id: 'sanction', route: '/Sanction', fr: 'Sanctions', en: 'Sanctions', kw: ['sanction', 'discipline'] }]
+    : [];
+
+  return [...agentExtra, ...acts].map(a => ({
+    id: `${role.toLowerCase()}-acte-${a.id}`,
+    route: a.route,
+    label: { fr: a.fr, en: a.en },
+    module: { fr: moduleFr, en: moduleEn },
+    description: { fr: `${a.fr} : ${descFr}`, en: `${a.en}: ${descEn}` },
+    actions: role === 'ADMIN'
+      ? [{ fr: 'Gérer cet acte', en: 'Manage this act' }]
+      : [{ fr: 'Consulter cet acte', en: 'View this act' }],
+    roles: ['ADMIN', 'AGENT'] as AppRole[],
+    keywords: a.kw,
+  }));
+}

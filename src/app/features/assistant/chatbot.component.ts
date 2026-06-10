@@ -9,16 +9,24 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { ChatbotService } from './services/chatbot.service';
 import { ChatMessage } from './services/chatbot.models';
+import { NavigationContextService } from '../../core/navigation/navigation-context.service';
+import { formatAssistantMessage, NavChip } from './services/message-format.util';
 
 /** Maximum number of prior turns kept in context (must match backend cap of 20). */
 const MAX_HISTORY = 20;
 
-/** A message as displayed in the UI (adds a transient flag for failed sends). */
+/** A message as displayed in the UI (adds rendering + transient flags). */
 interface UiMessage extends ChatMessage {
   failed?: boolean;
+  /** Pre-rendered safe HTML for assistant ('model') messages. */
+  html?: SafeHtml;
+  /** Validated navigation chips offered under an assistant message. */
+  chips?: NavChip[];
 }
 
 @Component({
@@ -45,12 +53,11 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
   /** Bound to the textarea. */
   draft = '';
 
-  /** Suggested prompts shown on the empty state. */
-  readonly suggestions = [
-    'ASSISTANT.SUGGESTIONS.LEAVE',
-    'ASSISTANT.SUGGESTIONS.DOCUMENTS',
-    'ASSISTANT.SUGGESTIONS.CAREER',
-  ];
+  /** Context-aware suggested prompts shown on the empty state (already localized). */
+  readonly suggestions = signal<string[]>([]);
+
+  /** Friendly name of the screen the user is currently on (or null). */
+  readonly currentScreenLabel = signal<string | null>(null);
 
   private shouldScroll = false;
   private lastUserMessage: string | null = null;
@@ -58,6 +65,9 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
   constructor(
     private chatbotService: ChatbotService,
     private translate: TranslateService,
+    private navContext: NavigationContextService,
+    private router: Router,
+    private sanitizer: DomSanitizer,
   ) {}
 
   ngOnInit(): void {}
@@ -72,9 +82,19 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
   toggle(): void {
     this.open.update(v => !v);
     if (this.open()) {
+      this.refreshContext();
       setTimeout(() => this.input?.nativeElement.focus(), 150);
       this.shouldScroll = true;
     }
+  }
+
+  /** Recompute the context-aware suggestions + current-screen label on open. */
+  private refreshContext(): void {
+    const screen = this.navContext.currentScreen();
+    this.currentScreenLabel.set(
+      screen ? this.translate.currentLang === 'en' ? screen.label.en : screen.label.fr : null,
+    );
+    this.suggestions.set(this.navContext.suggestions(3));
   }
 
   close(): void {
@@ -101,9 +121,15 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
     }
   }
 
-  useSuggestion(key: string): void {
-    this.draft = this.translate.instant(key);
+  useSuggestion(suggestion: string): void {
+    this.draft = suggestion;
     setTimeout(() => this.input?.nativeElement.focus(), 0);
+  }
+
+  /** Navigate to a validated screen the assistant referenced, and close the panel. */
+  openScreen(chip: NavChip): void {
+    this.router.navigateByUrl(chip.route);
+    this.close();
   }
 
   send(): void {
@@ -123,9 +149,19 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
     this.shouldScroll = true;
     this.loading.set(true);
 
-    this.chatbotService.chat(text, history).subscribe({
+    // Capture the live navigation context for this turn.
+    const context = this.navContext.buildContext();
+    const routeLabels = new Map(context.accessibleScreens.map(s => [s.route, s.label]));
+
+    this.chatbotService.chat(text, history, context).subscribe({
       next: response => {
-        this.messages.update(list => [...list, { role: 'model', content: response.reply }]);
+        const { html, chips } = formatAssistantMessage(response.reply, routeLabels);
+        this.messages.update(list => [...list, {
+          role: 'model',
+          content: response.reply,
+          html: this.sanitizer.bypassSecurityTrustHtml(html),
+          chips,
+        }]);
         this.loading.set(false);
         this.shouldScroll = true;
       },
