@@ -10,9 +10,18 @@ import { ReintegrationComponent } from 'app/features/actes-administratifs/pages/
 import { StageFormationComponent } from 'app/features/actes-administratifs/pages/actes-administratifs/stage-formation/stage-formation.component';
 import { PriseEnChargeComponent } from 'app/features/actes-administratifs/pages/actes-administratifs/prise-en-charge/prise-en-charge.component';
 import { MiseEnDisponibiliteComponent } from 'app/features/actes-administratifs/pages/actes-administratifs/mise-en-disponibilite/mise-en-disponibilite.component';
+import { SanctionListComponent } from 'app/features/actes-administratifs/pages/sanctions/sanction-list/sanction-list.component';
+import { SanctionDetailComponent } from 'app/features/actes-administratifs/pages/sanctions/sanction-detail/sanction-detail.component';
+import { SanctionFormComponent } from 'app/features/actes-administratifs/pages/sanctions/sanction-form/sanction-form.component';
 import { roleGuard } from 'app/core/guards/role.guard';
 
 export const ACTES_ADMINISTRATIFS_ROUTES: Routes = [
+  // Refonte « Sanctions » (gabarit acte administratif). L'ordre compte : /new avant /:id.
+  { path: 'admin/actes/sanctions', component: SanctionListComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
+  { path: 'admin/actes/sanctions/new', component: SanctionFormComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
+  { path: 'admin/actes/sanctions/:id/edit', component: SanctionFormComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
+  { path: 'admin/actes/sanctions/:id', component: SanctionDetailComponent, canActivate: [roleGuard], data: { roles: ['ADMIN', 'AGENT'] } },
+
   { path: 'ActesVisa', component: ActesVisaComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
   { path: 'HistoriqueActesVises', component: HistoriqueActesVisesComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
   { path: 'HistoriqueDesActes', component: HistoriqueDesActesComponent, canActivate: [roleGuard], data: { roles: ['AGENT'] } },

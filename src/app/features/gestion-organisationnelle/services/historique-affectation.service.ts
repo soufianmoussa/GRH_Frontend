@@ -1,45 +1,64 @@
 import { Injectable } from '@angular/core';
-import {environment} from '../../../../../environment';
-import {HttpClient, HttpParams} from '@angular/common/http';
-import {Observable} from 'rxjs';
-import {PageResponse} from '../../../models/PageResponse.model';
-import {HistoriqueAffectation} from '../../../models/gestionOrganisationelle/historique-affectation.model';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
 
-@Injectable({
-  providedIn: 'root'
-})
+import { environment } from '../../../../../environment';
+import { PageResponse } from '../../../models/PageResponse.model';
+import {
+  AuditCenterStats,
+  HistoriqueAffectationDto,
+  HistoriqueAffectationFilters,
+  HistoriqueAffectationTimelineDto
+} from '../../../models/gestionOrganisationelle/historique-affectation.model';
+
+@Injectable({ providedIn: 'root' })
 export class HistoriqueAffectationService {
 
-  private baseUrl = `${environment.apiUrl}/historique-affectations`;
+  private readonly baseUrl = `${environment.apiUrl}/historique-affectations`;
 
   constructor(private http: HttpClient) {}
 
-  getAll(page: number, size: number, global?: string): Observable<PageResponse<HistoriqueAffectation>> {
-    let params = new HttpParams()
+  search(page: number, size: number, filters: HistoriqueAffectationFilters = {}): Observable<PageResponse<HistoriqueAffectationDto>> {
+    const params = this.buildParams(filters)
       .set('page', page)
       .set('size', size);
-
-    if (global && global.trim().length) {
-      params = params.set('global', global.trim());
-    }
-
-    return this.http.get<PageResponse<HistoriqueAffectation>>(this.baseUrl, { params });
+    return this.http.get<PageResponse<HistoriqueAffectationDto>>(this.baseUrl, { params });
   }
 
-  create(payload: Partial<HistoriqueAffectation>) {
-    return this.http.post<HistoriqueAffectation>(this.baseUrl, payload);
+  getStats(filters: HistoriqueAffectationFilters = {}): Observable<AuditCenterStats> {
+    const params = this.buildParams(filters);
+    return this.http.get<AuditCenterStats>(`${this.baseUrl}/stats`, { params });
   }
 
-  update(id: number, payload: Partial<HistoriqueAffectation>) {
-    return this.http.put<HistoriqueAffectation>(`${this.baseUrl}/${id}`, payload);
+  getAgentTimeline(agentId: number): Observable<HistoriqueAffectationTimelineDto[]> {
+    return this.http.get<HistoriqueAffectationTimelineDto[]>(`${this.baseUrl}/agent/${agentId}/timeline`);
   }
 
-  delete(id: number) {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  exportExcel(filters: HistoriqueAffectationFilters = {}): Observable<Blob> {
+    const params = this.buildParams(filters);
+    return this.http.get(`${this.baseUrl}/export`, { params, responseType: 'blob' });
   }
 
-  getById(id: number) {
-    return this.http.get<HistoriqueAffectation>(`${this.baseUrl}/${id}`);
-  }
+  private buildParams(filters: HistoriqueAffectationFilters): HttpParams {
+    let params = new HttpParams();
+    const append = (key: string, value: unknown) => {
+      if (value === undefined || value === null) return;
+      const str = typeof value === 'string' ? value.trim() : String(value);
+      if (!str.length) return;
+      params = params.set(key, str);
+    };
 
+    append('global', filters.global);
+    append('agentId', filters.agentId);
+    append('matricule', filters.matricule);
+    append('uniteId', filters.uniteId);
+    append('posteId', filters.posteId);
+    append('type', filters.type);
+    append('statut', filters.statut);
+    append('performedBy', filters.performedBy);
+    append('dateEffetFrom', filters.dateEffetFrom);
+    append('dateEffetTo', filters.dateEffetTo);
+
+    return params;
+  }
 }

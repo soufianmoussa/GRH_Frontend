@@ -16,10 +16,15 @@ export class AuthService {
   private readonly USER_KEY = 'auth_user';
   private readonly ACTIVE_ROLE_KEY = 'auth_active_role';
 
+  // Stratégie de stockage : sessionStorage. Contrairement à localStorage, la session est
+  // effacée à la fermeture de l'onglet/navigateur — la fermeture de l'application déconnecte
+  // donc l'utilisateur et empêche toute restauration silencieuse au redémarrage.
+  private readonly storage: Storage = sessionStorage;
+
   private currentUserSubject = new BehaviorSubject<UserInfo | null>(this.loadStoredUser());
   currentUser$ = this.currentUserSubject.asObservable();
 
-  private activeRoleSubject = new BehaviorSubject<string | null>(localStorage.getItem(this.ACTIVE_ROLE_KEY));
+  private activeRoleSubject = new BehaviorSubject<string | null>(this.storage.getItem(this.ACTIVE_ROLE_KEY));
   activeRole$ = this.activeRoleSubject.asObservable();
 
   constructor(private http: HttpClient, private router: Router) {}
@@ -31,9 +36,9 @@ export class AuthService {
   }
 
   storeAuthResponse(response: AuthResponse): void {
-    localStorage.setItem(this.TOKEN_KEY, response.token);
+    this.storage.setItem(this.TOKEN_KEY, response.token);
     if (response.refreshToken) {
-      localStorage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
+      this.storage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
     }
 
     const user: UserInfo = {
@@ -44,17 +49,14 @@ export class AuthService {
       agentId: response.agentId ?? null,
       onboardingStatus: response.onboardingStatus ?? null
     };
-    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+    this.storage.setItem(this.USER_KEY, JSON.stringify(user));
     this.currentUserSubject.next(user);
     this.setDefaultActiveRole(response.roles);
   }
 
   logout(): void {
     const clearLocalState = () => {
-      localStorage.removeItem(this.TOKEN_KEY);
-      localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-      localStorage.removeItem(this.USER_KEY);
-      localStorage.removeItem(this.ACTIVE_ROLE_KEY);
+      this.clearAuthStorage();
       this.currentUserSubject.next(null);
       this.activeRoleSubject.next(null);
       this.router.navigate(['/login']);
@@ -71,11 +73,11 @@ export class AuthService {
   }
 
   getToken(): string | null {
-    return localStorage.getItem(this.TOKEN_KEY);
+    return this.storage.getItem(this.TOKEN_KEY);
   }
 
   getRefreshToken(): string | null {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
+    return this.storage.getItem(this.REFRESH_TOKEN_KEY);
   }
 
   refreshTokens(): Observable<AuthResponse> {
@@ -85,24 +87,41 @@ export class AuthService {
     }
     return this.http.post<AuthResponse>(`${this.API_URL}/refresh`, { refreshToken }).pipe(
       tap(response => {
-        localStorage.setItem(this.TOKEN_KEY, response.token);
+        this.storage.setItem(this.TOKEN_KEY, response.token);
         if (response.refreshToken) {
-          localStorage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
+          this.storage.setItem(this.REFRESH_TOKEN_KEY, response.refreshToken);
         }
       })
     );
   }
 
   isAuthenticated(): boolean {
+    // Token d'accès encore valide : authentifié sans ambiguïté.
+    if (this.hasValidAccessToken()) return true;
+    // Token d'accès expiré mais un refresh token est présent : on autorise (de façon optimiste)
+    // et l'intercepteur tentera un rafraîchissement au prochain appel API. Le serveur reste
+    // l'autorité : si le refresh est invalide/expiré/révoqué, la 401 entraînera la déconnexion.
+    return !!this.getRefreshToken();
+  }
+
+  /** Vrai uniquement si un token d'accès non expiré est présent (validation locale du `exp`). */
+  hasValidAccessToken(): boolean {
     const token = this.getToken();
     if (!token) return false;
-
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       return Date.now() < payload.exp * 1000;
     } catch {
       return false;
     }
+  }
+
+  /** Supprime toutes les clés d'authentification du stockage de session. */
+  private clearAuthStorage(): void {
+    this.storage.removeItem(this.TOKEN_KEY);
+    this.storage.removeItem(this.REFRESH_TOKEN_KEY);
+    this.storage.removeItem(this.USER_KEY);
+    this.storage.removeItem(this.ACTIVE_ROLE_KEY);
   }
 
   getCurrentUser(): UserInfo | null {
@@ -129,7 +148,7 @@ export class AuthService {
   fetchMe(): Observable<UserInfo> {
     return this.http.get<UserInfo>(`${this.API_URL}/me`).pipe(
       tap(user => {
-        localStorage.setItem(this.USER_KEY, JSON.stringify(user));
+        this.storage.setItem(this.USER_KEY, JSON.stringify(user));
         this.currentUserSubject.next(user);
 
         const currentActive = this.activeRoleSubject.value;
@@ -144,9 +163,13 @@ export class AuthService {
     return this.http.put(`${this.API_URL}/password`, request, { responseType: 'text' });
   }
 
+  getActiveRole(): string | null {
+    return this.activeRoleSubject.value;
+  }
+
   setActiveRole(role: string): void {
     if (this.hasRole(role)) {
-      localStorage.setItem(this.ACTIVE_ROLE_KEY, role);
+      this.storage.setItem(this.ACTIVE_ROLE_KEY, role);
       this.activeRoleSubject.next(role);
     }
   }
@@ -163,7 +186,16 @@ export class AuthService {
   }
 
   private loadStoredUser(): UserInfo | null {
-    const stored = localStorage.getItem(this.USER_KEY);
+    // Ne restaure une session au démarrage que s'il existe un token d'accès valide OU un refresh
+    // token (l'intercepteur pourra rafraîchir). Sinon on purge tout état résiduel : pas de
+    // restauration d'une session « connectée » à partir de données expirées/incohérentes.
+    const hasUsableSession = this.hasValidAccessToken() || !!this.getRefreshToken();
+    if (!hasUsableSession) {
+      this.clearAuthStorage();
+      return null;
+    }
+
+    const stored = this.storage.getItem(this.USER_KEY);
     if (stored) {
       try {
         return JSON.parse(stored);

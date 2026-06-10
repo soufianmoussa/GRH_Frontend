@@ -53,4 +53,14 @@ export class UniteStructurelleService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }
+
+  /** Archive (soft-delete) l'unité. */
+  archive(id: number): Observable<UniteStructurelle> {
+    return this.http.patch<UniteStructurelle>(`${this.baseUrl}/${id}/archive`, {});
+  }
+
+  /** Réactive une unité archivée. */
+  restore(id: number): Observable<UniteStructurelle> {
+    return this.http.patch<UniteStructurelle>(`${this.baseUrl}/${id}/restore`, {});
+  }
 }

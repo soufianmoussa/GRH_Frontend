@@ -173,9 +173,15 @@
               <fieldset class="form-section">
                 <legend><i class="pi pi-user"></i> Informations personnelles</legend>
                 <div class="form-grid">
-                  <div class="field"><label>Nom <span class="req">*</span></label><input pInputText formControlName="nom" /></div>
-                  <div class="field"><label>Prenom <span class="req">*</span></label><input pInputText formControlName="prenom" /></div>
-                  <div class="field"><label>CIN <span class="req">*</span></label><input pInputText formControlName="cin" /></div>
+                  <div class="field">
+                    <label>Nom <span class="req">*</span></label><input pInputText formControlName="nom" maxlength="50" />
+                    <small class="field-error" *ngIf="identityForm.get('nom')?.touched && identityForm.get('nom')?.errors?.['maxlength']"><i class="pi pi-exclamation-circle"></i> Nom : maximum 50 caracteres autorises.</small>
+                  </div>
+                  <div class="field">
+                    <label>Prenom <span class="req">*</span></label><input pInputText formControlName="prenom" maxlength="50" />
+                    <small class="field-error" *ngIf="identityForm.get('prenom')?.touched && identityForm.get('prenom')?.errors?.['maxlength']"><i class="pi pi-exclamation-circle"></i> Prenom : maximum 50 caracteres autorises.</small>
+                  </div>
+                  <div class="field"><label>CIN <span class="req">*</span></label><input pInputText formControlName="cin" maxlength="20" /></div>
                   <div class="field">
                     <label>Sexe <span class="req">*</span></label>
                     <p-select formControlName="sexe" [options]="sexeOptions" optionLabel="label" optionValue="value" placeholder="Choisir" appendTo="body"></p-select>
@@ -190,7 +196,7 @@
                   </div>
                   <div class="field">
                     <label>Nombre d'enfants</label>
-                    <p-inputnumber formControlName="numEnfant" [min]="0" [showButtons]="true" buttonLayout="horizontal"
+                    <p-inputnumber formControlName="numEnfant" [min]="0" [max]="20" [showButtons]="true" buttonLayout="horizontal"
                       [disabled]="identityForm.value.situation === 'C'"
                       incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus"></p-inputnumber>
                     <small *ngIf="identityForm.value.situation === 'C'" class="muted">
@@ -227,9 +233,9 @@
               <fieldset class="form-section">
                 <legend><i class="pi pi-users"></i> Information tuteur (optionnel)</legend>
                 <div class="form-grid">
-                  <div class="field"><label>Nom du tuteur (Arabe)</label><input pInputText formControlName="nomTuteurAr" /></div>
-                  <div class="field"><label>Prenom du tuteur (Arabe)</label><input pInputText formControlName="prenomTuteurAr" /></div>
-                  <div class="field"><label>PPR du tuteur</label><input pInputText formControlName="pprTuteur" /></div>
+                  <div class="field"><label>Nom du tuteur (Arabe)</label><input pInputText formControlName="nomTuteurAr" maxlength="50" /></div>
+                  <div class="field"><label>Prenom du tuteur (Arabe)</label><input pInputText formControlName="prenomTuteurAr" maxlength="50" /></div>
+                  <div class="field"><label>PPR du tuteur</label><input pInputText formControlName="pprTuteur" maxlength="20" /></div>
                   <div class="field">
                     <label>Date du tutorat</label>
                     <p-datepicker formControlName="dateTutorat" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
@@ -267,21 +273,45 @@
               <fieldset class="form-section">
                 <legend><i class="pi pi-map-marker"></i> Adresse principale</legend>
                 <div class="form-grid" formGroupName="adresse">
-                  <div class="field col-span-2"><label>Adresse <span class="req">*</span></label><input pInputText formControlName="adresse" placeholder="Rue, numero, quartier..." /></div>
-                  <div class="field"><label>Code postal</label><input pInputText formControlName="codePostal" /></div>
-                  <div class="field"><label>Ville <span class="req">*</span></label><input pInputText formControlName="ville" /></div>
-                  <div class="field"><label>Pays</label><input pInputText formControlName="pays" /></div>
-                  <div class="field"><label>Telephone</label><input pInputText formControlName="telephone" placeholder="+212 ..." /></div>
+                  <div class="field col-span-2">
+                    <label>Adresse <span class="req">*</span></label><input pInputText formControlName="adresse" placeholder="Rue, numero, quartier..." maxlength="255" />
+                    <small class="field-error" *ngIf="contactForm.get('adresse.adresse')?.touched && contactForm.get('adresse.adresse')?.errors?.['maxlength']"><i class="pi pi-exclamation-circle"></i> Adresse : maximum 255 caracteres autorises.</small>
+                  </div>
+                  <div class="field">
+                    <label>Code postal</label><input pInputText formControlName="codePostal" maxlength="10" />
+                    <small class="field-error" *ngIf="contactForm.get('adresse.codePostal')?.touched && contactForm.get('adresse.codePostal')?.errors?.['maxlength']"><i class="pi pi-exclamation-circle"></i> Code postal : maximum 10 caracteres autorises.</small>
+                  </div>
+                  <div class="field">
+                    <label>Ville <span class="req">*</span></label><input pInputText formControlName="ville" maxlength="50" />
+                    <small class="field-error" *ngIf="contactForm.get('adresse.ville')?.touched && contactForm.get('adresse.ville')?.errors?.['maxlength']"><i class="pi pi-exclamation-circle"></i> Ville : maximum 50 caracteres autorises.</small>
+                  </div>
+                  <div class="field"><label>Pays</label><input pInputText formControlName="pays" maxlength="50" /></div>
+                  <div class="field">
+                    <label>Telephone</label><input pInputText formControlName="telephone" placeholder="+212 ..." maxlength="20" />
+                    <small class="field-error" *ngIf="contactForm.get('adresse.telephone')?.touched && contactForm.get('adresse.telephone')?.errors?.['maxlength']"><i class="pi pi-exclamation-circle"></i> Telephone : maximum 20 caracteres autorises.</small>
+                  </div>
                 </div>
               </fieldset>
 
               <fieldset class="form-section">
                 <legend><i class="pi pi-credit-card"></i> Coordonnees bancaires</legend>
                 <div class="form-grid" formGroupName="coordonneesBancaires">
-                  <div class="field"><label>Banque</label><input pInputText formControlName="banque" /></div>
-                  <div class="field"><label>Compte</label><input pInputText formControlName="compte" /></div>
-                  <div class="field"><label>RIB</label><input pInputText formControlName="rib" /></div>
-                  <div class="field"><label>IBAN</label><input pInputText formControlName="iban" /></div>
+                  <div class="field">
+                    <label>Banque</label><input pInputText formControlName="banque" maxlength="80" />
+                    <small class="field-error" *ngIf="contactForm.get('coordonneesBancaires.banque')?.touched && contactForm.get('coordonneesBancaires.banque')?.errors?.['maxlength']"><i class="pi pi-exclamation-circle"></i> Banque : maximum 80 caracteres autorises.</small>
+                  </div>
+                  <div class="field">
+                    <label>Compte</label><input pInputText formControlName="compte" maxlength="34" />
+                    <small class="field-error" *ngIf="contactForm.get('coordonneesBancaires.compte')?.touched && contactForm.get('coordonneesBancaires.compte')?.errors?.['maxlength']"><i class="pi pi-exclamation-circle"></i> Compte : maximum 34 caracteres autorises.</small>
+                  </div>
+                  <div class="field">
+                    <label>RIB</label><input pInputText formControlName="rib" maxlength="24" placeholder="24 chiffres" />
+                    <small class="field-error" *ngIf="contactForm.get('coordonneesBancaires.rib')?.touched && contactForm.get('coordonneesBancaires.rib')?.errors?.['maxlength']"><i class="pi pi-exclamation-circle"></i> RIB : maximum 24 caracteres autorises.</small>
+                  </div>
+                  <div class="field">
+                    <label>IBAN</label><input pInputText formControlName="iban" maxlength="34" />
+                    <small class="field-error" *ngIf="contactForm.get('coordonneesBancaires.iban')?.touched && contactForm.get('coordonneesBancaires.iban')?.errors?.['maxlength']"><i class="pi pi-exclamation-circle"></i> IBAN : maximum 34 caracteres autorises.</small>
+                  </div>
                 </div>
 
                 <!-- Upload Attestation RIB -->
@@ -311,14 +341,23 @@
               <fieldset class="form-section" *ngIf="showConjoint()">
                 <legend><i class="pi pi-heart"></i> Conjoint <span class="req">*</span></legend>
                 <div class="form-grid" formGroupName="conjoint">
-                  <div class="field"><label>Nom <span class="req">*</span></label><input pInputText formControlName="nom" /></div>
-                  <div class="field"><label>Prenom <span class="req">*</span></label><input pInputText formControlName="prenom" /></div>
-                  <div class="field"><label>CIN <span class="req">*</span></label><input pInputText formControlName="cin" /></div>
+                  <div class="field">
+                    <label>Nom <span class="req">*</span></label><input pInputText formControlName="nom" maxlength="50" />
+                    <small class="field-error" *ngIf="contactForm.get('conjoint.nom')?.touched && contactForm.get('conjoint.nom')?.errors?.['required']"><i class="pi pi-exclamation-circle"></i> Nom du conjoint obligatoire.</small>
+                  </div>
+                  <div class="field">
+                    <label>Prenom <span class="req">*</span></label><input pInputText formControlName="prenom" maxlength="50" />
+                    <small class="field-error" *ngIf="contactForm.get('conjoint.prenom')?.touched && contactForm.get('conjoint.prenom')?.errors?.['required']"><i class="pi pi-exclamation-circle"></i> Prenom du conjoint obligatoire.</small>
+                  </div>
+                  <div class="field">
+                    <label>CIN <span class="req">*</span></label><input pInputText formControlName="cin" maxlength="20" />
+                    <small class="field-error" *ngIf="contactForm.get('conjoint.cin')?.touched && contactForm.get('conjoint.cin')?.errors?.['required']"><i class="pi pi-exclamation-circle"></i> CIN du conjoint obligatoire.</small>
+                  </div>
                   <div class="field">
                     <label>Date de naissance</label>
                     <p-datepicker formControlName="dateNaissance" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
                   </div>
-                  <div class="field"><label>Profession</label><input pInputText formControlName="profession" /></div>
+                  <div class="field"><label>Profession</label><input pInputText formControlName="profession" maxlength="80" /></div>
                 </div>
 
                 <!-- Upload Acte de mariage -->
@@ -352,7 +391,11 @@
               </div>
 
               <fieldset class="form-section" *ngIf="showEnfants()">
-                <legend><i class="pi pi-users"></i> Enfants</legend>
+                <legend><i class="pi pi-users"></i> Enfants ({{ enfants.length }})</legend>
+                <p class="hint hint--small">
+                  <i class="pi pi-info-circle"></i>
+                  Le nombre de formulaires correspond au <strong>Nombre d'enfants</strong> saisi a l'etape Identite.
+                </p>
 
                 <div class="children-list">
                   <div *ngFor="let _ of enfants.controls; let i = index"
@@ -365,8 +408,8 @@
                                 (onClick)="removeEnfant(i)"></p-button>
                     </div>
                     <div class="form-grid">
-                      <div class="field"><label>Nom <span class="req">*</span></label><input pInputText formControlName="nom" /></div>
-                      <div class="field"><label>Prenom <span class="req">*</span></label><input pInputText formControlName="prenom" /></div>
+                      <div class="field"><label>Nom <span class="req">*</span></label><input pInputText formControlName="nom" maxlength="50" /></div>
+                      <div class="field"><label>Prenom <span class="req">*</span></label><input pInputText formControlName="prenom" maxlength="50" /></div>
                       <div class="field">
                         <label>Date naissance</label>
                         <p-datepicker formControlName="dateNaissance" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
@@ -375,7 +418,7 @@
                         <label>Sexe</label>
                         <p-select formControlName="sexe" [options]="sexeOptions" optionLabel="label" optionValue="value" [showClear]="true" appendTo="body"></p-select>
                       </div>
-                      <div class="field"><label>Niveau scolaire</label><input pInputText formControlName="niveauScolaire" /></div>
+                      <div class="field"><label>Niveau scolaire</label><input pInputText formControlName="niveauScolaire" maxlength="50" /></div>
                     </div>
 
                     <!-- Acte de naissance per child -->
@@ -402,15 +445,7 @@
                     </div>
                   </div>
 
-                  <div class="children-empty" *ngIf="!enfants.controls.length">
-                    <i class="pi pi-users"></i>
-                    <span>Aucun enfant enregistre. Vous pouvez en ajouter ci-dessous.</span>
-                  </div>
                 </div>
-
-                <p-button label="Ajouter un enfant" icon="pi pi-plus" [outlined]="true" size="small"
-                          styleClass="mt-2"
-                          (onClick)="addEnfant()"></p-button>
               </fieldset>
 
               <!-- Hint when both conjoint AND enfants are hidden (single) -->
@@ -1043,23 +1078,23 @@
     <div class="form-grid">
       <div class="field">
         <label>Niveau <span class="req">*</span></label>
-        <p-autoComplete formControlName="niveau" [suggestions]="niveauSuggestions" (completeMethod)="filterNiveau($event)" [dropdown]="true" [forceSelection]="false" appendTo="body"></p-autoComplete>
+        <p-autoComplete formControlName="niveau" [suggestions]="niveauSuggestions" (completeMethod)="filterNiveau($event)" [dropdown]="true" [forceSelection]="false"></p-autoComplete>
       </div>
       <div class="field">
         <label>Specialite</label>
-        <p-autoComplete formControlName="specialite" [suggestions]="specialiteSuggestions" (completeMethod)="filterSpecialite($event)" [dropdown]="true" [forceSelection]="false" appendTo="body"></p-autoComplete>
+        <p-autoComplete formControlName="specialite" [suggestions]="specialiteSuggestions" (completeMethod)="filterSpecialite($event)" [dropdown]="true" [forceSelection]="false"></p-autoComplete>
       </div>
       <div class="field">
         <label>Etablissement</label>
-        <p-autoComplete formControlName="etablissement" [suggestions]="etablissementSuggestions" (completeMethod)="filterEtablissement($event)" [dropdown]="true" [forceSelection]="false" appendTo="body"></p-autoComplete>
+        <p-autoComplete formControlName="etablissement" [suggestions]="etablissementSuggestions" (completeMethod)="filterEtablissement($event)" [dropdown]="true" [forceSelection]="false"></p-autoComplete>
       </div>
       <div class="field">
         <label>Date d'obtention <span class="req">*</span></label>
-        <p-datepicker formControlName="dateObtention" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+        <p-datepicker formControlName="dateObtention" dateFormat="dd/mm/yy" [showIcon]="true"></p-datepicker>
       </div>
       <div class="field">
         <label>Mention</label>
-        <p-select formControlName="mention" [options]="mentionsList" placeholder="Choisir une mention" appendTo="body"></p-select>
+        <p-select formControlName="mention" [options]="mentionsList" placeholder="Choisir une mention"></p-select>
       </div>
       <div class="field">
         <label>Moyenne (/20)</label>
@@ -1093,11 +1128,11 @@
       <div class="field"><label>Reference / numero</label><input pInputText formControlName="reference" /></div>
       <div class="field">
         <label>Date d'obtention <span class="req">*</span></label>
-        <p-datepicker formControlName="dateObtention" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+        <p-datepicker formControlName="dateObtention" dateFormat="dd/mm/yy" [showIcon]="true"></p-datepicker>
       </div>
       <div class="field">
         <label>Date d'expiration</label>
-        <p-datepicker formControlName="dateExpiration" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+        <p-datepicker formControlName="dateExpiration" dateFormat="dd/mm/yy" [showIcon]="true"></p-datepicker>
       </div>
       <div class="field col-span-2">
         <label>Certificat</label>
@@ -1125,11 +1160,11 @@
       <div class="field col-span-2"><label>Intitule du stage</label><input pInputText formControlName="intituleStage" /></div>
       <div class="field">
         <label>Date de debut <span class="req">*</span></label>
-        <p-datepicker formControlName="dateDebut" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+        <p-datepicker formControlName="dateDebut" dateFormat="dd/mm/yy" [showIcon]="true"></p-datepicker>
       </div>
       <div class="field">
         <label>Date de fin <span class="req">*</span></label>
-        <p-datepicker formControlName="dateFin" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body"></p-datepicker>
+        <p-datepicker formControlName="dateFin" dateFormat="dd/mm/yy" [showIcon]="true"></p-datepicker>
       </div>
       <div class="field col-span-2">
         <label>Certificat de la formation</label>

@@ -180,6 +180,15 @@
       border: 1px solid #eef2f7;
     }
 
+    /* Parcours guidé : le stepper est un indicateur visuel de progression, pas un menu.
+       La navigation se fait uniquement via Précédent/Suivant et les liens "corriger" du récap.
+       On neutralise donc tout clic sur les en-têtes d'étape. */
+    .p-step-header,
+    button.p-step {
+      pointer-events: none;
+      cursor: default;
+    }
+
     .p-step {
       .p-step-number {
         background: #f1f5f9;
@@ -1296,4 +1305,29 @@
 
     &:hover { text-decoration: underline; }
   }
+}
+
+/* ============================================================
+   Indicateurs de complétude des étapes du stepper (Issue #5)
+   ============================================================ */
+.p-step .step-state {
+  margin-right: .4rem;
+  font-size: .95rem;
+  vertical-align: middle;
+
+  &.step-state--done { color: #16a34a; }   /* vert : étape complète */
+  &.step-state--warn { color: #f59e0b; }   /* orange : erreurs bloquantes restantes */
+  &.step-state--todo { color: #94a3b8; }   /* gris : pas encore complétée */
+}
+
+/* Message d'erreur inline sous un champ (formats téléphone / RIB / IBAN) */
+.field .field-error {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  margin-top: .3rem;
+  color: #dc2626;
+  font-size: .8rem;
+
+  .pi { font-size: .85rem; }
 }

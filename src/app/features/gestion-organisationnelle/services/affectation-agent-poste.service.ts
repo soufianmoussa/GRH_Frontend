@@ -8,6 +8,7 @@ import {
   AffectationAgentPosteDto,
   AffectationAgentPosteCreateRequest,
   AffectationAgentPosteUpdateRequest,
+  TransferAffectationRequest,
   PosteOption
 } from '../../../models/gestionOrganisationelle/affectation-agent-poste.model';
 import { AgentOption } from '../../../models/gestionOrganisationelle/responsable-unite.model';
@@ -47,6 +48,11 @@ export class AffectationAgentPosteService {
 
   close(id: number, payload: { dateFin: string; motif?: string | null }): Observable<AffectationAgentPosteDto> {
     return this.http.patch<AffectationAgentPosteDto>(`${this.baseUrl}/${id}/close`, payload);
+  }
+
+  /** Transfert atomique d'un agent vers un autre poste (clôture + nouvelle affectation côté backend). */
+  transfer(payload: TransferAffectationRequest): Observable<AffectationAgentPosteDto> {
+    return this.http.post<AffectationAgentPosteDto>(`${this.baseUrl}/transfer`, payload);
   }
 
   delete(id: number): Observable<void> {
@@ -93,6 +99,26 @@ export class AffectationAgentPosteService {
 
   getStats(): Observable<{ total: number; active: number; cloturee: number }> {
     return this.http.get<{ total: number; active: number; cloturee: number }>(`${this.baseUrl}/stats`);
+  }
+
+  /** Exporte l'historique des affectations (xlsx) en réutilisant les filtres serveur. */
+  exportExcel(filters: {
+    global?: string;
+    statut?: string;
+    posteLibelle?: string;
+    agentNom?: string;
+    dateDebutFrom?: string;
+    dateDebutTo?: string;
+  } = {}): Observable<Blob> {
+    let params = new HttpParams();
+    if (filters.global && filters.global.trim().length) params = params.set('global', filters.global.trim());
+    if (filters.statut && filters.statut.trim().length) params = params.set('statut', filters.statut.trim());
+    if (filters.posteLibelle && filters.posteLibelle.trim().length) params = params.set('posteLibelle', filters.posteLibelle.trim());
+    if (filters.agentNom && filters.agentNom.trim().length) params = params.set('agentNom', filters.agentNom.trim());
+    if (filters.dateDebutFrom) params = params.set('dateDebutFrom', filters.dateDebutFrom);
+    if (filters.dateDebutTo) params = params.set('dateDebutTo', filters.dateDebutTo);
+
+    return this.http.get(`${this.baseUrl}/export`, { params, responseType: 'blob' });
   }
 
 

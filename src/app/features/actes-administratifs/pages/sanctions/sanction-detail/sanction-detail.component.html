@@ -1,0 +1,116 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page" *ngIf="sanction as s; else loadingTpl">
+  <header class="page__head">
+    <div class="page__title">
+      <button pButton icon="pi pi-arrow-left" class="p-button-text p-button-rounded" (click)="back()"></button>
+      <div>
+        <h1>Sanction {{ s.numeroDecision }}</h1>
+        <p-tag [value]="s.statusLabel" [severity]="severity[s.status]"></p-tag>
+      </div>
+    </div>
+    <div class="page__actions">
+      <button pButton label="Modifier" icon="pi pi-pencil" class="p-button-outlined" *ngIf="canEdit" (click)="edit()"></button>
+      <button pButton label="Soumettre" icon="pi pi-send" *ngIf="canSubmit" (click)="submit()"></button>
+      <button pButton label="Valider" icon="pi pi-check" class="p-button-success" *ngIf="canValidate" (click)="validate()"></button>
+      <button pButton label="Rejeter" icon="pi pi-times" class="p-button-danger p-button-outlined" *ngIf="canReject" (click)="openReject()"></button>
+      <button pButton label="Appliquer" icon="pi pi-verified" class="p-button-success" *ngIf="canApply" (click)="apply()"></button>
+      <button pButton label="Annuler l'acte" icon="pi pi-ban" class="p-button-secondary p-button-text" *ngIf="canCancel" (click)="cancel()"></button>
+    </div>
+  </header>
+
+  <!-- Résumé agent -->
+  <div class="agent-summary">
+    <i class="pi pi-user"></i>
+    <div>
+      <strong>{{ s.agentNomComplet }}</strong>
+      <span class="muted">Matricule {{ s.matricule }}</span>
+    </div>
+  </div>
+
+  <p-tabs [value]="0">
+    <p-tablist>
+      <p-tab [value]="0"><i class="pi pi-info-circle"></i> Informations</p-tab>
+      <p-tab [value]="1"><i class="pi pi-file-pdf"></i> Documents <span class="badge">{{ documents.length }}</span></p-tab>
+      <p-tab [value]="2"><i class="pi pi-verified"></i> Validation</p-tab>
+      <p-tab [value]="3"><i class="pi pi-history"></i> Historique</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+      <!-- Informations -->
+      <p-tabpanel [value]="0">
+        <dl class="info-grid">
+          <div><dt>Type de sanction</dt><dd>{{ s.sanctionTypeLabel }}</dd></div>
+          <div><dt>Degré</dt><dd>{{ s.degre ? s.degre + 'er/e degré' : '—' }}</dd></div>
+          <div><dt>N° décision</dt><dd>{{ s.numeroDecision }}</dd></div>
+          <div><dt>Date de décision</dt><dd>{{ (s.dateDecision | date:'dd/MM/yyyy') || '—' }}</dd></div>
+          <div><dt>Date d'effet</dt><dd>{{ (s.dateEffet | date:'dd/MM/yyyy') || '—' }}</dd></div>
+          <div><dt>Date de fin</dt><dd>{{ (s.dateFin | date:'dd/MM/yyyy') || '—' }}</dd></div>
+          <div><dt>Date de la faute</dt><dd>{{ (s.dateFaute | date:'dd/MM/yyyy') || '—' }}</dd></div>
+          <div><dt>Réduction de traitement</dt><dd>{{ s.reductionTraitement != null ? s.reductionTraitement + ' %' : '—' }}</dd></div>
+          <div class="info-grid__full"><dt>Motif</dt><dd>{{ s.motif || '—' }}</dd></div>
+        </dl>
+      </p-tabpanel>
+
+      <!-- Documents -->
+      <p-tabpanel [value]="1">
+        <div class="docs-actions" *ngIf="canUpload">
+          <label class="upload-btn">
+            <i class="pi pi-upload"></i> Téléverser la décision (PDF)
+            <input type="file" accept="application/pdf" (change)="onFileSelected($event)" hidden />
+          </label>
+        </div>
+        <ul class="docs" *ngIf="documents.length; else noDocs">
+          <li *ngFor="let d of documents">
+            <i class="pi pi-file-pdf"></i>
+            <a [href]="d.url" target="_blank">{{ d.originalFileName }}</a>
+            <span class="muted">{{ (d.size/1024) | number:'1.0-0' }} Ko</span>
+            <button pButton icon="pi pi-trash" class="p-button-text p-button-danger p-button-sm"
+                    *ngIf="canUpload" (click)="deleteDoc(d)"></button>
+          </li>
+        </ul>
+        <ng-template #noDocs><p class="muted">Aucune décision attachée.</p></ng-template>
+      </p-tabpanel>
+
+      <!-- Validation -->
+      <p-tabpanel [value]="2">
+        <dl class="info-grid">
+          <div><dt>Statut courant</dt><dd><p-tag [value]="s.statusLabel" [severity]="severity[s.status]"></p-tag></dd></div>
+          <div><dt>Créée par</dt><dd>{{ s.createdBy || '—' }}</dd></div>
+          <div><dt>Validée par</dt><dd>{{ s.validatedBy || '—' }}</dd></div>
+          <div><dt>Date de validation</dt><dd>{{ (s.validatedAt | date:'dd/MM/yyyy HH:mm') || '—' }}</dd></div>
+          <div class="info-grid__full" *ngIf="s.rejectionReason"><dt>Motif de rejet</dt><dd class="danger">{{ s.rejectionReason }}</dd></div>
+        </dl>
+      </p-tabpanel>
+
+      <!-- Historique -->
+      <p-tabpanel [value]="3">
+        <p-timeline [value]="timeline" align="left">
+          <ng-template pTemplate="marker" let-e>
+            <span class="tl-marker" [style.background]="e.color"><i [class]="e.icon"></i></span>
+          </ng-template>
+          <ng-template pTemplate="content" let-e>
+            <div class="tl-content">
+              <strong>{{ e.label }}</strong>
+              <small class="muted" *ngIf="e.date">{{ e.date | date:'dd/MM/yyyy HH:mm' }} <span *ngIf="e.actor">— {{ e.actor }}</span></small>
+            </div>
+          </ng-template>
+        </p-timeline>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+</div>
+
+<ng-template #loadingTpl>
+  <div class="loading"><i class="pi pi-spin pi-spinner"></i> Chargement…</div>
+</ng-template>
+
+<!-- Dialog de rejet -->
+<p-dialog header="Rejeter la sanction" [(visible)]="rejectDialog" [modal]="true" [style]="{width:'30rem'}">
+  <p class="muted">Indiquez le motif communiqué à l'agent.</p>
+  <textarea pTextarea [(ngModel)]="rejectReason" rows="4" class="w-full" placeholder="Motif de rejet…"></textarea>
+  <ng-template pTemplate="footer">
+    <button pButton label="Annuler" class="p-button-text" (click)="rejectDialog=false"></button>
+    <button pButton label="Rejeter" class="p-button-danger" icon="pi pi-times" (click)="doReject()"></button>
+  </ng-template>
+</p-dialog>

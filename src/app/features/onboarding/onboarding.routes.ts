@@ -8,6 +8,7 @@ import { AgentOnboardingWizardComponent } from 'app/features/onboarding/pages/ag
 import { InitialisationMatriculesComponent } from 'app/features/onboarding/pages/initialisation-matricules/initialisation-matricules.component';
 import { OnboardingActivationComponent } from 'app/features/onboarding/pages/onboarding-activation/onboarding-activation.component';
 import { roleGuard } from 'app/core/guards/role.guard';
+import { unsavedChangesGuard } from 'app/core/guards/unsaved-changes.guard';
 
 // =============================================================================
 // Onboarding routing
@@ -31,6 +32,7 @@ export const ONBOARDING_ROUTES: Routes = [
     path: 'mon-onboarding/wizard',
     component: AgentOnboardingWizardComponent,
     canActivate: [roleGuard],
+    canDeactivate: [unsavedChangesGuard],
     data: { roles: ['AGENT'] }
   },
   { path: 'mon-onboarding/profil', redirectTo: 'mon-onboarding/wizard', pathMatch: 'full' },

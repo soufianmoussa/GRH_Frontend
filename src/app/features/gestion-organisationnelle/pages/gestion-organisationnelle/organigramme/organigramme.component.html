@@ -1,4 +1,5 @@
 <p-toast position="top-center"></p-toast>
+<p-confirmDialog [style]="{ width: '460px' }"></p-confirmDialog>
 
 <div class="content organigramme-page">
 
@@ -10,6 +11,11 @@
     </div>
     <div class="org-header-actions">
       <p-button
+        [label]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.BTN_NEW_UNIT' | translate"
+        icon="pi pi-plus"
+        (onClick)="openAddUnit(null)">
+      </p-button>
+      <p-button
         [label]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.BTN_REFRESH' | translate"
         icon="pi pi-refresh"
         [outlined]="true"
@@ -18,7 +24,7 @@
     </div>
   </div>
 
-  <!-- ── Summary cards ─────────────────────────────────── -->
+  <!-- ── Summary cards (dashboard) ─────────────────────── -->
   <div class="org-summary">
     <div class="summary-card summary-blue">
       <div class="summary-icon"><i class="pi pi-building"></i></div>
@@ -50,52 +56,55 @@
     </div>
   </div>
 
-  <!-- ── Two-column layout ────────────────────────────── -->
-  <div class="org-grid">
+  <!-- ── View toggle + search + filters ───────────────── -->
+  <div class="org-controlbar">
+    <div class="org-segmented" role="tablist" [attr.aria-label]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.VIEW_MODE' | translate">
+      <button type="button" role="tab" [attr.aria-selected]="viewMode === 'list'" [class.active]="viewMode === 'list'" (click)="setViewMode('list')">
+        <i class="pi pi-list"></i><span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.VIEW_LIST' | translate }}</span>
+      </button>
+      <button type="button" role="tab" [attr.aria-selected]="viewMode === 'chart'" [class.active]="viewMode === 'chart'" (click)="setViewMode('chart')">
+        <i class="pi pi-sitemap"></i><span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.VIEW_CHART' | translate }}</span>
+      </button>
+    </div>
 
-    <!-- LEFT — Tree -->
-    <aside class="org-tree-card">
-      <div class="org-tree-toolbar">
-        <div class="org-search">
-          <i class="pi pi-search"></i>
-          <input
-            pInputText
-            type="text"
-            [(ngModel)]="searchQuery"
-            [placeholder]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.SEARCH_PLACEHOLDER' | translate" />
-          <button *ngIf="searchQuery" type="button" class="org-search-clear" (click)="clearSearch()" [attr.aria-label]="'GLOBAL.EFFACER' | translate">
-            <i class="pi pi-times"></i>
-          </button>
-        </div>
-
-        <div class="org-filters">
-          <i class="pi pi-filter"></i>
-          <button
-            type="button"
-            *ngFor="let f of typeFilters"
-            class="filter-chip"
-            [class.active]="typeFilter === f.key"
-            (click)="setTypeFilter(f.key)">
-            {{ f.labelKey | translate }}
-          </button>
-        </div>
+    <div class="org-controlbar-tools">
+      <div class="org-search">
+        <i class="pi pi-search"></i>
+        <input pInputText type="text" [(ngModel)]="searchQuery" (ngModelChange)="onSearchChange()"
+               [placeholder]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.SEARCH_PLACEHOLDER' | translate" />
+        <button *ngIf="searchQuery" type="button" class="org-search-clear" (click)="clearSearch()" [attr.aria-label]="'GLOBAL.EFFACER' | translate">
+          <i class="pi pi-times"></i>
+        </button>
       </div>
+      <div class="org-filters">
+        <i class="pi pi-filter"></i>
+        <button type="button" *ngFor="let f of typeFilters" class="filter-chip"
+                [class.active]="typeFilter === f.key" (click)="setTypeFilter(f.key)">
+          {{ f.labelKey | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
 
+  <!-- ════════ VUE LISTE : arbre (40%) + détails (60%) ════════ -->
+  <div class="org-grid" *ngIf="viewMode === 'list'">
+
+    <!-- LEFT — Hierarchical tree -->
+    <aside class="org-tree-card">
       <div class="org-tree-body">
         <div *ngIf="loading" class="tree-state tree-state-loading">
           <p-progressSpinner styleClass="org-spinner" strokeWidth="3"></p-progressSpinner>
           <p>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.MSG_LOADING' | translate }}</p>
         </div>
-
         <div *ngIf="!loading && loadError" class="tree-state tree-state-error">
           <i class="pi pi-exclamation-triangle"></i>
           <p>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.MSG_ERR_LOAD' | translate }}</p>
           <p-button [label]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.BTN_RETRY' | translate" icon="pi pi-refresh" [outlined]="true" (onClick)="refresh()"></p-button>
         </div>
-
         <div *ngIf="!loading && !loadError && roots.length === 0" class="tree-state tree-state-empty">
           <i class="pi pi-sitemap"></i>
           <p>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.MSG_EMPTY' | translate }}</p>
+          <p-button [label]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.BTN_NEW_UNIT' | translate" icon="pi pi-plus" (onClick)="openAddUnit(null)"></p-button>
         </div>
 
         <ng-container *ngIf="!loading && !loadError && roots.length > 0">
@@ -106,8 +115,8 @@
       </div>
     </aside>
 
-    <!-- RIGHT — Detail -->
-    <section class="org-detail-card">
+    <!-- RIGHT — Detail panel -->
+    <aside class="org-detail-card">
       <header class="org-detail-header">
         <ng-container *ngIf="selectedUnit; else noSelectionHeader">
           <div class="left">
@@ -161,11 +170,13 @@
           <div class="detail-section-title">
             <i class="pi pi-user-plus"></i>
             <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_RESPONSABLE' | translate }}</span>
+            <button type="button" class="section-action" (click)="openResponsable(selectedUnit)">
+              <i class="pi pi-user-edit"></i>
+              {{ (selectedUnit.responsable ? 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_CHANGE_RESP' : 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_AFFECT_RESP') | translate }}
+            </button>
           </div>
           <div *ngIf="selectedUnit.responsable; else noResponsable" class="responsable-row">
-            <div class="responsable-avatar">
-              {{ selectedUnit.responsable.nomComplet.charAt(0) }}
-            </div>
+            <div class="responsable-avatar">{{ selectedUnit.responsable.nomComplet.charAt(0) }}</div>
             <div>
               <p class="responsable-name">{{ selectedUnit.responsable.nomComplet }}</p>
               <p class="responsable-meta" *ngIf="selectedUnit.responsable.matricule">
@@ -184,19 +195,19 @@
           </ng-template>
         </div>
 
-        <!-- Métriques -->
+        <!-- Effectifs -->
         <div class="metrics-row">
           <div class="metric metric-blue">
             <p class="metric-value">{{ selectedUnit.postes.length }}</p>
             <p class="metric-label">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_POSTES' | translate }}</p>
           </div>
           <div class="metric metric-teal">
-            <p class="metric-value">{{ countAgents(selectedUnit) }}</p>
-            <p class="metric-label">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_AGENTS' | translate }}</p>
+            <p class="metric-value">{{ countOccupes(selectedUnit) }}</p>
+            <p class="metric-label">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.STAT_OCCUPIED' | translate }}</p>
           </div>
-          <div class="metric metric-purple">
-            <p class="metric-value">{{ countDirectChildren(selectedUnit) }}</p>
-            <p class="metric-label">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_SUB_UNITS' | translate }}</p>
+          <div class="metric metric-orange">
+            <p class="metric-value">{{ countVacants(selectedUnit) }}</p>
+            <p class="metric-label">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.STAT_VACANT' | translate }}</p>
           </div>
         </div>
 
@@ -205,19 +216,20 @@
           <div class="detail-section-title">
             <i class="pi pi-briefcase"></i>
             <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_POSTES' | translate }}</span>
+            <button type="button" class="section-action" (click)="openAddPoste(selectedUnit)">
+              <i class="pi pi-plus"></i>
+              {{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_ADD_POSTE' | translate }}
+            </button>
           </div>
 
           <div class="primTable postes-table-wrapper" *ngIf="selectedUnit.postes.length > 0">
-            <p-table
-              [value]="selectedUnit.postes"
-              dataKey="id"
-              [rowHover]="true">
+            <p-table [value]="selectedUnit.postes" dataKey="id" [rowHover]="true">
               <ng-template pTemplate="header">
                 <tr>
                   <th>{{ 'GLOBAL.POSTE' | translate }}</th>
-                  <th>{{ 'GLOBAL.FONCTION' | translate }}</th>
                   <th>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_OCCUPANT' | translate }}</th>
                   <th>{{ 'GLOBAL.STATUT' | translate }}</th>
+                  <th class="actions-col">{{ 'GLOBAL.ACTIONS' | translate }}</th>
                 </tr>
               </ng-template>
               <ng-template pTemplate="body" let-p>
@@ -225,10 +237,9 @@
                   <td>
                     <div class="poste-cell">
                       <strong>{{ p.libelle }}</strong>
-                      <small>{{ p.codeCourt }}</small>
+                      <small>{{ p.codeCourt }}<span *ngIf="p.fonction"> · {{ p.fonction }}</span></small>
                     </div>
                   </td>
-                  <td>{{ p.fonction || '—' }}</td>
                   <td>
                     <span *ngIf="p.occupant; else noOccupant">{{ p.occupant }}</span>
                     <ng-template #noOccupant><span class="muted-italic">—</span></ng-template>
@@ -237,6 +248,27 @@
                     <span [class]="posteStatusClass(p)">
                       {{ p.statut === 'OCCUPE' ? ('GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_OCCUPIED' | translate) : ('GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_VACANT' | translate) }}
                     </span>
+                  </td>
+                  <td class="actions-col">
+                    <div class="row-actions">
+                      <!-- Vacant -->
+                      <button *ngIf="p.statut === 'VACANT'" type="button" class="icon-btn ok" (click)="openAffecterAgent(p)"
+                              [pTooltip]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_AFFECT_AGENT' | translate"><i class="pi pi-user-plus"></i></button>
+                      <!-- Occupied -->
+                      <button *ngIf="p.statut === 'OCCUPE'" type="button" class="icon-btn info" (click)="openChangerAgent(p)"
+                              [pTooltip]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_CHANGE_AGENT' | translate"><i class="pi pi-sync"></i></button>
+                      <button *ngIf="p.statut === 'OCCUPE'" type="button" class="icon-btn info" (click)="openTransfer(p)"
+                              [pTooltip]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_TRANSFER' | translate"><i class="pi pi-arrow-right-arrow-left"></i></button>
+                      <button *ngIf="p.statut === 'OCCUPE'" type="button" class="icon-btn warn" (click)="confirmLibererPoste(p)"
+                              [pTooltip]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_RELEASE' | translate"><i class="pi pi-sign-out"></i></button>
+                      <!-- Common -->
+                      <button type="button" class="icon-btn" (click)="openEditPoste(p, selectedUnit.id)"
+                              [pTooltip]="'GLOBAL.MODIFIER' | translate"><i class="pi pi-pencil"></i></button>
+                      <button type="button" class="icon-btn" (click)="confirmArchivePoste(p)"
+                              [pTooltip]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_ARCHIVE' | translate"><i class="pi pi-inbox"></i></button>
+                      <button type="button" class="icon-btn danger" (click)="confirmDeletePoste(p)"
+                              [pTooltip]="'GLOBAL.SUPPRIMER' | translate"><i class="pi pi-trash"></i></button>
+                    </div>
                   </td>
                 </tr>
               </ng-template>
@@ -249,28 +281,32 @@
           </div>
         </div>
 
-        <!-- Actions -->
+        <!-- Actions unité -->
         <div class="detail-section">
           <div class="detail-section-title">
             <i class="pi pi-bolt"></i>
             <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_ACTIONS' | translate }}</span>
           </div>
           <div class="actions-grid">
-            <button type="button" class="action-btn action-blue" (click)="goToFiche(selectedUnit)">
-              <i class="pi pi-eye"></i>
-              <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_VIEW_FICHE' | translate }}</span>
+            <button type="button" class="action-btn action-blue" (click)="openEditUnit(selectedUnit)">
+              <i class="pi pi-pencil"></i>
+              <span>{{ 'GLOBAL.MODIFIER' | translate }}</span>
             </button>
-            <button type="button" class="action-btn action-teal" (click)="goToAjouterPoste(selectedUnit)">
+            <button type="button" class="action-btn action-teal" (click)="openAddUnit(selectedUnit)">
+              <i class="pi pi-sitemap"></i>
+              <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_ADD_SUBUNIT' | translate }}</span>
+            </button>
+            <button type="button" class="action-btn action-purple" (click)="openAddPoste(selectedUnit)">
               <i class="pi pi-plus"></i>
               <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_ADD_POSTE' | translate }}</span>
             </button>
-            <button type="button" class="action-btn action-purple" (click)="goToAffecterResponsable(selectedUnit)">
-              <i class="pi pi-user-plus"></i>
-              <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_AFFECT_RESP' | translate }}</span>
+            <button type="button" class="action-btn action-amber" (click)="confirmArchiveUnit(selectedUnit)">
+              <i class="pi pi-inbox"></i>
+              <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_ARCHIVE' | translate }}</span>
             </button>
-            <button type="button" class="action-btn action-grey" (click)="goToModifier(selectedUnit)">
-              <i class="pi pi-pencil"></i>
-              <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ACTION_EDIT_UNIT' | translate }}</span>
+            <button type="button" class="action-btn action-red" (click)="confirmDeleteUnit(selectedUnit)">
+              <i class="pi pi-trash"></i>
+              <span>{{ 'GLOBAL.SUPPRIMER' | translate }}</span>
             </button>
           </div>
         </div>
@@ -283,28 +319,106 @@
           <p>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.SUB_UNIT_DETAILS' | translate }}</p>
         </div>
       </ng-template>
-    </section>
+    </aside>
 
   </div>
 
+  <!-- ════════ VUE ORGANIGRAMME : chart plein écran ════════ -->
+  <section class="org-chart-card org-chart-card--full" *ngIf="viewMode === 'chart'">
+    <div class="org-chart-body">
+      <div *ngIf="loading" class="tree-state tree-state-loading">
+        <p-progressSpinner styleClass="org-spinner" strokeWidth="3"></p-progressSpinner>
+        <p>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.MSG_LOADING' | translate }}</p>
+      </div>
+
+      <div *ngIf="!loading && loadError" class="tree-state tree-state-error">
+        <i class="pi pi-exclamation-triangle"></i>
+        <p>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.MSG_ERR_LOAD' | translate }}</p>
+        <p-button [label]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.BTN_RETRY' | translate" icon="pi pi-refresh" [outlined]="true" (onClick)="refresh()"></p-button>
+      </div>
+
+      <div *ngIf="!loading && !loadError && roots.length === 0" class="tree-state tree-state-empty">
+        <i class="pi pi-sitemap"></i>
+        <p>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.MSG_EMPTY' | translate }}</p>
+        <p-button [label]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.BTN_NEW_UNIT' | translate" icon="pi pi-plus" (onClick)="openAddUnit(null)"></p-button>
+      </div>
+
+      <!-- Chart viewport (zoom + pan) -->
+      <div *ngIf="!loading && !loadError && roots.length > 0"
+           class="org-chart-viewport"
+           (mousedown)="onPanStart($event)"
+           (mousemove)="onPanMove($event)"
+           (mouseup)="onPanEnd()"
+           (mouseleave)="onPanEnd()">
+
+        <div class="org-chart-stage"
+             [style.transform]="'translate(' + panX + 'px,' + panY + 'px) scale(' + zoom + ')'">
+          <p-organizationChart
+            [value]="chartData"
+            selectionMode="single"
+            [(selection)]="chartSelection"
+            (onNodeSelect)="onNodeSelect($event)"
+            styleClass="org-chart">
+            <ng-template let-node pTemplate="unit">
+              <div class="org-node-card" [class.is-selected]="selectedUnit?.id === node.data.id">
+                <div class="org-node-top">
+                  <span class="org-node-avatar" [ngClass]="typeIconColorClass(node.data.type)">
+                    <i [class]="typeIcon(node.data.type)"></i>
+                  </span>
+                  <div class="org-node-headings">
+                    <span class="org-node-title">{{ node.data.libelle }}</span>
+                    <span [class]="typeBadgeClass(node.data.type)">{{ 'GLOBAL.' + node.data.type | translate }}</span>
+                  </div>
+                </div>
+
+                <div class="org-node-resp" *ngIf="node.data.responsable" [class.expired]="node.data.responsable.statut === 'EXPIRE'">
+                  <i class="pi" [ngClass]="node.data.responsable.statut === 'ACTIF' ? 'pi-check-circle' : 'pi-clock'"></i>
+                  <span>{{ node.data.responsable.nomComplet }}</span>
+                </div>
+                <div class="org-node-resp empty" *ngIf="!node.data.responsable">
+                  <i class="pi pi-exclamation-circle"></i>
+                  <span>{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.TREE_NO_RESP' | translate }}</span>
+                </div>
+
+                <div class="org-node-stats">
+                  <span class="node-chip node-chip-ok"  [pTooltip]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.STAT_OCCUPIED' | translate">
+                    <i class="pi pi-users"></i> {{ countOccupes(node.data) }}
+                  </span>
+                  <span class="node-chip node-chip-warn" [pTooltip]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.STAT_VACANT' | translate">
+                    <i class="pi pi-inbox"></i> {{ countVacants(node.data) }}
+                  </span>
+                </div>
+              </div>
+            </ng-template>
+          </p-organizationChart>
+        </div>
+      </div>
+
+      <!-- Zoom controls -->
+      <div class="org-zoom-controls" *ngIf="!loading && !loadError && roots.length > 0">
+        <button type="button" (click)="zoomOut()" [attr.aria-label]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ZOOM_OUT' | translate"><i class="pi pi-minus"></i></button>
+        <button type="button" class="zoom-value" (click)="zoomReset()">{{ (zoom * 100) | number:'1.0-0' }}%</button>
+        <button type="button" (click)="zoomIn()" [attr.aria-label]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.ZOOM_IN' | translate"><i class="pi pi-plus"></i></button>
+      </div>
+    </div>
+  </section>
 </div>
 
 
 <!-- ─────────────────────────────────────────────────────
-     Recursive tree-node template
+     Vue Liste — recursive tree-node template
 ────────────────────────────────────────────────────── -->
 <ng-template #treeNode let-node="node" let-depth="depth">
   <ng-container *ngIf="isNodeVisible(node)">
-    <div
-      class="tree-node"
-      [class.selected]="selectedUnit?.id === node.id"
-      [style.padding-left.px]="depth * 16"
-      (click)="select(node)">
+    <div class="tree-node"
+         [id]="'org-tree-row-' + node.id"
+         [class.selected]="selectedUnit?.id === node.id"
+         [class.is-match]="isMatch(node)"
+         [style.padding-left.px]="depth * 18 + 8"
+         (click)="selectFromList(node)">
 
-      <span class="tree-toggle" (click)="toggle(node, $event)">
-        <i *ngIf="node.children.length > 0"
-           class="pi"
-           [ngClass]="isExpanded(node) ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+      <span class="tree-toggle" (click)="toggleNode(node, $event)">
+        <i *ngIf="node.children.length > 0" class="pi" [ngClass]="isListExpanded(node) ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
       </span>
 
       <i class="tree-type-icon" [class]="typeIcon(node.type) + ' ' + typeIconColorClass(node.type)"></i>
@@ -312,9 +426,8 @@
       <div class="tree-node-body">
         <div class="tree-node-title-row">
           <span class="tree-node-title">{{ node.libelle }}</span>
-          <span [class]="typeBadgeClass(node.type)">{{ node.type }}</span>
+          <span [class]="typeBadgeClass(node.type)">{{ 'GLOBAL.' + node.type | translate }}</span>
         </div>
-
         <p *ngIf="node.responsable" class="tree-node-resp" [class.expired]="node.responsable.statut === 'EXPIRE'">
           <i class="pi" [ngClass]="node.responsable.statut === 'ACTIF' ? 'pi-check-circle' : 'pi-clock'"></i>
           {{ node.responsable.nomComplet }}
@@ -324,12 +437,210 @@
           {{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.TREE_NO_RESP' | translate }}
         </p>
       </div>
+
+      <span class="tree-postes-mini" *ngIf="node.postes.length"
+            [pTooltip]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.STAT_OCCUPIED' | translate">
+        <i class="pi pi-users"></i>{{ countOccupes(node) }}/{{ node.postes.length }}
+      </span>
     </div>
 
-    <div *ngIf="isExpanded(node) && node.children.length > 0">
+    <div *ngIf="isListExpanded(node) && node.children.length > 0">
       <ng-container *ngFor="let child of node.children">
         <ng-container *ngTemplateOutlet="treeNode; context: { node: child, depth: depth + 1 }"></ng-container>
       </ng-container>
     </div>
   </ng-container>
 </ng-template>
+
+
+<!-- ════════════════════════════════════════════════════
+     DIALOG — Unité (créer / modifier / sous-unité)
+═════════════════════════════════════════════════════ -->
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="(unitDialogMode === 'add' ? 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.DLG_UNIT_ADD' : 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.DLG_UNIT_EDIT') | translate"
+  [(visible)]="showUnitDialog"
+  [modal]="true"
+  [style]="{ width: 'min(560px, 95vw)' }">
+  <div class="p-fluid org-dialog-form">
+    <p-floatLabel>
+      <input pInputText id="u-code" [(ngModel)]="unitForm.code" />
+      <label for="u-code">{{ 'GLOBAL.CODE' | translate }}</label>
+    </p-floatLabel>
+    <p-floatLabel>
+      <input pInputText id="u-abr" [(ngModel)]="unitForm.abreviation" />
+      <label for="u-abr">{{ 'GLOBAL.ABREVIATION' | translate }}</label>
+    </p-floatLabel>
+    <p-floatLabel>
+      <input pInputText id="u-lib" [(ngModel)]="unitForm.libelle" />
+      <label for="u-lib">{{ 'GLOBAL.LIBELLE' | translate }}</label>
+    </p-floatLabel>
+    <p-dropdown
+      [options]="typeOptions"
+      [(ngModel)]="unitForm.type"
+      optionValue="value"
+      [placeholder]="'GLOBAL.TYPE' | translate"
+      appendTo="body">
+      <ng-template let-opt pTemplate="item">{{ opt.label | translate }}</ng-template>
+      <ng-template let-opt pTemplate="selectedItem">{{ ('GLOBAL.' + unitForm.type) | translate }}</ng-template>
+    </p-dropdown>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button [label]="'GLOBAL.ANNULER' | translate" icon="pi pi-times" [text]="true" (onClick)="showUnitDialog = false"></p-button>
+    <p-button [label]="'GLOBAL.ENREGISTRER' | translate" icon="pi pi-check" [loading]="savingUnit" (onClick)="saveUnit()"></p-button>
+  </ng-template>
+</p-dialog>
+
+
+<!-- ════════════════════════════════════════════════════
+     DIALOG — Responsable
+═════════════════════════════════════════════════════ -->
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.DLG_RESP' | translate"
+  [(visible)]="showResponsableDialog"
+  [modal]="true"
+  [style]="{ width: 'min(540px, 95vw)' }">
+  <div class="p-fluid org-dialog-form">
+    <p-dropdown
+      [options]="agentsForUnite"
+      [(ngModel)]="responsableForm.agentId"
+      optionValue="id"
+      [filter]="true"
+      filterBy="nom,prenom,matricule"
+      [placeholder]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.PH_SELECT_AGENT' | translate"
+      [emptyMessage]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.NO_ELIGIBLE_AGENT' | translate"
+      appendTo="body">
+      <ng-template let-a pTemplate="item">{{ a.prenom }} {{ a.nom }} ({{ a.matricule }})</ng-template>
+    </p-dropdown>
+    <p class="dialog-hint">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.HINT_RESP' | translate }}</p>
+    <p-floatLabel>
+      <p-calendar [(ngModel)]="responsableForm.dateDebut" dateFormat="yy-mm-dd" appendTo="body" inputId="r-date"></p-calendar>
+      <label for="r-date">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_DATE_DEBUT' | translate }}</label>
+    </p-floatLabel>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button [label]="'GLOBAL.ANNULER' | translate" icon="pi pi-times" [text]="true" (onClick)="showResponsableDialog = false"></p-button>
+    <p-button [label]="'GLOBAL.ENREGISTRER' | translate" icon="pi pi-check" [loading]="savingResponsable" (onClick)="saveResponsable()"></p-button>
+  </ng-template>
+</p-dialog>
+
+
+<!-- ════════════════════════════════════════════════════
+     DIALOG — Poste (créer / modifier)
+═════════════════════════════════════════════════════ -->
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="(posteDialogMode === 'add' ? 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.DLG_POSTE_ADD' : 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.DLG_POSTE_EDIT') | translate"
+  [(visible)]="showPosteDialog"
+  [modal]="true"
+  [style]="{ width: 'min(560px, 95vw)' }">
+  <div class="p-fluid org-dialog-form">
+    <p-floatLabel>
+      <input pInputText id="p-code" [(ngModel)]="posteForm.codeCourt" />
+      <label for="p-code">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_POSTE_CODE' | translate }}</label>
+    </p-floatLabel>
+    <p-floatLabel>
+      <input pInputText id="p-lib" [(ngModel)]="posteForm.libelleDuPoste" />
+      <label for="p-lib">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_POSTE_LIBELLE' | translate }}</label>
+    </p-floatLabel>
+    <p-dropdown
+      [options]="fonctions"
+      [(ngModel)]="posteForm.fonctionId"
+      optionLabel="label" optionValue="value"
+      [filter]="true"
+      [showClear]="true"
+      [placeholder]="'GLOBAL.FONCTION' | translate"
+      appendTo="body"></p-dropdown>
+    <p-dropdown
+      [options]="postesTravail"
+      [(ngModel)]="posteForm.posteTravailId"
+      optionLabel="label" optionValue="value"
+      [filter]="true"
+      [showClear]="true"
+      [placeholder]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_POSTE_TRAVAIL' | translate"
+      appendTo="body"></p-dropdown>
+    <p-floatLabel>
+      <p-calendar [(ngModel)]="posteForm.dateCreation" dateFormat="yy-mm-dd" appendTo="body" inputId="p-date"></p-calendar>
+      <label for="p-date">{{ 'GLOBAL.DATE_CREATION' | translate }}</label>
+    </p-floatLabel>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button [label]="'GLOBAL.ANNULER' | translate" icon="pi pi-times" [text]="true" (onClick)="showPosteDialog = false"></p-button>
+    <p-button [label]="'GLOBAL.ENREGISTRER' | translate" icon="pi pi-check" [loading]="savingPoste" (onClick)="savePoste()"></p-button>
+  </ng-template>
+</p-dialog>
+
+
+<!-- ════════════════════════════════════════════════════
+     DIALOG — Affecter / Changer agent
+═════════════════════════════════════════════════════ -->
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="(affectationMode === 'assign' ? 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.DLG_AFFECT_AGENT' : 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.DLG_CHANGE_AGENT') | translate"
+  [(visible)]="showAffectationDialog"
+  [modal]="true"
+  [style]="{ width: 'min(540px, 95vw)' }">
+  <div class="p-fluid org-dialog-form">
+    <p-dropdown
+      [options]="availableAgents"
+      [(ngModel)]="affectationForm.agentId"
+      optionValue="id"
+      [filter]="true"
+      filterBy="nom,prenom,matricule"
+      [placeholder]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.PH_SELECT_AGENT' | translate"
+      [emptyMessage]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.NO_AVAILABLE_AGENT' | translate"
+      appendTo="body">
+      <ng-template let-a pTemplate="item">{{ a.prenom }} {{ a.nom }} ({{ a.matricule }})</ng-template>
+    </p-dropdown>
+    <p-floatLabel>
+      <p-calendar [(ngModel)]="affectationForm.date" dateFormat="yy-mm-dd" appendTo="body" inputId="a-date"></p-calendar>
+      <label for="a-date">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_DATE_DEBUT' | translate }}</label>
+    </p-floatLabel>
+    <p-floatLabel>
+      <textarea pInputText id="a-motif" rows="2" [(ngModel)]="affectationForm.motif"></textarea>
+      <label for="a-motif">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_MOTIF' | translate }}</label>
+    </p-floatLabel>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button [label]="'GLOBAL.ANNULER' | translate" icon="pi pi-times" [text]="true" (onClick)="showAffectationDialog = false"></p-button>
+    <p-button [label]="'GLOBAL.ENREGISTRER' | translate" icon="pi pi-check" [loading]="savingAffectation" (onClick)="saveAffectation()"></p-button>
+  </ng-template>
+</p-dialog>
+
+
+<!-- ════════════════════════════════════════════════════
+     DIALOG — Transfert d'agent
+═════════════════════════════════════════════════════ -->
+<p-dialog
+  styleClass="pdialogfon"
+  [header]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.DLG_TRANSFER' | translate"
+  [(visible)]="showTransferDialog"
+  [modal]="true"
+  [style]="{ width: 'min(540px, 95vw)' }">
+  <div class="p-fluid org-dialog-form">
+    <p-dropdown
+      [options]="availablePostes"
+      [(ngModel)]="transferForm.toPosteId"
+      optionValue="id"
+      [filter]="true"
+      filterBy="libelleDuPoste,codeCourt"
+      [placeholder]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.PH_SELECT_POSTE' | translate"
+      [emptyMessage]="'GESTION_ORGANISATIONELLE.ORGANIGRAMME.NO_AVAILABLE_POSTE' | translate"
+      appendTo="body">
+      <ng-template let-p pTemplate="item">{{ p.libelleDuPoste }} ({{ p.codeCourt }})</ng-template>
+    </p-dropdown>
+    <p-floatLabel>
+      <p-calendar [(ngModel)]="transferForm.dateTransfert" dateFormat="yy-mm-dd" appendTo="body" inputId="t-date"></p-calendar>
+      <label for="t-date">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_DATE_TRANSFER' | translate }}</label>
+    </p-floatLabel>
+    <p-floatLabel>
+      <textarea pInputText id="t-motif" rows="2" [(ngModel)]="transferForm.motif"></textarea>
+      <label for="t-motif">{{ 'GESTION_ORGANISATIONELLE.ORGANIGRAMME.LBL_MOTIF' | translate }}</label>
+    </p-floatLabel>
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button [label]="'GLOBAL.ANNULER' | translate" icon="pi pi-times" [text]="true" (onClick)="showTransferDialog = false"></p-button>
+    <p-button [label]="'GLOBAL.ENREGISTRER' | translate" icon="pi pi-check" [loading]="savingTransfer" (onClick)="saveTransfer()"></p-button>
+  </ng-template>
+</p-dialog>

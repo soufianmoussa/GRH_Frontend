@@ -1,0 +1,97 @@
+<p-toast></p-toast>
+
+<div class="page">
+  <header class="page__head">
+    <h1>{{ isEdit ? 'Modifier la sanction' : 'Nouvelle sanction' }}</h1>
+    <button pButton icon="pi pi-times" label="Fermer" class="p-button-text" (click)="cancel()"></button>
+  </header>
+
+  <!-- Indicateur d'étapes -->
+  <ol class="stepper">
+    <li *ngFor="let s of steps; let i = index"
+        [class.active]="i === step" [class.done]="i < step" (click)="goTo(i)">
+      <span class="stepper__num">{{ i + 1 }}</span>
+      <span class="stepper__label">{{ s }}</span>
+    </li>
+  </ol>
+
+  <!-- Étape 1 : Agent -->
+  <section *ngIf="step === 0" class="step-body">
+    <label class="field">
+      <span>Agent concerné *</span>
+      <p-select [(ngModel)]="agentId" [options]="agents" optionValue="id" [filter]="true"
+                filterBy="nom,prenom,matricule" placeholder="Sélectionner un agent" [disabled]="isEdit"
+                styleClass="w-full">
+        <ng-template let-a pTemplate="item">{{ a.nom }} {{ a.prenom }} — {{ a.matricule }}</ng-template>
+        <ng-template let-a pTemplate="selectedItem">{{ a.nom }} {{ a.prenom }} — {{ a.matricule }}</ng-template>
+      </p-select>
+    </label>
+
+    <div class="agent-summary" *ngIf="selectedAgent as a">
+      <i class="pi pi-user"></i>
+      <div>
+        <strong>{{ a.nom }} {{ a.prenom }}</strong>
+        <span class="muted">Matricule {{ a.matricule }} · CIN {{ a.cin }}</span>
+      </div>
+    </div>
+    <p class="hint"><i class="pi pi-info-circle"></i> Une seule sanction « en cours » est autorisée par agent à la fois.</p>
+  </section>
+
+  <!-- Étape 2 : Détails -->
+  <section *ngIf="step === 1" class="step-body grid2">
+    <label class="field">
+      <span>Type de sanction *</span>
+      <p-select [(ngModel)]="sanctionType" [options]="types" optionLabel="label" optionValue="value"
+                placeholder="Type" styleClass="w-full"></p-select>
+    </label>
+    <div class="field" *ngIf="selectedDegre">
+      <span>Degré</span>
+      <p-tag [value]="selectedDegre + 'er/e degré'" [severity]="selectedDegre === 2 ? 'danger' : 'info'"></p-tag>
+    </div>
+    <label class="field">
+      <span>Date d'effet *</span>
+      <p-datepicker [(ngModel)]="dateEffet" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full"></p-datepicker>
+    </label>
+    <label class="field">
+      <span>Date de fin</span>
+      <p-datepicker [(ngModel)]="dateFin" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full"></p-datepicker>
+    </label>
+    <label class="field">
+      <span>Date de la faute</span>
+      <p-datepicker [(ngModel)]="dateFaute" dateFormat="dd/mm/yy" [showIcon]="true" appendTo="body" styleClass="w-full"></p-datepicker>
+    </label>
+    <label class="field">
+      <span>Réduction de traitement (%)</span>
+      <input pInputText type="number" [(ngModel)]="reductionTraitement" min="0" max="100" />
+    </label>
+    <label class="field field--full">
+      <span>Motif / exposé</span>
+      <textarea pTextarea [(ngModel)]="motif" rows="3"></textarea>
+    </label>
+  </section>
+
+  <!-- Étape 3 : Récapitulatif -->
+  <section *ngIf="step === 2" class="step-body">
+    <dl class="recap">
+      <div><dt>Agent</dt><dd>{{ selectedAgent?.nom }} {{ selectedAgent?.prenom }} ({{ selectedAgent?.matricule }})</dd></div>
+      <div><dt>Type</dt><dd>{{ selectedTypeLabel }}</dd></div>
+      <div><dt>Degré</dt><dd>{{ selectedDegre ? selectedDegre + 'er/e degré' : '—' }}</dd></div>
+      <div><dt>Date d'effet</dt><dd>{{ (dateEffet | date:'dd/MM/yyyy') || '—' }}</dd></div>
+      <div><dt>Date de fin</dt><dd>{{ (dateFin | date:'dd/MM/yyyy') || '—' }}</dd></div>
+      <div><dt>Date de faute</dt><dd>{{ (dateFaute | date:'dd/MM/yyyy') || '—' }}</dd></div>
+      <div><dt>Réduction</dt><dd>{{ reductionTraitement != null ? reductionTraitement + ' %' : '—' }}</dd></div>
+      <div class="recap__full"><dt>Motif</dt><dd>{{ motif || '—' }}</dd></div>
+    </dl>
+    <p class="hint"><i class="pi pi-info-circle"></i> La sanction sera créée au statut <strong>Brouillon</strong>.
+      Vous pourrez ensuite y joindre la décision PDF puis la soumettre à validation.</p>
+  </section>
+
+  <!-- Navigation -->
+  <footer class="step-nav">
+    <button pButton label="Précédent" icon="pi pi-chevron-left" class="p-button-text" *ngIf="step > 0" (click)="prev()"></button>
+    <span class="spacer"></span>
+    <button pButton label="Suivant" icon="pi pi-chevron-right" iconPos="right" *ngIf="step < steps.length - 1" (click)="next()"></button>
+    <button pButton [label]="isEdit ? 'Enregistrer' : 'Créer le brouillon'" icon="pi pi-check"
+            class="p-button-success" *ngIf="step === steps.length - 1" [disabled]="saving" (click)="save()"></button>
+  </footer>
+</div>
