@@ -1,0 +1,61 @@
+<p-toast></p-toast>
+<p-confirmDialog></p-confirmDialog>
+
+<div class="page">
+  <header class="page__head">
+    <div>
+      <h1><i class="fa-solid fa-gavel"></i> Sanctions disciplinaires</h1>
+      <p class="page__subtitle">Gestion et suivi des actes disciplinaires des agents.</p>
+    </div>
+    <button pButton type="button" icon="pi pi-plus" label="Nouvelle sanction" (click)="create()"></button>
+  </header>
+
+  <section class="filters">
+    <span class="p-input-icon-left filters__search">
+      <input pInputText type="text" [(ngModel)]="global" (keyup.enter)="load()"
+             placeholder="Rechercher (matricule, n° décision, motif)" />
+    </span>
+    <p-select [(ngModel)]="status" [options]="statusOptions" optionLabel="label" optionValue="value"
+              [showClear]="true" placeholder="Statut" (onChange)="load()" styleClass="filters__select"></p-select>
+    <p-datepicker [(ngModel)]="dateFrom" dateFormat="dd/mm/yy" placeholder="Effet du" (onSelect)="load()" [showButtonBar]="true"></p-datepicker>
+    <p-datepicker [(ngModel)]="dateTo" dateFormat="dd/mm/yy" placeholder="au" (onSelect)="load()" [showButtonBar]="true"></p-datepicker>
+    <button pButton type="button" icon="pi pi-filter-slash" label="Réinitialiser"
+            class="p-button-text" (click)="resetFilters()"></button>
+  </section>
+
+  <p-table [value]="sanctions" [loading]="loading" [paginator]="true" [rows]="10"
+           [rowsPerPageOptions]="[10,25,50]" styleClass="p-datatable-sm" [rowHover]="true"
+           responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>N° décision</th>
+        <th>Agent</th>
+        <th>Type</th>
+        <th>Degré</th>
+        <th>Date d'effet</th>
+        <th>Statut</th>
+        <th style="width: 9rem">Actions</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-s>
+      <tr (click)="view(s)" class="clickable">
+        <td><strong>{{ s.numeroDecision }}</strong></td>
+        <td>{{ s.agentNomComplet }} <span class="muted">({{ s.matricule }})</span></td>
+        <td>{{ s.sanctionTypeLabel }}</td>
+        <td><span class="degre" [class.degre--2]="s.degre === 2">{{ s.degre ? (s.degre + 'er/e degré') : '—' }}</span></td>
+        <td>{{ s.dateEffet | date:'dd/MM/yyyy' }}</td>
+        <td><p-tag [value]="s.statusLabel" [severity]="severity[s.status]"></p-tag></td>
+        <td (click)="$event.stopPropagation()">
+          <button pButton icon="pi pi-eye" class="p-button-text p-button-sm" pTooltip="Détail" (click)="view(s)"></button>
+          <button pButton icon="pi pi-pencil" class="p-button-text p-button-sm" pTooltip="Modifier"
+                  *ngIf="isDraft(s)" (click)="edit(s, $event)"></button>
+          <button pButton icon="pi pi-trash" class="p-button-text p-button-sm p-button-danger" pTooltip="Supprimer"
+                  *ngIf="isDraft(s)" (click)="remove(s, $event)"></button>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="7" class="empty">Aucune sanction trouvée.</td></tr>
+    </ng-template>
+  </p-table>
+</div>
