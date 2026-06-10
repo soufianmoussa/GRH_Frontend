@@ -199,18 +199,19 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     private formationService: FormationService,
     private agentDocumentsService: AgentDocumentsService
   ) {
+    // Les maxLength reflètent les longueurs de colonnes backend (DTO @Size + DB) → message précis par champ.
     this.identityForm = this.fb.group({
-      nom: ['', Validators.required],
-      prenom: ['', Validators.required],
-      cin: ['', Validators.required],
+      nom: ['', [Validators.required, Validators.maxLength(50)]],
+      prenom: ['', [Validators.required, Validators.maxLength(50)]],
+      cin: ['', [Validators.required, Validators.maxLength(20)]],
       // Enum-typed fields start as null (not '') so the JSON payload doesn't
       // contain "" which would crash Jackson on the Java enum side.
       sexe: [null as string | null, Validators.required],
       situation: [null as string | null],
       dateNaissance: [null as Date | null, Validators.required],
-      nomTuteurAr: [''],
-      prenomTuteurAr: [''],
-      pprTuteur: [''],
+      nomTuteurAr: ['', Validators.maxLength(50)],
+      prenomTuteurAr: ['', Validators.maxLength(50)],
+      pprTuteur: ['', Validators.maxLength(20)],
       dateTutorat: [null as Date | null],
       numEnfant: [0]
     });
@@ -219,24 +220,24 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
       adresse: this.fb.group({
         id: [null as number | null],
         type: ['PRINCIPALE'],
-        adresse: ['', Validators.required],
-        codePostal: [''],
-        ville: ['', Validators.required],
-        pays: ['Maroc'],
-        telephone: ['']
+        adresse: ['', [Validators.required, Validators.maxLength(255)]],
+        codePostal: ['', Validators.maxLength(10)],
+        ville: ['', [Validators.required, Validators.maxLength(50)]],
+        pays: ['Maroc', Validators.maxLength(50)],
+        telephone: ['', Validators.maxLength(20)]
       }),
       coordonneesBancaires: this.fb.group({
-        banque: [''],
-        compte: [''],
-        rib: [''],
-        iban: ['']
+        banque: ['', Validators.maxLength(80)],
+        compte: ['', Validators.maxLength(34)],
+        rib: ['', Validators.maxLength(24)],
+        iban: ['', Validators.maxLength(34)]
       }),
       conjoint: this.fb.group({
-        nom: [''],
-        prenom: [''],
-        cin: [''],
+        nom: ['', Validators.maxLength(50)],
+        prenom: ['', Validators.maxLength(50)],
+        cin: ['', Validators.maxLength(20)],
         dateNaissance: [null as Date | null],
-        profession: ['']
+        profession: ['', Validators.maxLength(80)]
       }),
       enfants: this.fb.array([])
     });
@@ -282,6 +283,35 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     this.identityForm.get('situation')?.valueChanges.subscribe((sit: string | null) => {
       this.applySituationRules(sit);
     });
+
+    // Problème 3 — Le champ "Nombre d'enfants" pilote dynamiquement les formulaires enfants.
+    this.identityForm.get('numEnfant')?.valueChanges.subscribe((count: number | null) => {
+      this.adjustEnfantsCount(count);
+    });
+  }
+
+  /** Construit un sous-formulaire enfant (validators alignés sur le backend). */
+  private newEnfantGroup(e?: any): FormGroup {
+    return this.fb.group({
+      nom: [e?.nom ?? '', [Validators.required, Validators.maxLength(50)]],
+      prenom: [e?.prenom ?? '', [Validators.required, Validators.maxLength(50)]],
+      dateNaissance: [e?.dateNaissance ? new Date(e.dateNaissance) : null],
+      // null (not '') for enum-typed fields so empty strings never reach the backend.
+      sexe: [e?.sexe ?? null as string | null],
+      situation: [e?.situation ?? null as string | null],
+      niveauScolaire: [e?.niveauScolaire ?? '', Validators.maxLength(50)]
+    });
+  }
+
+  /** Aligne le FormArray des enfants sur le nombre demandé (ajoute/retire par la fin). */
+  private adjustEnfantsCount(count: number | null | undefined): void {
+    const target = Math.max(0, Math.min(20, Number(count) || 0));
+    while (this.enfants.length < target) {
+      this.enfants.push(this.newEnfantGroup());
+    }
+    while (this.enfants.length > target) {
+      this.enfants.removeAt(this.enfants.length - 1);
+    }
   }
 
   private applySituationRules(situation: string | null | undefined): void {
@@ -296,6 +326,7 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
       // Reset spouse data when not married
       conjointGroup.reset({ nom: '', prenom: '', cin: '', dateNaissance: null, profession: '' });
       this.pendingMariageFile = null;
+      this.existingMariage = null;
       conjointGroup.get('nom')?.clearValidators();
       conjointGroup.get('prenom')?.clearValidators();
       conjointGroup.get('cin')?.clearValidators();
@@ -317,7 +348,8 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
   }
 
   showEnfants(): boolean {
-    return this.identityForm.get('situation')?.value !== 'C';
+    // Piloté par le nombre d'enfants saisi (0 → aucune section). Forcé à 0 pour un célibataire.
+    return (this.identityForm.get('numEnfant')?.value ?? 0) > 0;
   }
 
   private loadAndStartAssisted(): void {
@@ -494,15 +526,9 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
       });
     }
     this.enfants.clear();
-    (a.enfants ?? []).forEach(e => this.enfants.push(this.fb.group({
-      nom: [e.nom ?? '', Validators.required],
-      prenom: [e.prenom ?? '', Validators.required],
-      dateNaissance: [e.dateNaissance ? new Date(e.dateNaissance) : null],
-      // null (not '') for enum-typed fields. See payload-utils + addEnfant().
-      sexe: [e.sexe ?? null],
-      situation: [e.situation ?? null],
-      niveauScolaire: [e.niveauScolaire ?? '']
-    })));
+    (a.enfants ?? []).forEach(e => this.enfants.push(this.newEnfantGroup(e)));
+    // numEnfant reflète toujours le nombre réel d'enfants persistés (cohérence à la reprise).
+    this.identityForm.get('numEnfant')?.setValue(this.enfants.length, { emitEvent: false });
   }
 
   private computeStartingStep(): void {
@@ -562,29 +588,22 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     const banqueSan = this.sanitizeObject(contact.coordonneesBancaires ?? {});
     const hasBanque = Object.keys(banqueSan).length > 0;
 
-    // Backend rule: if situation === 'M', conjoint info is mandatory.
-    // The user typically picks the situation in step 2 BEFORE filling
-    // the conjoint section in step 3 — so we delay sending situation='M'
-    // until the conjoint data is actually present. The same applies when
-    // the persisted record already has a conjoint (re-edits).
-    const conjointFilled = this.hasConjoint(contact.conjoint);
-    const situationToSend = (id.situation === 'M' && !conjointFilled)
-      ? undefined
-      : (id.situation || undefined);
-
+    // La situation est envoyée telle quelle : le backend accepte désormais un brouillon
+    // "Marié(e)" sans conjoint (complétude conjoint contrôlée à la soumission). Plus de hack de report.
     const rawPayload: AgentCreateRequest = {
       matriculeId: a.matricule?.id ?? null,
       nom: id.nom,
       prenom: id.prenom,
       cin: id.cin,
       sexe: id.sexe,
-      situation: situationToSend,
+      situation: id.situation || undefined,
       dateNaissance: this.toIsoDate(id.dateNaissance),
       nomTuteurAr: id.nomTuteurAr,
       prenomTuteurAr: id.prenomTuteurAr,
       pprTuteur: id.pprTuteur,
       dateTutorat: this.toIsoDate(id.dateTutorat),
-      numEnfant: id.numEnfant ?? 0,
+      // numEnfant reflète la liste réelle des enfants saisis.
+      numEnfant: (contact.enfants ?? []).length,
       conjoint: this.hasConjoint(contact.conjoint) ? {
         ...contact.conjoint,
         dateNaissance: this.toIsoDate(contact.conjoint.dateNaissance)
@@ -629,18 +648,10 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     return out;
   }
 
-  addEnfant(): void {
-    this.enfants.push(this.fb.group({
-      nom: ['', Validators.required],
-      prenom: ['', Validators.required],
-      dateNaissance: [null as Date | null],
-      // Enum-typed fields kept as null so empty strings never reach the backend.
-      sexe: [null as string | null],
-      situation: [null as string | null],
-      niveauScolaire: ['']
-    }));
-  }
-
+  /**
+   * Suppression d'un enfant précis : retire la ligne, réindexe les actes en attente puis
+   * réaligne le compteur "Nombre d'enfants" (sans réémettre pour ne pas re-déclencher adjustEnfantsCount).
+   */
   removeEnfant(i: number): void {
     this.enfants.removeAt(i);
     // Re-key the pending naissance Map after a removal.
@@ -650,6 +661,7 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
       else if (idx > i) reindexed.set(idx - 1, file);
     });
     this.pendingActesNaissance = reindexed;
+    this.identityForm.get('numEnfant')?.setValue(this.enfants.length, { emitEvent: false });
   }
 
   // ---------- File pickers (local state for now) ----------
@@ -1159,16 +1171,16 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     if (!id.sexe) issues.push({ step: 2, label: 'Sexe obligatoire', severity: 'error' });
     if (!id.dateNaissance) issues.push({ step: 2, label: 'Date de naissance obligatoire', severity: 'error' });
     if (!this.cinFileIsSet()) issues.push({ step: 2, label: 'Scan CIN manquant', severity: 'error' });
-    if (!this.photoIsSet()) issues.push({ step: 2, label: 'Photo de profil recommandee', severity: 'warn' });
+    // Aligné sur la règle backend appliquée à la soumission (anti-incohérence FE/BE).
+    if (!this.photoIsSet()) issues.push({ step: 2, label: 'Photo de profil obligatoire', severity: 'error' });
 
     // Step 3 — required contact
     if (!c.adresse?.adresse?.trim()) issues.push({ step: 3, label: 'Adresse obligatoire', severity: 'error' });
     if (!c.adresse?.ville?.trim()) issues.push({ step: 3, label: 'Ville obligatoire', severity: 'error' });
 
-    // Bank fields are optional but if any filled we want a RIB attached
-    const hasBankFields = !!(c.coordonneesBancaires?.banque || c.coordonneesBancaires?.rib || c.coordonneesBancaires?.iban);
-    if (hasBankFields && !this.ribIsSet()) {
-      issues.push({ step: 3, label: 'Attestation RIB recommandee (banque renseignee)', severity: 'warn' });
+    // Attestation RIB : obligatoire (contrôlée côté serveur à la soumission).
+    if (!this.ribIsSet()) {
+      issues.push({ step: 3, label: 'Attestation RIB obligatoire', severity: 'error' });
     }
 
     // Spouse: if married, conjoint info required + acte de mariage
@@ -1176,7 +1188,7 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
       if (!c.conjoint?.nom?.trim()) issues.push({ step: 3, label: 'Nom du conjoint obligatoire (situation : Marie/e)', severity: 'error' });
       if (!c.conjoint?.prenom?.trim()) issues.push({ step: 3, label: 'Prenom du conjoint obligatoire', severity: 'error' });
       if (!c.conjoint?.cin?.trim()) issues.push({ step: 3, label: 'CIN du conjoint obligatoire', severity: 'error' });
-      if (!this.mariageIsSet()) issues.push({ step: 3, label: 'Acte de mariage manquant', severity: 'warn' });
+      if (!this.mariageIsSet()) issues.push({ step: 3, label: 'Acte de mariage obligatoire', severity: 'error' });
     }
 
     // Each child needs an acte de naissance
@@ -1187,7 +1199,7 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
       }
       if (!this.hasActeNaissance(i)) {
         const childName = `${enfant.prenom || ''} ${enfant.nom || ''}`.trim() || `Enfant #${i + 1}`;
-        issues.push({ step: 3, label: `Acte de naissance manquant pour ${childName}`, severity: 'warn' });
+        issues.push({ step: 3, label: `Acte de naissance manquant pour ${childName}`, severity: 'error' });
       }
     });
 
@@ -1313,6 +1325,23 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
       this.contactForm.markAllAsTouched();
       ToastHelper.showError(this.messageService, 'Adresse principale obligatoire.');
       return false;
+    }
+    if (!this.ribIsSet()) {
+      ToastHelper.showError(this.messageService, 'Attestation RIB obligatoire.');
+      return false;
+    }
+    // Conjoint + acte de mariage : exigés ici (étape 3) pour un agent marié.
+    if (this.showConjoint()) {
+      const conjoint = this.contactForm.get('conjoint')?.value;
+      if (!conjoint?.nom?.trim() || !conjoint?.prenom?.trim() || !conjoint?.cin?.trim()) {
+        this.contactForm.markAllAsTouched();
+        ToastHelper.showError(this.messageService, 'Conjoint : nom, prenom et CIN obligatoires (situation Marie/e).');
+        return false;
+      }
+      if (!this.mariageIsSet()) {
+        ToastHelper.showError(this.messageService, 'Acte de mariage obligatoire pour les agents maries.');
+        return false;
+      }
     }
     return true;
   }

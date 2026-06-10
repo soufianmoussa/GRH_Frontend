@@ -7,28 +7,28 @@
     <ng-container *ngIf="state === 'loading'">
       <p-progressSpinner ariaLabel="Validation du lien" styleClass="activation-spinner"></p-progressSpinner>
       <h1>Validation du lien</h1>
-      <p>Nous verifions votre invitation onboarding.</p>
+      <p>Nous vérifions votre invitation onboarding.</p>
     </ng-container>
 
     <ng-container *ngIf="state === 'invalid'">
       <i class="pi pi-exclamation-triangle status-icon danger"></i>
       <h1>Lien non valide</h1>
       <p-message severity="error" [text]="message"></p-message>
-      <a pButton routerLink="/login" label="Retour a la connexion" icon="pi pi-arrow-left" class="mt-4"></a>
+      <a pButton routerLink="/login" label="Retour à la connexion" icon="pi pi-arrow-left" class="mt-4"></a>
     </ng-container>
 
     <ng-container *ngIf="state === 'success'">
       <i class="pi pi-check-circle status-icon success"></i>
-      <h1>Compte active</h1>
+      <h1>Compte activé</h1>
       <p-message severity="success" [text]="message"></p-message>
-      <p class="redirect-note">Redirection vers le formulaire de completion du profil...</p>
-      <a pButton routerLink="/mon-onboarding/profil" label="Completer mon profil" icon="pi pi-arrow-right" class="mt-4 activation-link-button"></a>
+      <p class="redirect-note">Redirection vers le formulaire de complétion du profil...</p>
+      <a pButton routerLink="/mon-onboarding/profil" label="Compléter mon profil" icon="pi pi-arrow-right" class="mt-4 activation-link-button"></a>
     </ng-container>
 
     <ng-container *ngIf="state === 'valid'">
       <h1>Activation du compte</h1>
       <p class="activation-subtitle">
-        Definissez votre mot de passe pour finaliser l activation et acceder a votre espace onboarding.
+        Définissez votre mot de passe pour finaliser l'activation et accéder à votre espace onboarding.
       </p>
 
       <form [formGroup]="form" (ngSubmit)="activate()" novalidate>
@@ -47,10 +47,10 @@
             styleClass="activation-password"
             inputStyleClass="activation-password-input"
             autocomplete="new-password"
-            placeholder="Minimum 12 caracteres">
+            placeholder="Minimum 12 caractères">
           </p-password>
           <small *ngIf="form.controls['password'].touched && form.controls['password'].invalid" class="p-error">
-            Le mot de passe doit contenir au moins 12 caracteres.
+            Le mot de passe doit contenir au moins 12 caractères.
           </small>
         </div>
 

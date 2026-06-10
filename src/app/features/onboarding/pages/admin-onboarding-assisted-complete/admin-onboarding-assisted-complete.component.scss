@@ -168,6 +168,14 @@
       border: 1px solid #eef2f7;
     }
 
+    /* Parcours guidé : le stepper est un indicateur visuel, pas un menu cliquable.
+       Navigation via Précédent/Suivant et liens "corriger" du récap uniquement. */
+    .p-step-header,
+    button.p-step {
+      pointer-events: none;
+      cursor: default;
+    }
+
     .p-step {
       .p-step-number {
         background: #f1f5f9;

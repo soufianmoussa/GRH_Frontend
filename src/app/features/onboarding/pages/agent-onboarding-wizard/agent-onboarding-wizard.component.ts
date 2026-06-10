@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, HostListener, OnInit, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
@@ -154,14 +154,20 @@ export class AgentOnboardingWizardComponent implements OnInit {
 
   sexeOptions = [
     { label: 'Masculin', value: 'M' },
-    { label: 'Feminin', value: 'F' }
+    { label: 'Féminin', value: 'F' }
   ];
   situationOptions = [
-    { label: 'Celibataire', value: 'C' },
-    { label: 'Marie(e)', value: 'M' },
+    { label: 'Célibataire', value: 'C' },
+    { label: 'Marié(e)', value: 'M' },
     { label: 'Veuf(ve)', value: 'V' },
-    { label: 'Divorce(e)', value: 'D' }
+    { label: 'Divorcé(e)', value: 'D' }
   ];
+
+  // Téléphone marocain / international : indicatif optionnel, 8 à 15 chiffres, espaces/tirets tolérés.
+  static readonly PHONE_PATTERN = /^\+?[\d\s-]{8,15}$/;
+  // RIB marocain : 24 chiffres. IBAN : 2 lettres pays + 2 chiffres clé + 10 à 30 alphanum.
+  static readonly RIB_PATTERN = /^\d{24}$/;
+  static readonly IBAN_PATTERN = /^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/;
 
   constructor(
     private fb: FormBuilder,
@@ -171,15 +177,17 @@ export class AgentOnboardingWizardComponent implements OnInit {
     private confirmationService: ConfirmationService,
     private router: Router
   ) {
+    // Les maxLength reflètent EXACTEMENT les longueurs de colonnes backend (DTO @Size + DB)
+    // pour afficher un message précis sous le champ, en cohérence avec l'API.
     this.identityForm = this.fb.group({
-      nom: ['', Validators.required],
-      prenom: ['', Validators.required],
+      nom: ['', [Validators.required, Validators.maxLength(50)]],
+      prenom: ['', [Validators.required, Validators.maxLength(50)]],
       sexe: ['', Validators.required],
       situation: [''],
       dateNaissance: ['', Validators.required],
-      nomTuteurAr: [''],
-      prenomTuteurAr: [''],
-      pprTuteur: [''],
+      nomTuteurAr: ['', Validators.maxLength(50)],
+      prenomTuteurAr: ['', Validators.maxLength(50)],
+      pprTuteur: ['', Validators.maxLength(20)],
       dateTutorat: [''],
       numEnfant: [0]
     });
@@ -187,24 +195,24 @@ export class AgentOnboardingWizardComponent implements OnInit {
     this.contactForm = this.fb.group({
       adresse: this.fb.group({
         type: ['PRINCIPALE'],
-        adresse: ['', Validators.required],
-        codePostal: [''],
-        ville: ['', Validators.required],
-        pays: ['Maroc'],
-        telephone: ['']
+        adresse: ['', [Validators.required, Validators.maxLength(255)]],
+        codePostal: ['', Validators.maxLength(10)],
+        ville: ['', [Validators.required, Validators.maxLength(50)]],
+        pays: ['Maroc', Validators.maxLength(50)],
+        telephone: ['', [Validators.pattern(AgentOnboardingWizardComponent.PHONE_PATTERN), Validators.maxLength(20)]]
       }),
       coordonneesBancaires: this.fb.group({
-        banque: [''],
-        compte: [''],
-        rib: [''],
-        iban: ['']
+        banque: ['', Validators.maxLength(80)],
+        compte: ['', Validators.maxLength(34)],
+        rib: ['', [Validators.pattern(AgentOnboardingWizardComponent.RIB_PATTERN), Validators.maxLength(24)]],
+        iban: ['', [Validators.pattern(AgentOnboardingWizardComponent.IBAN_PATTERN), Validators.maxLength(34)]]
       }),
       conjoint: this.fb.group({
-        nom: [''],
-        prenom: [''],
-        cin: [''],
+        nom: ['', Validators.maxLength(50)],
+        prenom: ['', Validators.maxLength(50)],
+        cin: ['', Validators.maxLength(20)],
         dateNaissance: [''],
-        profession: ['']
+        profession: ['', Validators.maxLength(80)]
       }),
       enfants: this.fb.array([])
     });
@@ -314,6 +322,94 @@ export class AgentOnboardingWizardComponent implements OnInit {
 
   ngOnInit(): void {
     this.load();
+
+    // Les sections conditionnelles (Conjoint / Enfants) doivent apparaître ET disparaître proprement :
+    // on (dé)pose les validators et on purge les données devenues hors-contexte à chaque changement
+    // de situation familiale. Évite les "champs cachés mais obligatoires" et les données figées.
+    this.identityForm.get('situation')!.valueChanges.subscribe((situation) => {
+      this.applySituationEffects(situation);
+    });
+
+    // Problème 3 — Le champ "Nombre d'enfants" pilote dynamiquement les formulaires enfants :
+    // chaque changement génère/supprime instantanément les sous-formulaires correspondants.
+    this.identityForm.get('numEnfant')!.valueChanges.subscribe((count) => {
+      this.adjustEnfantsCount(count);
+    });
+  }
+
+  /** Construit un sous-formulaire enfant (validators alignés sur le backend). */
+  private newEnfantGroup(e?: any): FormGroup {
+    return this.fb.group({
+      nom: [e?.nom ?? '', [Validators.required, Validators.maxLength(50)]],
+      prenom: [e?.prenom ?? '', [Validators.required, Validators.maxLength(50)]],
+      dateNaissance: [e?.dateNaissance ? new Date(e.dateNaissance) : null],
+      sexe: [e?.sexe ?? ''],
+      situation: [e?.situation ?? ''],
+      niveauScolaire: [e?.niveauScolaire ?? '', Validators.maxLength(50)]
+    });
+  }
+
+  /**
+   * Aligne le FormArray des enfants sur le nombre demandé : ajoute des formulaires vierges
+   * si besoin, retire les excédentaires par la fin (et purge leurs actes en attente).
+   */
+  private adjustEnfantsCount(count: number | null | undefined): void {
+    const target = Math.max(0, Math.min(20, Number(count) || 0));
+    while (this.enfants.length < target) {
+      this.enfants.push(this.newEnfantGroup());
+    }
+    while (this.enfants.length > target) {
+      const idx = this.enfants.length - 1;
+      this.pendingActeNaissanceByIndex.delete(idx);
+      this.enfants.removeAt(idx);
+    }
+    this.hydrateSlotsFromExistingDocs();
+  }
+
+  /** (Re)configure validators + purge des sections conjoint/enfants selon la situation familiale. */
+  private applySituationEffects(situation: string | null | undefined): void {
+    const conjoint = this.contactForm.get('conjoint') as FormGroup;
+    const married = situation === 'M';
+
+    // Conjoint : requis uniquement si marié, sinon validators retirés ET données purgées.
+    ['nom', 'prenom', 'cin'].forEach((field) => {
+      const ctrl = conjoint.get(field)!;
+      ctrl.setValidators(married ? [Validators.required] : []);
+      ctrl.updateValueAndValidity({ emitEvent: false });
+    });
+    if (!married) {
+      conjoint.reset({ nom: '', prenom: '', cin: '', dateNaissance: '', profession: '' }, { emitEvent: false });
+      this.pendingMariageFile = null;
+      this.existingMariage = undefined;
+    }
+
+    // Enfants : non applicables aux célibataires → purge de la fratrie et des actes en attente.
+    if (situation === 'C') {
+      if (this.enfants.length) {
+        this.pendingActeNaissanceByIndex.clear();
+        this.enfants.clear();
+      }
+      this.identityForm.get('numEnfant')!.setValue(0, { emitEvent: false });
+    }
+    this.hydrateSlotsFromExistingDocs();
+  }
+
+  // ----- Unsaved changes guard (Issue #6) -----
+
+  /** True dès qu'un des formulaires éditables a été modifié sans enregistrement. */
+  hasUnsavedChanges(): boolean {
+    if (this.locked()) return false;
+    return this.identityForm.dirty || this.contactForm.dirty || this.cinForm.dirty;
+  }
+
+  /** Averti par le navigateur lors d'un rechargement / fermeture d'onglet avec un brouillon non sauvegardé. */
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent): void {
+    if (this.hasUnsavedChanges()) {
+      event.preventDefault();
+      // Requis par certains navigateurs pour déclencher la boîte de dialogue native.
+      event.returnValue = '';
+    }
   }
 
   filterNiveau(event: { query: string }) {
@@ -346,7 +442,10 @@ export class AgentOnboardingWizardComponent implements OnInit {
           this.formations = docs.formations ?? [];
           this.patchFromOnboarding();
           this.patchCinForm();
-          this.computeStartingStep();
+          // Aligne les validators conditionnels sur la situation chargée (sans purger les données existantes).
+          this.applySituationEffects(this.identityForm.value.situation);
+          // L'étape de reprise est calculée APRÈS le chargement des documents (loadExistingAgentDocuments),
+          // car recapIssues dépend de la présence des pièces (photo, RIB, actes...).
           this.loadExistingAgentDocuments();
         },
         error: (e) => ToastHelper.handleApiError(this.messageService, e, 'Chargement impossible.')
@@ -360,7 +459,7 @@ export class AgentOnboardingWizardComponent implements OnInit {
    */
   private loadExistingAgentDocuments(): void {
     const agentId = this.onboarding?.agent?.id;
-    if (!agentId) return;
+    if (!agentId) { this.computeStartingStep(); return; }
     this.agentDocumentsService.getByAgent(agentId)
       .pipe(catchError(() => of([] as AgentDocument[])))
       .subscribe((docs) => {
@@ -375,6 +474,8 @@ export class AgentOnboardingWizardComponent implements OnInit {
           }
         }
         this.hydrateSlotsFromExistingDocs();
+        // Documents chargés : on peut maintenant déterminer la 1ʳᵉ étape réellement incomplète.
+        this.computeStartingStep();
       });
   }
 
@@ -542,7 +643,8 @@ export class AgentOnboardingWizardComponent implements OnInit {
   }
 
   showEnfants(): boolean {
-    return this.identityForm.get('situation')?.value !== 'C';
+    // Piloté par le nombre d'enfants saisi (0 → aucune section). Forcé à 0 pour un célibataire.
+    return (this.identityForm.get('numEnfant')?.value ?? 0) > 0;
   }
 
   // ---------- Display labels ----------
@@ -613,6 +715,27 @@ export class AgentOnboardingWizardComponent implements OnInit {
     return this.recapIssues().filter(i => i.severity === 'error').length;
   }
 
+  // ---------- Indicateurs de complétude des étapes (Issue #5) ----------
+
+  /** Vrai si l'étape comporte au moins une erreur bloquante. */
+  hasStepErrors(step: WizardStep): boolean {
+    return this.recapIssues().some(i => i.step === step && i.severity === 'error');
+  }
+
+  /** Icône d'état affichée dans l'en-tête de chaque onglet du stepper. */
+  stepStateIcon(step: WizardStep): string {
+    if (step === 1) return 'pi-check-circle';
+    if (step === 5) return this.canSubmit() ? 'pi-check-circle' : 'pi-circle';
+    return this.hasStepErrors(step) ? 'pi-exclamation-circle' : 'pi-check-circle';
+  }
+
+  /** Classe de couleur associée à l'état de l'étape. */
+  stepStateClass(step: WizardStep): string {
+    if (step === 1) return 'step-state--done';
+    if (step === 5) return this.canSubmit() ? 'step-state--done' : 'step-state--todo';
+    return this.hasStepErrors(step) ? 'step-state--warn' : 'step-state--done';
+  }
+
   recapWarnings(): number {
     return this.recapIssues().filter(i => i.severity === 'warn').length;
   }
@@ -660,7 +783,7 @@ export class AgentOnboardingWizardComponent implements OnInit {
       pprTuteur: a.pprTuteur ?? '',
       dateTutorat: a.dateTutorat ? new Date(a.dateTutorat) : null,
       numEnfant: a.numEnfant ?? 0
-    });
+    }, { emitEvent: false }); // n'enclenche pas le nettoyage "célibataire" pendant l'hydratation
     const primary = (a.adresses ?? [])[0];
     if (primary) {
       (this.contactForm.get('adresse') as FormGroup).patchValue({
@@ -685,14 +808,9 @@ export class AgentOnboardingWizardComponent implements OnInit {
       });
     }
     this.enfants.clear();
-    (a.enfants ?? []).forEach(e => this.enfants.push(this.fb.group({
-      nom: [e.nom ?? '', Validators.required],
-      prenom: [e.prenom ?? '', Validators.required],
-      dateNaissance: [e.dateNaissance ? new Date(e.dateNaissance) : null],
-      sexe: [e.sexe ?? ''],
-      situation: [e.situation ?? ''],
-      niveauScolaire: [e.niveauScolaire ?? '']
-    })));
+    (a.enfants ?? []).forEach(e => this.enfants.push(this.newEnfantGroup(e)));
+    // numEnfant reflète toujours le nombre réel d'enfants persistés (cohérence à la reprise).
+    this.identityForm.get('numEnfant')!.setValue(this.enfants.length, { emitEvent: false });
   }
 
   private patchCinForm(): void {
@@ -710,13 +828,19 @@ export class AgentOnboardingWizardComponent implements OnInit {
     }
   }
 
+  /**
+   * Problème 2 — Reprise basée sur la progression RÉELLE et non sur un mapping figé.
+   * On positionne l'utilisateur sur la première étape encore incomplète (2 → 3 → 4),
+   * sinon sur le récapitulatif (5). Un dossier déjà soumis ouvre directement le récap.
+   * (Appelé après chargement des documents pour que recapIssues soit fiable.)
+   */
   private computeStartingStep(): void {
     if (!this.onboarding) return;
-    const step = this.onboarding.currentStep;
-    if (step === 'PROFILE') this.activeStep = 2;
-    else if (step === 'DOCUMENTS') this.activeStep = 4;
-    else if (step === 'REVIEW' || step === 'VALIDATION') this.activeStep = 5;
-    else this.activeStep = 1;
+    if (this.locked()) { this.activeStep = 5; return; }
+    for (const s of [2, 3, 4] as WizardStep[]) {
+      if (this.hasStepErrors(s)) { this.activeStep = s; return; }
+    }
+    this.activeStep = 5;
   }
 
   // ----- Navigation -----
@@ -742,12 +866,24 @@ export class AgentOnboardingWizardComponent implements OnInit {
   // ----- Step 2 / 3 save -----
 
   saveIdentity(thenNext?: (v: number) => void): void {
-    if (!this.validateIdentity()) return;
+    // En brouillon (sans navigation) on persiste les champs texte sans exiger les pièces
+    // jointes (photo, scan CIN) : cela lève le blocage "chicken-and-egg" de l'Issue #4.
+    // Les pièces obligatoires ne sont contrôlées qu'au passage à l'étape suivante / soumission.
+    if (thenNext) {
+      if (!this.validateIdentity()) return;
+    } else if (!this.validateIdentityFields()) {
+      return;
+    }
     this.persistProfile(thenNext, this.identityForm.value);
   }
 
   saveContact(thenNext?: (v: number) => void): void {
-    if (!this.validateContact()) return;
+    if (thenNext) {
+      if (!this.validateContact()) return;
+    } else if (!this.validateContactFormats()) {
+      // Brouillon : adresse partielle tolérée, mais on refuse les formats invalides.
+      return;
+    }
     this.persistProfile(thenNext, {});
   }
 
@@ -777,23 +913,21 @@ export class AgentOnboardingWizardComponent implements OnInit {
     const banqueSan = this.sanitizeObject(contact.coordonneesBancaires ?? {});
     const hasBanque = Object.keys(banqueSan).length > 0;
 
-    // Backend rejects situation='M' when conjoint is not yet provided.
-    // Since conjoint is filled in step 3, we defer sending situation='M' until then.
-    const conjointReady = this.hasConjoint(contact.conjoint);
-    const situationToSend = (id.situation === 'M' && !conjointReady) ? undefined : (id.situation || undefined);
-
+    // La situation est désormais envoyée telle quelle : le backend accepte un brouillon "Marié(e)"
+    // sans conjoint (la complétude conjoint est contrôlée à la soumission). Plus de hack de report.
     const payload: Partial<AgentCreateRequest> = {
       matriculeId: a.matricule?.id ?? null,
       nom: id.nom,
       prenom: id.prenom,
       sexe: id.sexe,
-      situation: situationToSend,
+      situation: id.situation || undefined,
       dateNaissance: this.toIsoDate(id.dateNaissance),
       nomTuteurAr: id.nomTuteurAr || undefined,
       prenomTuteurAr: id.prenomTuteurAr || undefined,
       pprTuteur: id.pprTuteur || undefined,
       dateTutorat: this.toIsoDate(id.dateTutorat),
-      numEnfant: id.numEnfant ?? 0,
+      // numEnfant reflète la liste réelle des enfants saisis (évite toute contradiction récap/liste).
+      numEnfant: (contact.enfants ?? []).length,
       conjoint: this.hasConjoint(contact.conjoint) ? {
         ...contact.conjoint,
         dateNaissance: this.toIsoDate(contact.conjoint.dateNaissance)
@@ -817,6 +951,9 @@ export class AgentOnboardingWizardComponent implements OnInit {
       .subscribe({
         next: (o) => {
           this.onboarding = o;
+          // Les données sont persistées : on repart d'un état "propre" pour le garde anti-perte.
+          this.identityForm.markAsPristine();
+          this.contactForm.markAsPristine();
           ToastHelper.showSuccess(this.messageService, 'Informations enregistrees.');
           if (thenNext) this.next(thenNext);
         },
@@ -847,21 +984,14 @@ export class AgentOnboardingWizardComponent implements OnInit {
     return out;
   }
 
-  addEnfant(): void {
-    this.enfants.push(this.fb.group({
-      nom: ['', Validators.required],
-      prenom: ['', Validators.required],
-      dateNaissance: [null],
-      sexe: [''],
-      situation: [''],
-      niveauScolaire: ['']
-    }));
-    this.hydrateSlotsFromExistingDocs();
-  }
-
+  /**
+   * Suppression d'un enfant précis : on retire la ligne puis on réaligne le compteur
+   * "Nombre d'enfants" (sans réémettre, pour ne pas re-déclencher adjustEnfantsCount).
+   */
   removeEnfant(i: number): void {
     this.pendingActeNaissanceByIndex.delete(i);
     this.enfants.removeAt(i);
+    this.identityForm.get('numEnfant')!.setValue(this.enfants.length, { emitEvent: false });
     this.hydrateSlotsFromExistingDocs();
   }
 
@@ -886,6 +1016,7 @@ export class AgentOnboardingWizardComponent implements OnInit {
       .subscribe({
         next: (dto) => {
           this.cin = dto;
+          this.cinForm.markAsPristine();
           ToastHelper.showSuccess(this.messageService, 'Informations CIN enregistrees.');
           if (this.pendingCinFile) {
             this.uploadCinScan(this.pendingCinFile);
@@ -1120,10 +1251,35 @@ export class AgentOnboardingWizardComponent implements OnInit {
     return s === 'PENDING_VALIDATION' || s === 'VALIDATED' || s === 'ACTIVE';
   }
 
-  private validateIdentity(): boolean {
+  /** Champs texte de l'identité uniquement (sans les pièces jointes) — utilisé pour le brouillon. */
+  private validateIdentityFields(): boolean {
     if (this.identityForm.invalid) {
       this.identityForm.markAllAsTouched();
       ToastHelper.showError(this.messageService, 'Identite : champs obligatoires manquants.');
+      return false;
+    }
+    return true;
+  }
+
+  /** Contrôle des formats saisis (téléphone, RIB, IBAN) avec messages dédiés (Issues #10/#11). */
+  private validateContactFormats(): boolean {
+    if (this.contactForm.get('adresse.telephone')?.errors?.['pattern']) {
+      ToastHelper.showError(this.messageService, 'Numero de telephone invalide (8 a 15 chiffres, ex : +212 6 12 34 56 78).');
+      return false;
+    }
+    if (this.contactForm.get('coordonneesBancaires.rib')?.errors?.['pattern']) {
+      ToastHelper.showError(this.messageService, 'RIB invalide : 24 chiffres attendus.');
+      return false;
+    }
+    if (this.contactForm.get('coordonneesBancaires.iban')?.errors?.['pattern']) {
+      ToastHelper.showError(this.messageService, 'IBAN invalide (ex : MA64XXXXXXXXXXXXXXXXXXXXXX).');
+      return false;
+    }
+    return true;
+  }
+
+  private validateIdentity(): boolean {
+    if (!this.validateIdentityFields()) {
       return false;
     }
     if (!this.photoIsSet()) {
@@ -1139,22 +1295,37 @@ export class AgentOnboardingWizardComponent implements OnInit {
       ToastHelper.showError(this.messageService, 'Scan CIN obligatoire.');
       return false;
     }
-    if (this.isMarried() && !this.mariageIsSet()) {
-      ToastHelper.showError(this.messageService, 'Acte de mariage obligatoire pour les agents maries.');
-      return false;
-    }
+    // NB : l'acte de mariage et les infos du conjoint sont contrôlés à l'étape 3 (Coordonnées),
+    // là où se trouvent les champs/upload. Les exiger ici bloquerait l'agent marié dès l'étape 2.
     return true;
   }
 
   private validateContact(): boolean {
-    if (this.contactForm.get('adresse')?.invalid) {
+    if (!this.validateContactFormats()) {
+      return false;
+    }
+    const adresse = this.contactForm.get('adresse')?.value;
+    if (!adresse?.adresse?.trim() || !adresse?.ville?.trim()) {
       this.contactForm.markAllAsTouched();
-      ToastHelper.showError(this.messageService, 'Adresse principale obligatoire.');
+      ToastHelper.showError(this.messageService, 'Adresse et ville obligatoires.');
       return false;
     }
     if (!this.ribIsSet()) {
       ToastHelper.showError(this.messageService, 'Attestation RIB obligatoire.');
       return false;
+    }
+    // Conjoint + acte de mariage : exigés ici (étape 3) pour un agent marié.
+    if (this.showConjoint()) {
+      const conjoint = this.contactForm.get('conjoint')?.value;
+      if (!conjoint?.nom?.trim() || !conjoint?.prenom?.trim() || !conjoint?.cin?.trim()) {
+        this.contactForm.markAllAsTouched();
+        ToastHelper.showError(this.messageService, 'Conjoint : nom, prenom et CIN obligatoires (situation Marie/e).');
+        return false;
+      }
+      if (!this.mariageIsSet()) {
+        ToastHelper.showError(this.messageService, 'Acte de mariage obligatoire pour les agents maries.');
+        return false;
+      }
     }
     const missingEnfants = this.enfantsWithoutActe();
     if (missingEnfants.length) {
