@@ -208,7 +208,7 @@
       </ng-container>
 
       <!-- 🏢 Organisation -->
-      <ng-container *ngIf="sectionMatches('Organigramme','Unités structurelles','Responsables unites','Postes','Affectation Agent','Historique des affectations')">
+      <ng-container *ngIf="sectionMatches('Organigramme','Historique des affectations','Fonctions','Postes Activités','Familles professionnelles','Familles emplois')">
         <span class="nav-section-label">Organisation</span>
         <div class="nav-group">
           <button type="button" class="nav-group__head" (click)="toggle('admin-org')" [class.is-open]="isOpen('admin-org')">
@@ -217,12 +217,16 @@
             <i class="fa-solid fa-chevron-down nav-group__caret"></i>
           </button>
           <div class="nav-group__body" *ngIf="isOpen('admin-org')">
+            <!-- Pilotage & construction de l'organisation -->
             <a class="nav-item nav-item--sub" routerLink="/Organigramme" routerLinkActive="is-active" *ngIf="matchesSearch('Organigramme')"><i class="fa-solid fa-sitemap"></i><span>{{ 'LAYOUT.SIDEBAR.ORGANIGRAMME' | translate }}</span></a>
-            <a class="nav-item nav-item--sub" routerLink="/UniteStructurelle" routerLinkActive="is-active" *ngIf="matchesSearch('Unités structurelles')"><i class="fa-solid fa-building"></i><span>{{ 'LAYOUT.SIDEBAR.UNITE_STRUCTURELLE' | translate }}</span></a>
-            <a class="nav-item nav-item--sub" routerLink="/ResponsableUs" routerLinkActive="is-active" *ngIf="matchesSearch('Responsables unites')"><i class="fa-solid fa-user-tie"></i><span>{{ 'LAYOUT.SIDEBAR.RESPONSABLES_US' | translate }}</span></a>
-            <a class="nav-item nav-item--sub" routerLink="/Postes" [routerLinkActiveOptions]="{exact: true}" routerLinkActive="is-active" *ngIf="matchesSearch('Postes')"><i class="fa-solid fa-briefcase"></i><span>{{ 'LAYOUT.SIDEBAR.POSTES' | translate }}</span></a>
-            <a class="nav-item nav-item--sub" routerLink="/AffectationAgentPoste" routerLinkActive="is-active" *ngIf="matchesSearch('Affectation Agent Poste')"><i class="fa-solid fa-people-arrows"></i><span>{{ 'LAYOUT.SIDEBAR.AFFECTATIONS_AGENT_POSTE' | translate }}</span></a>
             <a class="nav-item nav-item--sub" routerLink="/HistoriqueAffectations" routerLinkActive="is-active" *ngIf="matchesSearch('Historique des affectations')"><i class="fa-solid fa-clock-rotate-left"></i><span>{{ 'LAYOUT.SIDEBAR.HISTORIQUE_AFFECTATIONS' | translate }}</span></a>
+
+            <!-- Référentiels métier (prérequis des postes) -->
+            <span class="nav-subgroup-label" *ngIf="matchesSearch('Fonctions') || matchesSearch('Postes Activités') || matchesSearch('Familles professionnelles') || matchesSearch('Familles emplois')">{{ 'LAYOUT.SIDEBAR.REFERENTIELS_METIER' | translate }}</span>
+            <a class="nav-item nav-item--sub" routerLink="/Fonctions" routerLinkActive="is-active" *ngIf="matchesSearch('Fonctions')"><i class="fa-solid fa-briefcase-medical"></i><span>{{ 'LAYOUT.SIDEBAR.FONCTIONS' | translate }}</span></a>
+            <a class="nav-item nav-item--sub" routerLink="/PostesActivites" routerLinkActive="is-active" *ngIf="matchesSearch('Postes Activités')"><i class="fa-solid fa-list-check"></i><span>{{ 'LAYOUT.SIDEBAR.POSTES_ACTIVITES' | translate }}</span></a>
+            <a class="nav-item nav-item--sub" routerLink="/situationFamille" routerLinkActive="is-active" *ngIf="matchesSearch('Familles professionnelles')"><i class="fa-solid fa-sitemap"></i><span>{{ 'LAYOUT.SIDEBAR.SITUATION_FAMILLES_PRO' | translate }}</span></a>
+            <a class="nav-item nav-item--sub" routerLink="/familleEtEmploi" routerLinkActive="is-active" *ngIf="matchesSearch('Familles emplois')"><i class="fa-solid fa-folder-tree"></i><span>{{ 'LAYOUT.SIDEBAR.FICHIER_FAMILLE_EMPLOIS' | translate }}</span></a>
           </div>
         </div>
       </ng-container>
@@ -238,9 +242,9 @@
             <i class="fa-solid fa-chevron-down nav-group__caret"></i>
           </button>
           <div class="nav-group__body" *ngIf="isOpen('admin-actes')">
-            <a class="nav-item nav-item--sub" routerLink="/Sanction" routerLinkActive="is-active" *ngIf="matchesSearch('Sanctions')"><i class="fa-solid fa-gavel"></i><span>{{ 'LAYOUT.SIDEBAR.SANCTIONS' | translate }}</span></a>
+            <a class="nav-item nav-item--sub" routerLink="/admin/actes/sanctions" routerLinkActive="is-active" *ngIf="matchesSearch('Sanctions')"><i class="fa-solid fa-gavel"></i><span>{{ 'LAYOUT.SIDEBAR.SANCTIONS' | translate }}</span></a>
             <a class="nav-item nav-item--sub" routerLink="/Reintegration" routerLinkActive="is-active" *ngIf="matchesSearch('Réintégration')"><i class="fa-solid fa-user-check"></i><span>{{ 'LAYOUT.SIDEBAR.REINTEGRATION' | translate }}</span></a>
-            <a class="nav-item nav-item--sub" routerLink="/StageFormation" routerLinkActive="is-active" *ngIf="matchesSearch('Stage formation')"><i class="fa-solid fa-graduation-cap"></i><span>{{ 'LAYOUT.SIDEBAR.STAGE_FORMATION' | translate }}</span></a>
+            <a class="nav-item nav-item--sub" routerLink="/StageFormation" routerLinkActive="is-active" *ngIf="matchesSearch('Stages et formations')"><i class="fa-solid fa-graduation-cap"></i><span>{{ 'LAYOUT.SIDEBAR.STAGE_FORMATION' | translate }}</span></a>
             <a class="nav-item nav-item--sub" routerLink="/Detachement" routerLinkActive="is-active" *ngIf="matchesSearch('Détachement')"><i class="fa-solid fa-people-arrows"></i><span>{{ 'LAYOUT.SIDEBAR.DETACHEMENT' | translate }}</span></a>
             <a class="nav-item nav-item--sub" routerLink="/Radiation" routerLinkActive="is-active" *ngIf="matchesSearch('Radiation')"><i class="fa-solid fa-user-slash"></i><span>{{ 'LAYOUT.SIDEBAR.RADIATION' | translate }}</span></a>
             <a class="nav-item nav-item--sub" routerLink="/Suspension" routerLinkActive="is-active" *ngIf="matchesSearch('Suspension')"><i class="fa-solid fa-circle-pause"></i><span>{{ 'LAYOUT.SIDEBAR.SUSPENSION' | translate }}</span></a>
@@ -330,24 +334,6 @@
             <a class="nav-item nav-item--sub" routerLink="/GestionCongesAgents" routerLinkActive="is-active" *ngIf="matchesSearch('Congés des agents')"><i class="fa-solid fa-users"></i><span>{{ 'LAYOUT.SIDEBAR.CONGES_AGENTS' | translate }}</span></a>
             <a class="nav-item nav-item--sub" routerLink="/TypesConge" routerLinkActive="is-active" *ngIf="matchesSearch('Types de congé')"><i class="fa-solid fa-tags"></i><span>{{ 'LAYOUT.SIDEBAR.TYPES_CONGE' | translate }}</span></a>
             <a class="nav-item nav-item--sub" routerLink="/JoursFeries" routerLinkActive="is-active" *ngIf="matchesSearch('Jours fériés')"><i class="fa-solid fa-calendar-day"></i><span>{{ 'LAYOUT.SIDEBAR.JOURS_FERIES' | translate }}</span></a>
-          </div>
-        </div>
-      </ng-container>
-
-      <!-- 📋 Référentiels RH -->
-      <ng-container *ngIf="sectionMatches('Fonctions','Postes Activités','Familles professionnelles','Familles emplois')">
-        <span class="nav-section-label">Référentiels RH</span>
-        <div class="nav-group">
-          <button type="button" class="nav-group__head" (click)="toggle('admin-ref')" [class.is-open]="isOpen('admin-ref')">
-            <i class="fa-solid fa-database"></i>
-            <span>Référentiels RH</span>
-            <i class="fa-solid fa-chevron-down nav-group__caret"></i>
-          </button>
-          <div class="nav-group__body" *ngIf="isOpen('admin-ref')">
-            <a class="nav-item nav-item--sub" routerLink="/Fonctions" routerLinkActive="is-active" *ngIf="matchesSearch('Fonctions')"><i class="fa-solid fa-briefcase-medical"></i><span>{{ 'LAYOUT.SIDEBAR.FONCTIONS' | translate }}</span></a>
-            <a class="nav-item nav-item--sub" routerLink="/PostesActivites" routerLinkActive="is-active" *ngIf="matchesSearch('Postes Activités')"><i class="fa-solid fa-list-check"></i><span>{{ 'LAYOUT.SIDEBAR.POSTES_ACTIVITES' | translate }}</span></a>
-            <a class="nav-item nav-item--sub" routerLink="/situationFamille" routerLinkActive="is-active" *ngIf="matchesSearch('Familles professionnelles')"><i class="fa-solid fa-sitemap"></i><span>{{ 'LAYOUT.SIDEBAR.SITUATION_FAMILLES_PRO' | translate }}</span></a>
-            <a class="nav-item nav-item--sub" routerLink="/familleEtEmploi" routerLinkActive="is-active" *ngIf="matchesSearch('Familles emplois')"><i class="fa-solid fa-folder-tree"></i><span>{{ 'LAYOUT.SIDEBAR.FICHIER_FAMILLE_EMPLOIS' | translate }}</span></a>
           </div>
         </div>
       </ng-container>

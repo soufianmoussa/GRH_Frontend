@@ -58,13 +58,15 @@ export class SidebarComponent implements OnInit {
     '/ApprobationModifications': 'admin-agents',
 
     '/Organigramme': 'admin-org',
-    '/UniteStructurelle': 'admin-org',
-    '/ResponsableUs': 'admin-org',
-    '/Postes': 'admin-org',
-    '/AffectationAgentPoste': 'admin-org',
     '/HistoriqueAffectations': 'admin-org',
+    // Référentiels métier — désormais rattachés à la section Organisation
+    '/Fonctions': 'admin-org',
+    '/PostesActivites': 'admin-org',
+    '/situationFamille': 'admin-org',
+    '/familleEtEmploi': 'admin-org',
 
     '/Sanction': 'admin-actes',
+    '/admin/actes/sanctions': 'admin-actes',
     '/Reintegration': 'admin-actes',
     '/StageFormation': 'admin-actes',
     '/Detachement': 'admin-actes',
@@ -95,11 +97,6 @@ export class SidebarComponent implements OnInit {
     '/GestionCongesAgents': 'admin-conges',
     '/TypesConge': 'admin-conges',
     '/JoursFeries': 'admin-conges',
-
-    '/Fonctions': 'admin-ref',
-    '/PostesActivites': 'admin-ref',
-    '/situationFamille': 'admin-ref',
-    '/familleEtEmploi': 'admin-ref',
 
     '/ActesVisa': 'admin-visa',
     '/HistoriqueActesVises': 'admin-visa',

@@ -28,6 +28,14 @@ export interface AffectationAgentPosteUpdateRequest {
   motif?: string | null;
 }
 
+export interface TransferAffectationRequest {
+  agentId: number;
+  fromPosteId: number;
+  toPosteId: number;
+  dateTransfert: string;
+  motif?: string | null;
+}
+
 export type StatutAffectation = 'ACTIVE' | 'CLOTUREE';
 
 export interface PosteOption {

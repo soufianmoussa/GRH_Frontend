@@ -46,4 +46,14 @@ export class PosteService {
   getAllNoPagination(): Observable<Poste[]> {
     return this.http.get<Poste[]>(`${this.baseUrl}/all`);
   }
+
+  /** Archive (soft-delete) le poste. */
+  archive(id: number): Observable<Poste> {
+    return this.http.patch<Poste>(`${this.baseUrl}/${id}/archive`, {});
+  }
+
+  /** Réactive un poste archivé. */
+  restore(id: number): Observable<Poste> {
+    return this.http.patch<Poste>(`${this.baseUrl}/${id}/restore`, {});
+  }
 }

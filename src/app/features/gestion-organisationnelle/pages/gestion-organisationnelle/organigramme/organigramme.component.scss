@@ -98,7 +98,7 @@
    ─────────────────────────────────────────────── */
 .org-grid {
   display: grid;
-  grid-template-columns: 360px 1fr;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr); /* 40% / 60% */
   gap: 1.25rem;
   align-items: stretch;
 
@@ -108,23 +108,139 @@
 }
 
 /* ───────────────────────────────────────────────
-   Tree (left card)
+   View toggle + search + filters control bar
    ─────────────────────────────────────────────── */
-.org-tree-card {
+.org-controlbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: #fff;
+  border: 1px solid #e6ebf2;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  padding: 0.6rem 0.8rem;
+
+  .org-segmented {
+    display: inline-flex;
+    background: #f1f5f9;
+    border-radius: 10px;
+    padding: 3px;
+    gap: 2px;
+
+    button {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      border: none;
+      background: transparent;
+      color: #64748b;
+      font-size: 0.82rem;
+      font-weight: 600;
+      padding: 7px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+
+      i { font-size: 0.85rem; }
+
+      &:hover { color: #334155; }
+
+      &.active {
+        background: #fff;
+        color: #237ad2;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+      }
+    }
+  }
+
+  .org-controlbar-tools {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+  }
+
+  .org-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 0 10px;
+    min-width: 240px;
+
+    i.pi-search { color: #94a3b8; font-size: 0.85rem; }
+
+    input {
+      flex: 1;
+      border: none !important;
+      background: transparent !important;
+      outline: none;
+      padding: 8px 0;
+      font-size: 0.85rem;
+      color: #334155;
+      box-shadow: none !important;
+      min-height: unset !important;
+      border-radius: 0 !important;
+    }
+
+    .org-search-clear { background: transparent; border: none; color: #94a3b8; cursor: pointer; padding: 0 4px; }
+  }
+
+  .org-filters {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+
+    i.pi-filter { color: #94a3b8; font-size: 0.78rem; }
+
+    .filter-chip {
+      background: transparent;
+      border: 1px solid transparent;
+      color: #64748b;
+      font-size: 0.75rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+
+      &:hover { background: #f1f5f9; }
+      &.active { background: #237ad2; color: #fff; border-color: #237ad2; }
+    }
+  }
+}
+
+/* Full-width chart in Vue Organigramme */
+.org-chart-card--full {
+  width: 100%;
+  min-height: 640px;
+}
+
+/* ───────────────────────────────────────────────
+   Organization chart (left card)
+   ─────────────────────────────────────────────── */
+.org-chart-card {
   background: #fff;
   border: 1px solid #e6ebf2;
   border-radius: 14px;
   box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
   display: flex;
   flex-direction: column;
-  min-height: 560px;
+  min-height: 620px;
+  overflow: hidden;
 
-  .org-tree-toolbar {
+  .org-chart-toolbar {
     border-bottom: 1px solid #f1f5f9;
     padding: 0.8rem;
     display: flex;
-    flex-direction: column;
-    gap: 0.55rem;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
 
     .org-search {
       display: flex;
@@ -134,11 +250,10 @@
       border: 1px solid #e2e8f0;
       border-radius: 10px;
       padding: 0 10px;
+      flex: 1;
+      min-width: 220px;
 
-      i.pi-search {
-        color: #94a3b8;
-        font-size: 0.85rem;
-      }
+      i.pi-search { color: #94a3b8; font-size: 0.85rem; }
 
       input {
         flex: 1;
@@ -154,11 +269,7 @@
       }
 
       .org-search-clear {
-        background: transparent;
-        border: none;
-        color: #94a3b8;
-        cursor: pointer;
-        padding: 0 4px;
+        background: transparent; border: none; color: #94a3b8; cursor: pointer; padding: 0 4px;
       }
     }
 
@@ -168,10 +279,7 @@
       gap: 6px;
       flex-wrap: wrap;
 
-      i.pi-filter {
-        color: #94a3b8;
-        font-size: 0.78rem;
-      }
+      i.pi-filter { color: #94a3b8; font-size: 0.78rem; }
 
       .filter-chip {
         background: transparent;
@@ -183,22 +291,197 @@
         cursor: pointer;
         transition: all 0.15s ease;
 
-        &:hover {
-          background: #f1f5f9;
-        }
-
-        &.active {
-          background: #237ad2;
-          color: #fff;
-          border-color: #237ad2;
-        }
+        &:hover { background: #f1f5f9; }
+        &.active { background: #237ad2; color: #fff; border-color: #237ad2; }
       }
     }
   }
 
+  .org-chart-body {
+    position: relative;
+    flex: 1;
+    background:
+      radial-gradient(circle, #e7eef7 1px, transparent 1px);
+    background-size: 22px 22px;
+    overflow: hidden;
+  }
+
+  .org-chart-viewport {
+    position: absolute;
+    inset: 0;
+    overflow: auto;
+    cursor: grab;
+    padding: 1.5rem;
+
+    &:active { cursor: grabbing; }
+  }
+
+  .org-chart-stage {
+    transform-origin: top center;
+    transition: transform 0.08s ease-out;
+    display: inline-block;
+    min-width: 100%;
+  }
+
+  .org-zoom-controls {
+    position: absolute;
+    right: 14px;
+    bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+    padding: 3px;
+    z-index: 5;
+
+    button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: #334155;
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+
+      &:hover { background: #f1f5f9; }
+      &.zoom-value { width: auto; padding: 0 8px; font-size: 0.75rem; font-weight: 600; color: #475569; }
+    }
+  }
+}
+
+/* Organization chart node cards */
+::ng-deep .org-chart {
+  .p-organizationchart-node-content,
+  .p-organizationchart-node-content.p-organizationchart-selectable-node {
+    border: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border-radius: 14px;
+  }
+  .p-organizationchart-line-down { background: #cbd5e1; }
+  .p-organizationchart-line-left,
+  .p-organizationchart-line-right { border-color: #cbd5e1; }
+  .p-organizationchart-node-content .p-node-toggler {
+    background: #fff;
+    border: 1px solid #cbd5e1;
+    color: #64748b;
+  }
+}
+
+.org-node-card {
+  width: 220px;
+  text-align: left;
+  background: #fff;
+  border: 1px solid #e6ebf2;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, border-color 0.15s ease, transform 0.05s ease;
+
+  &:hover { box-shadow: 0 6px 18px rgba(15, 23, 42, 0.12); transform: translateY(-1px); }
+  &.is-selected { border-color: #237ad2; box-shadow: 0 0 0 2px rgba(35, 122, 210, 0.25); }
+
+  .org-node-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+
+    .org-node-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+      background: #f1f5f9;
+
+      &.icon-direction { background: #f5f3ff; color: #7c3aed; }
+      &.icon-division  { background: #eff6ff; color: #2563eb; }
+      &.icon-service   { background: #ecfeff; color: #0d9488; }
+    }
+
+    .org-node-headings {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+
+      .org-node-title {
+        font-size: 0.88rem;
+        font-weight: 600;
+        color: #1e293b;
+        line-height: 1.15;
+      }
+    }
+  }
+
+  .org-node-resp {
+    margin-top: 9px;
+    font-size: 0.72rem;
+    color: #16a34a;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+
+    i { font-size: 0.65rem; }
+    &.expired { color: #f97316; }
+    &.empty { color: #ef4444; }
+    span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  }
+
+  .org-node-stats {
+    margin-top: 10px;
+    display: flex;
+    gap: 6px;
+
+    .node-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+
+      i { font-size: 0.65rem; }
+    }
+    .node-chip-ok   { background: #dcfce7; color: #166534; }
+    .node-chip-warn { background: #fef3c7; color: #b45309; }
+  }
+}
+
+/* Search highlight on a matching node */
+::ng-deep .org-node.is-match .org-node-card {
+  border-color: #f59e0b;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.35);
+}
+
+/* ───────────────────────────────────────────────
+   Tree (left card)
+   ─────────────────────────────────────────────── */
+.org-tree-card {
+  background: #fff;
+  border: 1px solid #e6ebf2;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  min-height: 560px;
+
   .org-tree-body {
     flex: 1;
     padding: 0.5rem;
+    overflow: auto;
   }
 }
 
@@ -316,6 +599,30 @@
   &.selected .tree-node-title {
     color: #1d4ed8;
     font-weight: 600;
+  }
+}
+
+/* Tree row : occupancy mini-badge + search highlight */
+.tree-node {
+  .tree-postes-mini {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #166534;
+    background: #dcfce7;
+    border-radius: 999px;
+    padding: 2px 8px;
+    flex-shrink: 0;
+
+    i { font-size: 0.62rem; }
+  }
+
+  &.is-match {
+    background: #fff7ed;
+    border-color: #fed7aa;
   }
 }
 
@@ -602,6 +909,7 @@
   .metric-blue   { background: #eff6ff; .metric-value { color: #2563eb; } }
   .metric-teal   { background: #ecfeff; .metric-value { color: #0d9488; } }
   .metric-purple { background: #f5f3ff; .metric-value { color: #7c3aed; } }
+  .metric-orange { background: #fff7ed; .metric-value { color: #ea580c; } }
 }
 
 /* Action buttons */
@@ -635,4 +943,83 @@
   .action-teal   { background:#ecfeff; color:#0d9488; border-color:#a5f3fc; &:hover{background:#cffafe;} }
   .action-purple { background:#f5f3ff; color:#6d28d9; border-color:#ddd6fe; &:hover{background:#ede9fe;} }
   .action-grey   { background:#f8fafc; color:#334155; border-color:#e2e8f0; &:hover{background:#f1f5f9;} }
+  .action-amber  { background:#fff7ed; color:#b45309; border-color:#fed7aa; &:hover{background:#ffedd5;} }
+  .action-red    { background:#fef2f2; color:#b91c1c; border-color:#fecaca; &:hover{background:#fee2e2;} }
+}
+
+/* Section header inline action (Affecter responsable / + Ajouter poste) */
+.detail-section-title {
+  position: relative;
+
+  .section-action {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1d4ed8;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+
+    &:hover { background: #dbeafe; }
+    i { font-size: 0.72rem; }
+  }
+}
+
+/* Per-row poste actions */
+.actions-col { width: 1%; white-space: nowrap; text-align: right; }
+
+.row-actions {
+  display: inline-flex;
+  gap: 3px;
+
+  .icon-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 7px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+    color: #475569;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+
+    i { font-size: 0.72rem; }
+
+    &:hover  { background: #f1f5f9; }
+    &.ok:hover    { background:#dcfce7; color:#166534; border-color:#bbf7d0; }
+    &.info:hover  { background:#eff6ff; color:#1d4ed8; border-color:#bfdbfe; }
+    &.warn:hover  { background:#fff7ed; color:#b45309; border-color:#fed7aa; }
+    &.danger:hover{ background:#fee2e2; color:#b91c1c; border-color:#fecaca; }
+  }
+}
+
+/* Dialog forms */
+.org-dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.35rem;
+
+  .dialog-hint {
+    font-size: 0.74rem;
+    color: #94a3b8;
+    margin-top: -0.7rem;
+  }
+
+  textarea[pInputText] {
+    resize: none;
+    width: 100%;
+  }
+}
+
+/* Responsive: stack chart over details, give the chart real height */
+@media (max-width: 1100px) {
+  .org-chart-card { min-height: 460px; }
+  .org-detail-card { min-height: unset; }
 }

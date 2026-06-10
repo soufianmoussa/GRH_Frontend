@@ -2,24 +2,184 @@
 
 <div class="content">
 
+  <!-- ============================================================
+       Page header + KPI cards
+       ============================================================ -->
   <div class="page-header">
-    <h1 class="titleh1">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.TITLE' | translate }}</h1>
-    <div class="stats-cards">
-      <div class="stat-card stat-total">
-        <span class="stat-value">{{ stats.total }}</span>
-        <span class="stat-label">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.STAT_TOTAL' | translate }}</span>
+    <div class="page-title">
+      <h1 class="titleh1">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.TITLE' | translate }}</h1>
+      <span class="page-subtitle">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.SUBTITLE' | translate }}</span>
+    </div>
+    <div class="header-actions">
+      <p-button [label]="'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.BTN_EXPORT' | translate"
+                icon="pi pi-file-excel" severity="success" [outlined]="true"
+                [loading]="exporting" (onClick)="exportExcel()">
+      </p-button>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card kpi-total">
+      <div class="kpi-icon"><i class="pi pi-list"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ stats.totalMouvements }}</span>
+        <span class="kpi-label">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.KPI.TOTAL' | translate }}</span>
       </div>
-      <div class="stat-card stat-active">
-        <span class="stat-value">{{ stats.active }}</span>
-        <span class="stat-label">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.STAT_ACTIVE' | translate }}</span>
+    </div>
+
+    <div class="kpi-card kpi-active">
+      <div class="kpi-icon"><i class="pi pi-check-circle"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ stats.affectationsActives }}</span>
+        <span class="kpi-label">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.KPI.ACTIVES' | translate }}</span>
       </div>
-      <div class="stat-card stat-cloturee">
-        <span class="stat-value">{{ stats.cloturee }}</span>
-        <span class="stat-label">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.STAT_CLOSED' | translate }}</span>
+    </div>
+
+    <div class="kpi-card kpi-transfer">
+      <div class="kpi-icon"><i class="pi pi-arrow-right-arrow-left"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ stats.transferts }}</span>
+        <span class="kpi-label">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.KPI.TRANSFERTS' | translate }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-vacant"
+         [pTooltip]="'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.KPI.POSTES_LIBERES_HINT' | translate"
+         tooltipPosition="top">
+      <div class="kpi-icon"><i class="pi pi-bookmark"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ stats.postesLiberes }}</span>
+        <span class="kpi-label">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.KPI.POSTES_LIBERES' | translate }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-card kpi-closed">
+      <div class="kpi-icon"><i class="pi pi-times-circle"></i></div>
+      <div class="kpi-body">
+        <span class="kpi-value">{{ stats.affectationsCloturees }}</span>
+        <span class="kpi-label">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.KPI.CLOTUREES' | translate }}</span>
       </div>
     </div>
   </div>
 
+  <!-- ============================================================
+       Filters panel
+       ============================================================ -->
+  <p-panel [header]="'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.FILTERS_TITLE' | translate"
+           [toggleable]="true" styleClass="filters-panel">
+    <div class="filters-grid">
+      <div class="filter-field span-2">
+        <label>{{ 'GLOBAL.RECHERCHER' | translate }}</label>
+        <span class="p-input-icon-left">
+          <i class="pi pi-search"></i>
+          <input pInputText type="text" [(ngModel)]="filters.global"
+                 (keyup.enter)="applyFilters()"
+                 [placeholder]="'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.SEARCH_PLACEHOLDER' | translate" />
+        </span>
+      </div>
+
+      <div class="filter-field">
+        <label>{{ 'GLOBAL.AGENT' | translate }}</label>
+        <p-select [(ngModel)]="filters.agentId" [options]="agentOptions"
+                  optionLabel="label" optionValue="value"
+                  [filter]="true" [showClear]="true"
+                  [placeholder]="'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.FILTER_AGENT_PLACEHOLDER' | translate"
+                  (onChange)="applyFilters()">
+        </p-select>
+      </div>
+
+      <div class="filter-field">
+        <label>{{ 'GLOBAL.MATRICULE' | translate }}</label>
+        <input pInputText type="text" [(ngModel)]="filters.matricule"
+               (keyup.enter)="applyFilters()" />
+      </div>
+
+      <div class="filter-field">
+        <label>{{ 'GLOBAL.UNITE' | translate }}</label>
+        <p-select [(ngModel)]="filters.uniteId" [options]="uniteOptions"
+                  optionLabel="label" optionValue="value"
+                  [filter]="true" [showClear]="true"
+                  [placeholder]="'GLOBAL.UNITE' | translate"
+                  (onChange)="applyFilters()">
+        </p-select>
+      </div>
+
+      <div class="filter-field">
+        <label>{{ 'GLOBAL.POSTE' | translate }}</label>
+        <p-select [(ngModel)]="filters.posteId" [options]="posteOptions"
+                  optionLabel="label" optionValue="value"
+                  [filter]="true" [showClear]="true"
+                  [placeholder]="'GLOBAL.POSTE' | translate"
+                  (onChange)="applyFilters()">
+        </p-select>
+      </div>
+
+      <div class="filter-field">
+        <label>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.FILTER_TYPE' | translate }}</label>
+        <p-select [(ngModel)]="filters.type" [options]="typeOptions"
+                  optionLabel="label" optionValue="value" [showClear]="true"
+                  [placeholder]="'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.FILTER_TYPE' | translate"
+                  (onChange)="applyFilters()">
+        </p-select>
+      </div>
+
+      <div class="filter-field">
+        <label>{{ 'GLOBAL.STATUT' | translate }}</label>
+        <p-select [(ngModel)]="filters.statut" [options]="statutOptions"
+                  optionLabel="label" optionValue="value" [showClear]="true"
+                  [placeholder]="'GLOBAL.STATUT' | translate"
+                  (onChange)="applyFilters()">
+        </p-select>
+      </div>
+
+      <div class="filter-field">
+        <label>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.FILTER_DATE_FROM' | translate }}</label>
+        <p-datepicker [(ngModel)]="filters.dateEffetFrom" dateFormat="dd/mm/yy" [showIcon]="true"
+                      appendTo="body" (onSelect)="applyFilters()" (onClear)="applyFilters()" [showClear]="true">
+        </p-datepicker>
+      </div>
+
+      <div class="filter-field">
+        <label>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.FILTER_DATE_TO' | translate }}</label>
+        <p-datepicker [(ngModel)]="filters.dateEffetTo" dateFormat="dd/mm/yy" [showIcon]="true"
+                      appendTo="body" (onSelect)="applyFilters()" (onClear)="applyFilters()" [showClear]="true">
+        </p-datepicker>
+      </div>
+
+      <div class="filter-actions span-2">
+        <div class="quick-chips">
+          <button type="button" class="chip" [class.chip-active]="activeQuickRange === 'today'"
+                  (click)="applyQuickRange('today')">
+            {{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.QUICK.TODAY' | translate }}
+          </button>
+          <button type="button" class="chip" [class.chip-active]="activeQuickRange === 'week'"
+                  (click)="applyQuickRange('week')">
+            {{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.QUICK.WEEK' | translate }}
+          </button>
+          <button type="button" class="chip" [class.chip-active]="activeQuickRange === 'month'"
+                  (click)="applyQuickRange('month')">
+            {{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.QUICK.MONTH' | translate }}
+          </button>
+          <button type="button" class="chip" [class.chip-active]="activeQuickRange === 'year'"
+                  (click)="applyQuickRange('year')">
+            {{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.QUICK.YEAR' | translate }}
+          </button>
+        </div>
+        <div class="action-buttons">
+          <p-button [label]="'GLOBAL.EFFACER' | translate" icon="pi pi-filter-slash"
+                    severity="secondary" [outlined]="true" (onClick)="clearFilters()">
+          </p-button>
+          <p-button [label]="'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.BTN_APPLY' | translate"
+                    icon="pi pi-search" (onClick)="applyFilters()">
+          </p-button>
+        </div>
+      </div>
+    </div>
+  </p-panel>
+
+  <!-- ============================================================
+       Split layout: 55% table | 45% detail
+       ============================================================ -->
   <div class="master-detail">
 
     <div class="master-panel">
@@ -27,73 +187,67 @@
         <div class="container primTable">
 
           <p-table #dtHist
-                   [value]="affectations"
+                   [value]="rows"
                    [rows]="pageSize"
                    [paginator]="true"
-                   [rowsPerPageOptions]="[5, 10, 20]"
+                   [rowsPerPageOptions]="[5, 10, 20, 50]"
                    [totalRecords]="totalRecords"
                    [lazy]="true"
-                   (onPage)="onPageChange($event)"
+                   (onLazyLoad)="onLazyLoad($event)"
                    [loading]="loading"
                    selectionMode="single"
                    [(selection)]="selectedRow"
                    (onRowSelect)="onRowSelect($any($event).data)"
                    [rowHover]="true"
                    dataKey="id"
-                   [globalFilterFields]="['agentNom','agentPrenom','agentMatricule','posteLibelle','posteCodeCourt','uniteLibelle','statut']">
-
-            <ng-template pTemplate="caption">
-              <div class="flex align-items-center justify-content-between">
-                <p-button [label]="'GLOBAL.EFFACER' | translate" [outlined]="true" icon="pi pi-filter-slash"
-                          (onClick)="clearFilters(); dtHist.clear()">
-                </p-button>
-
-                <span class="p-input-icon-left">
-                  <i class="pi pi-search"></i>
-                  <input pInputText type="text" [(ngModel)]="search"
-                         (input)="dtHist.filterGlobal(search,'contains'); applyFilters();" [placeholder]="'GLOBAL.RECHERCHER' | translate" />
-                </span>
-              </div>
-            </ng-template>
+                   responsiveLayout="scroll">
 
             <ng-template pTemplate="header">
               <tr>
-                <th>
-                  <p-columnFilter field="posteLibelle" display="menu" />
-                  {{ 'GLOBAL.POSTE' | translate }}
-                </th>
-                <th>
-                  <p-columnFilter field="agentNom" display="menu" />
-                  {{ 'GLOBAL.AGENT' | translate }}
-                </th>
-                <th>{{ 'GLOBAL.UNITE' | translate }}</th>
+                <th>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.COL_DATE' | translate }}</th>
+                <th>{{ 'GLOBAL.AGENT' | translate }}</th>
+                <th>{{ 'GLOBAL.MATRICULE' | translate }}</th>
+                <th>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.COL_TYPE' | translate }}</th>
+                <th>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.COL_ANCIEN_POSTE' | translate }}</th>
+                <th>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.COL_NOUVEAU_POSTE' | translate }}</th>
+                <th>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.COL_ANCIENNE_UNITE' | translate }}</th>
+                <th>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.COL_NOUVELLE_UNITE' | translate }}</th>
                 <th>{{ 'GLOBAL.STATUT' | translate }}</th>
+                <th>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.COL_PERFORMED_BY' | translate }}</th>
               </tr>
             </ng-template>
 
             <ng-template pTemplate="body" let-item>
               <tr [pSelectableRow]="item"
                   [ngClass]="{'row-selected': selectedRow?.id === item.id}">
+                <td>{{ item.dateEffet | date:'dd/MM/yyyy' }}</td>
                 <td>
-                  <strong>{{ item.posteLibelle }}</strong>
-                  <br />
-                  <small class="text-muted">{{ item.posteCodeCourt }}</small>
+                  <strong>{{ agentFullName(item) }}</strong>
                 </td>
+                <td><small class="text-muted">{{ item.matricule }}</small></td>
                 <td>
-                  <strong>{{ item.agentNom }} {{ item.agentPrenom }}</strong>
-                  <br />
-                  <small class="text-muted">{{ item.agentMatricule }}</small>
+                  <p-tag [value]="getTypeLabel(item.type)"
+                         [severity]="getTypeSeverity(item.type)"
+                         [icon]="getTypeIcon(item.type)">
+                  </p-tag>
                 </td>
-                <td>{{ item.uniteLibelle || '—' }}</td>
+                <td>{{ item.ancienPosteLibelle || item.ancienneImpBudg || '—' }}</td>
+                <td>{{ item.nouveauPosteLibelle || item.nouvelleImpBudg || '—' }}</td>
+                <td>{{ item.ancienneUniteLibelle || '—' }}</td>
+                <td>{{ item.nouvelleUniteLibelle || '—' }}</td>
                 <td>
                   <p-tag [value]="getStatutLabel(item.statut)" [severity]="getStatutSeverity(item.statut)"></p-tag>
                 </td>
+                <td><small class="text-muted">{{ item.performedBy || '—' }}</small></td>
               </tr>
             </ng-template>
 
             <ng-template pTemplate="emptymessage">
               <tr>
-                <td colspan="4" class="text-center">{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.EMPTY_MESSAGE' | translate }}</td>
+                <td colspan="10" class="text-center empty-row">
+                  <i class="pi pi-inbox" style="font-size: 1.5rem; opacity: 0.4;"></i>
+                  <div>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.EMPTY_MESSAGE' | translate }}</div>
+                </td>
               </tr>
             </ng-template>
 
@@ -120,118 +274,173 @@
         <ng-container *ngIf="selectedRow">
           <div class="detail-content">
 
-          <div class="detail-header">
-            <div class="detail-title-row">
-              <div>
-                <h3>{{ selectedPosteDetail?.libelle }}</h3>
-                <span class="detail-code">{{ selectedPosteDetail?.codeCourt }}</span>
+            <div class="detail-header">
+              <div class="detail-title-row">
+                <div class="agent-identity">
+                  <span class="detail-avatar">{{ getInitials(selectedRow.agentNom, selectedRow.agentPrenom) }}</span>
+                  <div>
+                    <h3>{{ agentFullName(selectedRow) }}</h3>
+                    <span class="detail-code">{{ selectedRow.matricule }}</span>
+                  </div>
+                </div>
+                <div class="detail-tags">
+                  <p-tag [value]="getTypeLabel(selectedRow.type)"
+                         [severity]="getTypeSeverity(selectedRow.type)"
+                         [icon]="getTypeIcon(selectedRow.type)">
+                  </p-tag>
+                  <p-tag [value]="getStatutLabel(selectedRow.statut)"
+                         [severity]="getStatutSeverity(selectedRow.statut)">
+                  </p-tag>
+                </div>
               </div>
-              <p-tag [value]="getStatutLabel(selectedRow.statut)"
-                     [severity]="getStatutSeverity(selectedRow.statut)">
-              </p-tag>
             </div>
 
-            <div class="detail-info-grid">
-              <div class="detail-info-item">
-                <i class="pi pi-building"></i>
-                <div>
-                  <small>{{ 'GLOBAL.UNITE' | translate }}</small>
-                  <span>{{ selectedPosteDetail?.unite || '—' }}</span>
+            <div class="before-after-grid">
+              <div class="state-card state-before"
+                   [class.state-empty]="!selectedRow.ancienPosteLibelle && !selectedRow.ancienneImpBudg">
+                <div class="state-card-header">
+                  <i class="pi pi-history"></i>
+                  <span>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.STATE_BEFORE' | translate }}</span>
                 </div>
+                <ng-container *ngIf="selectedRow.ancienPosteLibelle || selectedRow.ancienneImpBudg; else stateEmptyTpl">
+                  <div class="state-row">
+                    <small>{{ 'GLOBAL.POSTE' | translate }}</small>
+                    <strong>{{ selectedRow.ancienPosteLibelle || selectedRow.ancienneImpBudg }}</strong>
+                  </div>
+                  <div class="state-row" *ngIf="selectedRow.ancienPosteCodeCourt">
+                    <small>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.CODE_COURT' | translate }}</small>
+                    <span>{{ selectedRow.ancienPosteCodeCourt }}</span>
+                  </div>
+                  <div class="state-row">
+                    <small>{{ 'GLOBAL.UNITE' | translate }}</small>
+                    <span>{{ selectedRow.ancienneUniteLibelle || '—' }}</span>
+                  </div>
+                </ng-container>
               </div>
-              <div class="detail-info-item">
-                <i class="pi pi-user"></i>
-                <div>
-                  <small>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.LBL_AGENT_ACTUEL' | translate }}</small>
-                  <span>{{ selectedRow.agentNom }} {{ selectedRow.agentPrenom }}</span>
+
+              <div class="state-arrow"><i class="pi pi-arrow-right"></i></div>
+
+              <div class="state-card state-after"
+                   [class.state-empty]="!selectedRow.nouveauPosteLibelle && !selectedRow.nouvelleImpBudg">
+                <div class="state-card-header">
+                  <i class="pi pi-bookmark-fill"></i>
+                  <span>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.STATE_AFTER' | translate }}</span>
                 </div>
+                <ng-container *ngIf="selectedRow.nouveauPosteLibelle || selectedRow.nouvelleImpBudg; else stateEmptyTpl">
+                  <div class="state-row">
+                    <small>{{ 'GLOBAL.POSTE' | translate }}</small>
+                    <strong>{{ selectedRow.nouveauPosteLibelle || selectedRow.nouvelleImpBudg }}</strong>
+                  </div>
+                  <div class="state-row" *ngIf="selectedRow.nouveauPosteCodeCourt">
+                    <small>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.CODE_COURT' | translate }}</small>
+                    <span>{{ selectedRow.nouveauPosteCodeCourt }}</span>
+                  </div>
+                  <div class="state-row">
+                    <small>{{ 'GLOBAL.UNITE' | translate }}</small>
+                    <span>{{ selectedRow.nouvelleUniteLibelle || '—' }}</span>
+                  </div>
+                </ng-container>
               </div>
-              <div class="detail-info-item">
-                <i class="pi pi-id-card"></i>
-                <div>
-                  <small>{{ 'GLOBAL.MATRICULE' | translate }}</small>
-                  <span>{{ selectedRow.agentMatricule }}</span>
+
+              <ng-template #stateEmptyTpl>
+                <div class="state-empty-body">
+                  <i class="pi pi-minus-circle"></i>
+                  <span>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.STATE_EMPTY' | translate }}</span>
                 </div>
-              </div>
-              <div class="detail-info-item">
+              </ng-template>
+            </div>
+
+            <div class="meta-grid">
+              <div class="meta-item">
                 <i class="pi pi-calendar"></i>
                 <div>
-                  <small>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.LBL_DATE_DEBUT' | translate }}</small>
-                  <span>{{ selectedRow.dateDebut | date:'dd/MM/yyyy' }}</span>
+                  <small>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.LBL_DATE_EFFET' | translate }}</small>
+                  <span>{{ selectedRow.dateEffet | date:'dd/MM/yyyy' }}</span>
+                </div>
+              </div>
+              <div class="meta-item">
+                <i class="pi pi-clock"></i>
+                <div>
+                  <small>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.LBL_CREATED_AT' | translate }}</small>
+                  <span>{{ selectedRow.createdAt ? (selectedRow.createdAt | date:'dd/MM/yyyy HH:mm') : '—' }}</span>
+                </div>
+              </div>
+              <div class="meta-item">
+                <i class="pi pi-user"></i>
+                <div>
+                  <small>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.LBL_PERFORMED_BY' | translate }}</small>
+                  <span>{{ selectedRow.performedBy || '—' }}</span>
+                </div>
+              </div>
+              <div class="meta-item">
+                <i class="pi pi-hashtag"></i>
+                <div>
+                  <small>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.LBL_REF' | translate }}</small>
+                  <span>#{{ selectedRow.id }}</span>
+                </div>
+              </div>
+              <div class="meta-item span-2" *ngIf="selectedRow.motif">
+                <i class="pi pi-info-circle"></i>
+                <div>
+                  <small>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.LBL_MOTIF' | translate }}</small>
+                  <span>{{ selectedRow.motif }}</span>
                 </div>
               </div>
             </div>
-          </div>
 
-          <div class="timeline-section">
-            <h4>
-              <i class="pi pi-history"></i>
-              {{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.TIMELINE_TITLE' | translate }}
-              <span class="timeline-count">{{ timeline.length }}</span>
-            </h4>
+            <div class="timeline-section">
+              <h4>
+                <i class="pi pi-history"></i>
+                {{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.AGENT_TIMELINE_TITLE' | translate }}
+                <span class="timeline-count">{{ agentTimeline.length }}</span>
+              </h4>
 
-            <div *ngIf="timelineLoading" class="timeline-loading">
-              <i class="pi pi-spin pi-spinner"></i>
-              <span>{{ 'GLOBAL.CHARGEMENT' | translate }}</span>
-            </div>
+              <div *ngIf="timelineLoading" class="timeline-loading">
+                <i class="pi pi-spin pi-spinner"></i>
+                <span>{{ 'GLOBAL.CHARGEMENT' | translate }}</span>
+              </div>
 
-            <p-timeline *ngIf="!timelineLoading && timeline.length > 0"
-                        [value]="timeline" align="left" styleClass="custom-timeline">
+              <p-timeline *ngIf="!timelineLoading && agentTimeline.length > 0"
+                          [value]="agentTimeline" align="left" styleClass="custom-timeline">
 
-              <ng-template pTemplate="marker" let-event>
-                <span class="timeline-marker"
-                      [style.background-color]="getTimelineColor(event.statut)">
-                  <i [class]="getTimelineIcon(event.statut)"></i>
-                </span>
-              </ng-template>
+                <ng-template pTemplate="marker" let-event>
+                  <span class="timeline-marker"
+                        [ngClass]="'marker-' + event.type?.toLowerCase()">
+                    <i [class]="getTypeIcon(event.type)"></i>
+                  </span>
+                </ng-template>
 
-              <ng-template pTemplate="content" let-event>
-                <div class="timeline-card" [ngClass]="{'timeline-active': event.statut === 'ACTIVE'}">
-                  <div class="timeline-card-header">
-                    <div class="timeline-agent-info">
-                      <span class="timeline-avatar"
-                            [style.background-color]="event.statut === 'ACTIVE' ? '#dbeafe' : '#f1f5f9'"
-                            [style.color]="event.statut === 'ACTIVE' ? '#1d4ed8' : '#64748b'">
-                        {{ getInitials(event.agentNom, event.agentPrenom) }}
-                      </span>
-                      <div>
-                        <strong>{{ event.agentPrenom }} {{ event.agentNom }}</strong>
-                        <small>{{ event.agentMatricule }}</small>
+                <ng-template pTemplate="content" let-event>
+                  <div class="timeline-card" [ngClass]="'card-' + event.type?.toLowerCase()">
+                    <div class="timeline-card-header">
+                      <p-tag [value]="getTypeLabel(event.type)"
+                             [severity]="getTypeSeverity(event.type)">
+                      </p-tag>
+                      <small>{{ event.dateEffet | date:'dd/MM/yyyy' }}</small>
+                    </div>
+
+                    <div class="timeline-card-body">
+                      <div class="timeline-transition" *ngIf="event.ancienPosteLibelle || event.nouveauPosteLibelle">
+                        <span>{{ event.ancienPosteLibelle || ('GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.STATE_EMPTY' | translate) }}</span>
+                        <i class="pi pi-arrow-right"></i>
+                        <span>{{ event.nouveauPosteLibelle || ('GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.STATE_EMPTY' | translate) }}</span>
+                      </div>
+                      <div class="timeline-motif" *ngIf="event.motif">
+                        <i class="pi pi-info-circle"></i>
+                        <span>{{ event.motif }}</span>
                       </div>
                     </div>
-                    <p-tag [value]="getStatutLabel(event.statut)"
-                           [severity]="getStatutSeverity(event.statut)"
-                           [style]="{ fontSize: '0.75rem' }">
-                    </p-tag>
                   </div>
+                </ng-template>
 
-                  <div class="timeline-card-body">
-                    <div class="timeline-dates">
-                      <i class="pi pi-calendar"></i>
-                      <span>{{ event.dateDebut | date:'dd/MM/yyyy' }}</span>
-                      <i class="pi pi-arrow-right"></i>
-                      <span>{{ event.dateFin ? (event.dateFin | date:'dd/MM/yyyy') : ('GLOBAL.EN_COURS' | translate) }}</span>
-                    </div>
-                    <div class="timeline-duration">
-                      <i class="pi pi-clock"></i>
-                      <span>{{ event.duration }}</span>
-                    </div>
-                    <div class="timeline-motif" *ngIf="event.motif">
-                      <i class="pi pi-info-circle"></i>
-                      <span>{{ event.motif }}</span>
-                    </div>
-                  </div>
-                </div>
-              </ng-template>
+              </p-timeline>
 
-            </p-timeline>
+              <div *ngIf="!timelineLoading && agentTimeline.length === 0" class="no-timeline">
+                <i class="pi pi-info-circle"></i>
+                <span>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.TIMELINE_EMPTY' | translate }}</span>
+              </div>
 
-            <div *ngIf="!timelineLoading && timeline.length === 0" class="no-timeline">
-              <i class="pi pi-info-circle"></i>
-              <span>{{ 'GESTION_ORGANISATIONELLE.HISTORIQUE_AFFECTATIONS.TIMELINE_EMPTY' | translate }}</span>
             </div>
-
-          </div>
           </div>
         </ng-container>
 
