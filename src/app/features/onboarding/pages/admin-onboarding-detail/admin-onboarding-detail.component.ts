@@ -35,6 +35,8 @@ import { FormationService } from '../../../documents/services/formation/formatio
 import { Diplome } from '../../../documents/models/diplomes/diplome.model';
 import { Formation } from '../../../../models/formation.model';
 import { AgentDocumentsService } from '../../../dossier-agent/services/dossiers-agents/agent-documents.service';
+import { AffectationAgentPosteService } from '../../../gestion-organisationnelle/services/affectation-agent-poste.service';
+import { AffectationAgentPosteDto } from '../../../../models/gestionOrganisationelle/affectation-agent-poste.model';
 import {
   AgentDocument,
   AgentDocumentStatus,
@@ -91,6 +93,7 @@ const ACTION_LABELS: Record<string, string> = {
   ADMIN_SUBMIT: 'Dossier soumis (RH)',
   SELF_SUBMIT: 'Dossier soumis par l\'agent',
   ONBOARDING_VALIDATE: 'Dossier valide',
+  ONBOARDING_POSTE_ASSIGNED: 'Agent affecte au poste',
   ONBOARDING_REJECT: 'Dossier rejete'
 };
 
@@ -143,6 +146,7 @@ const ACTION_SEVERITY: Record<string, 'success' | 'info' | 'warn' | 'danger' | '
   ADMIN_SUBMIT: 'info',
   SELF_SUBMIT: 'info',
   ONBOARDING_VALIDATE: 'success',
+  ONBOARDING_POSTE_ASSIGNED: 'success',
   ONBOARDING_REJECT: 'danger'
 };
 
@@ -176,6 +180,9 @@ export class AdminOnboardingDetailComponent implements OnInit {
   agentDocuments: AgentDocument[] = [];
   loading = true;
 
+  /** Affectation active de l'agent (poste/unité), créée automatiquement à la validation. */
+  activeAffectation?: AffectationAgentPosteDto;
+
   // --- Invitation management (modifier / annuler) ---
   showInvitationEmailDialog = false;
   invitationEmailValue = '';
@@ -202,6 +209,7 @@ export class AdminOnboardingDetailComponent implements OnInit {
     private diplomesService: DiplomesService,
     private formationService: FormationService,
     private agentDocumentsService: AgentDocumentsService,
+    private affectationService: AffectationAgentPosteService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) {}
@@ -247,6 +255,13 @@ export class AdminOnboardingDetailComponent implements OnInit {
         .subscribe(list => {
           // The CIN slot is already shown in the OnboardingDocument table — skip it here.
           this.agentDocuments = list.filter(d => d.documentType !== 'CARTE_NATIONALE');
+        });
+
+      // Affectation poste/unité (créée automatiquement à la validation finale).
+      this.affectationService.getByAgent(agentId)
+        .pipe(catchError(() => of([] as AffectationAgentPosteDto[])))
+        .subscribe(list => {
+          this.activeAffectation = list.find(a => a.statut === 'ACTIVE') ?? list[0];
         });
     }
   }

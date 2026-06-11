@@ -61,6 +61,11 @@
               <i class="pi pi-phone"></i>
               {{ agentPhone() }}
             </span>
+            <span class="meta-chip" *ngIf="activeAffectation?.posteLibelle">
+              <i class="pi pi-briefcase"></i>
+              {{ activeAffectation?.posteLibelle }}
+              <ng-container *ngIf="activeAffectation?.uniteLibelle">— {{ activeAffectation?.uniteLibelle }}</ng-container>
+            </span>
           </div>
           <div class="agent-tags">
             <p-tag
@@ -70,6 +75,11 @@
             <p-tag
               [value]="modeLabel(onboarding.completionMode)"
               [severity]="onboarding.completionMode === 'ASSISTED' ? 'warn' : 'info'">
+            </p-tag>
+            <p-tag *ngIf="activeAffectation"
+              icon="pi pi-briefcase"
+              [value]="'Affecte : ' + (activeAffectation.posteLibelle || 'poste') + ' (' + activeAffectation.statut + ')'"
+              severity="success">
             </p-tag>
           </div>
         </div>
