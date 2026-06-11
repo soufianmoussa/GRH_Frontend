@@ -4,6 +4,20 @@
   overflow-y: hidden;
 }
 
+/* Écran d'attente pendant la vérification de session (évite le flash du sidemenu). */
+.app-auth-checking {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: #f4f8fc;
+
+  i {
+    font-size: 2.5rem;
+    color: var(--rh-primary, #237ad2);
+  }
+}
+
 .main-layout {
   display: flex;
   margin-top: 60px;
