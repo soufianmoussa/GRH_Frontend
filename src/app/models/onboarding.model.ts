@@ -234,8 +234,8 @@ export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
 };
 
 export const INVITATION_STATUS_LABELS: Record<InvitationStatus, string> = {
-  PENDING: 'En attente',
-  USED: 'Utilisee',
+  PENDING: 'Envoyee',
+  USED: 'Activee',
   EXPIRED: 'Expiree',
-  REVOKED: 'Revoquee'
+  REVOKED: 'Annulee'
 };

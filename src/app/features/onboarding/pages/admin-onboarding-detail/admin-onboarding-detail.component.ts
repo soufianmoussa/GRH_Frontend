@@ -1,9 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DialogModule } from 'primeng/dialog';
+import { InputTextModule } from 'primeng/inputtext';
 import { ConfirmationService, MenuItem, MessageService } from 'primeng/api';
 import { MenuModule } from 'primeng/menu';
 import { ProgressBarModule } from 'primeng/progressbar';
@@ -71,6 +74,8 @@ const ACTION_LABELS: Record<string, string> = {
   INVITATION_RESENT: 'Invitation renvoyee',
   INVITATION_RESEND_REQUESTED: 'Renvoi d\'invitation demande',
   INVITATION_REVOKE_PREVIOUS: 'Invitation precedente revoquee',
+  INVITATION_CANCELLED: 'Invitation annulee',
+  INVITATION_UPDATED: 'Email de l\'invitation modifie',
   INVITATION_VALIDATE_SUCCESS: 'Lien d\'invitation valide',
   INVITATION_VALIDATE_EXPIRED: 'Lien d\'invitation expire',
   INVITATION_ACTIVATION_SUCCESS: 'Compte agent active',
@@ -95,6 +100,8 @@ const ACTION_ICONS: Record<string, string> = {
   INVITATION_RESENT: 'pi-replay',
   INVITATION_RESEND_REQUESTED: 'pi-replay',
   INVITATION_REVOKE_PREVIOUS: 'pi-ban',
+  INVITATION_CANCELLED: 'pi-ban',
+  INVITATION_UPDATED: 'pi-pencil',
   INVITATION_VALIDATE_SUCCESS: 'pi-link',
   INVITATION_VALIDATE_EXPIRED: 'pi-clock',
   INVITATION_ACTIVATION_SUCCESS: 'pi-check-circle',
@@ -119,6 +126,8 @@ const ACTION_SEVERITY: Record<string, 'success' | 'info' | 'warn' | 'danger' | '
   INVITATION_RESENT: 'info',
   INVITATION_RESEND_REQUESTED: 'info',
   INVITATION_REVOKE_PREVIOUS: 'warn',
+  INVITATION_CANCELLED: 'warn',
+  INVITATION_UPDATED: 'info',
   INVITATION_VALIDATE_SUCCESS: 'success',
   INVITATION_VALIDATE_EXPIRED: 'warn',
   INVITATION_ACTIVATION_SUCCESS: 'success',
@@ -142,9 +151,12 @@ const ACTION_SEVERITY: Record<string, 'success' | 'info' | 'warn' | 'danger' | '
   providers: [MessageService, ConfirmationService],
   imports: [
     CommonModule,
+    FormsModule,
     RouterLink,
     ButtonModule,
     ConfirmDialogModule,
+    DialogModule,
+    InputTextModule,
     MenuModule,
     ProgressBarModule,
     TableModule,
@@ -163,6 +175,11 @@ export class AdminOnboardingDetailComponent implements OnInit {
   formations: Formation[] = [];
   agentDocuments: AgentDocument[] = [];
   loading = true;
+
+  // --- Invitation management (modifier / annuler) ---
+  showInvitationEmailDialog = false;
+  invitationEmailValue = '';
+  savingInvitation = false;
 
   readonly agentDocLabels = AGENT_DOCUMENT_TYPE_LABELS;
   readonly agentDocIcons = AGENT_DOCUMENT_TYPE_ICONS;
@@ -202,6 +219,7 @@ export class AdminOnboardingDetailComponent implements OnInit {
         next: (detail) => {
           this.onboarding = detail;
           this.loadAgentDiplomesAndFormations();
+          this.refreshInvitationStatus();
         },
         error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Erreur lors du chargement du dossier onboarding.')
       });
@@ -272,6 +290,70 @@ export class AdminOnboardingDetailComponent implements OnInit {
       },
       error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Envoi de l\'invitation impossible.')
     });
+  }
+
+  /** Charge le statut d'invitation pour piloter l'affichage et les actions de gestion. */
+  private refreshInvitationStatus(): void {
+    this.onboardingService.getInvitationStatus(this.onboardingId)
+      .pipe(catchError(() => of(undefined)))
+      .subscribe(status => {
+        if (this.onboarding && status) this.onboarding.invitation = status;
+      });
+  }
+
+  /** Une invitation non encore activée (≠ USED) peut être corrigée ou annulée. */
+  canManageInvitation(): boolean {
+    const status = this.onboarding?.invitation?.status;
+    return !!status && status !== 'USED';
+  }
+
+  /** Seule une invitation en attente (envoyée) peut être annulée. */
+  canCancelInvitation(): boolean {
+    return this.onboarding?.invitation?.status === 'PENDING';
+  }
+
+  openEditInvitationEmail(): void {
+    this.invitationEmailValue = '';
+    this.showInvitationEmailDialog = true;
+  }
+
+  saveInvitationEmail(): void {
+    if (!this.onboarding) return;
+    const email = (this.invitationEmailValue || '').trim();
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      ToastHelper.showError(this.messageService, 'Veuillez saisir un email valide.');
+      return;
+    }
+    this.savingInvitation = true;
+    this.onboardingService.updateInvitationEmail(this.onboarding.id, email)
+      .pipe(finalize(() => this.savingInvitation = false))
+      .subscribe({
+        next: () => {
+          this.showInvitationEmailDialog = false;
+          ToastHelper.showSuccess(this.messageService, 'Email corrige : un nouveau lien a ete envoye.');
+          this.load();
+        },
+        error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Modification de l\'invitation impossible.')
+      });
+  }
+
+  cancelInvitation(): void {
+    if (!this.onboarding) return;
+    ToastHelper.confirmAction(
+      this.confirmationService,
+      'Annuler cette invitation ? Le lien d\'activation deviendra invalide.',
+      'Annulation de l\'invitation',
+      () => {
+        this.onboardingService.cancelInvitation(this.onboarding!.id).subscribe({
+          next: (status) => {
+            if (this.onboarding) this.onboarding.invitation = status;
+            ToastHelper.showSuccess(this.messageService, 'Invitation annulee.');
+            this.load();
+          },
+          error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Annulation de l\'invitation impossible.')
+        });
+      }
+    );
   }
 
   startAssisted(): void {
@@ -427,6 +509,18 @@ export class AdminOnboardingDetailComponent implements OnInit {
         label: 'Renvoyer l\'invitation',
         icon: 'pi pi-send',
         command: () => this.resendInvitation()
+      },
+      {
+        label: 'Modifier l\'email de l\'invitation',
+        icon: 'pi pi-pencil',
+        disabled: !this.canManageInvitation(),
+        command: () => this.openEditInvitationEmail()
+      },
+      {
+        label: 'Annuler l\'invitation',
+        icon: 'pi pi-ban',
+        disabled: !this.canCancelInvitation(),
+        command: () => this.cancelInvitation()
       },
       {
         label: 'Activer le mode assiste',

@@ -6,6 +6,26 @@
   (confirm)="confirmRejection($event)">
 </app-rejection-reason-dialog>
 
+<!-- Correction de l'email d'une invitation non activee -->
+<p-dialog header="Modifier l'email de l'invitation"
+          [(visible)]="showInvitationEmailDialog"
+          [modal]="true" [style]="{ width: '460px' }" [draggable]="false">
+  <p style="margin:0 0 12px;color:#475569;font-size:14px;">
+    Saisissez l'email corrige. Un nouveau lien d'activation sera envoye a cette adresse et l'ancien lien sera invalide.
+  </p>
+  <div class="field" style="display:flex;flex-direction:column;gap:6px;">
+    <label for="invitationEmail">Nouvel email <span style="color:#dc2626;">*</span></label>
+    <input id="invitationEmail" type="email" pInputText [(ngModel)]="invitationEmailValue"
+           placeholder="prenom.nom@exemple.com" maxlength="120" />
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" severity="secondary" [text]="true"
+              (onClick)="showInvitationEmailDialog = false"></p-button>
+    <p-button label="Enregistrer et renvoyer" icon="pi pi-send"
+              [loading]="savingInvitation" (onClick)="saveInvitationEmail()"></p-button>
+  </ng-template>
+</p-dialog>
+
 <div class="content onboarding-detail">
   <!-- Back link -->
   <a routerLink="/admin/onboarding" class="back-link">
