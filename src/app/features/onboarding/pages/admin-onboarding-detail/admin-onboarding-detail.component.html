@@ -93,6 +93,22 @@
                 (click)="resendInvitation()">
         </button>
         <button pButton
+                label="Modifier l'email"
+                icon="pi pi-pencil"
+                class="p-button-outlined hero-btn"
+                [disabled]="!canManageInvitation()"
+                pTooltip="Corriger l'email d'une invitation non encore activee"
+                (click)="openEditInvitationEmail()">
+        </button>
+        <button pButton
+                label="Annuler l'invitation"
+                icon="pi pi-ban"
+                class="p-button-outlined hero-btn p-button-danger"
+                [disabled]="!canCancelInvitation()"
+                pTooltip="Annuler une invitation en attente (le lien deviendra invalide)"
+                (click)="cancelInvitation()">
+        </button>
+        <button pButton
                 label="Mode assiste"
                 icon="pi pi-user-edit"
                 class="p-button-outlined hero-btn"
