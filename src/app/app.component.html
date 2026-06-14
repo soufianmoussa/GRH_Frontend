@@ -1,5 +1,5 @@
-<!-- Layout principal (Topbar + Sidebar) -->
-<div *ngIf="!isPublicLayoutPage()" class="app-wrapper">
+<!-- Layout principal (Topbar + Sidebar) — uniquement pour un utilisateur authentifié -->
+<div *ngIf="showMainLayout()" class="app-wrapper">
 
   <app-topbar (toggleSidebar)="sidebarOpened = !sidebarOpened"></app-topbar>
 
@@ -13,8 +13,13 @@
 
 </div>
 
-<!-- Pages publiques / auth (sans layout admin) -->
-<div *ngIf="isPublicLayoutPage()">
+<!-- Vérification de session en cours : on n'affiche pas encore le menu (évite le flash) -->
+<div *ngIf="showAuthChecking()" class="app-auth-checking">
+  <i class="pi pi-spin pi-spinner"></i>
+</div>
+
+<!-- Pages publiques / auth / onboarding (sans layout admin) -->
+<div *ngIf="showPublicOutlet()">
   <router-outlet></router-outlet>
 </div>
 

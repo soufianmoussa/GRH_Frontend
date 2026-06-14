@@ -6,6 +6,26 @@
   (confirm)="confirmRejection($event)">
 </app-rejection-reason-dialog>
 
+<!-- Correction de l'email d'une invitation non activee -->
+<p-dialog header="Modifier l'email de l'invitation"
+          [(visible)]="showInvitationEmailDialog"
+          [modal]="true" [style]="{ width: '460px' }" [draggable]="false">
+  <p style="margin:0 0 12px;color:#475569;font-size:14px;">
+    Saisissez l'email corrige. Un nouveau lien d'activation sera envoye a cette adresse et l'ancien lien sera invalide.
+  </p>
+  <div class="field" style="display:flex;flex-direction:column;gap:6px;">
+    <label for="invitationEmail">Nouvel email <span style="color:#dc2626;">*</span></label>
+    <input id="invitationEmail" type="email" pInputText [(ngModel)]="invitationEmailValue"
+           placeholder="prenom.nom@exemple.com" maxlength="120" />
+  </div>
+  <ng-template pTemplate="footer">
+    <p-button label="Annuler" severity="secondary" [text]="true"
+              (onClick)="showInvitationEmailDialog = false"></p-button>
+    <p-button label="Enregistrer et renvoyer" icon="pi pi-send"
+              [loading]="savingInvitation" (onClick)="saveInvitationEmail()"></p-button>
+  </ng-template>
+</p-dialog>
+
 <div class="content onboarding-detail">
   <!-- Back link -->
   <a routerLink="/admin/onboarding" class="back-link">
@@ -41,6 +61,11 @@
               <i class="pi pi-phone"></i>
               {{ agentPhone() }}
             </span>
+            <span class="meta-chip" *ngIf="activeAffectation?.posteLibelle">
+              <i class="pi pi-briefcase"></i>
+              {{ activeAffectation?.posteLibelle }}
+              <ng-container *ngIf="activeAffectation?.uniteLibelle">— {{ activeAffectation?.uniteLibelle }}</ng-container>
+            </span>
           </div>
           <div class="agent-tags">
             <p-tag
@@ -50,6 +75,11 @@
             <p-tag
               [value]="modeLabel(onboarding.completionMode)"
               [severity]="onboarding.completionMode === 'ASSISTED' ? 'warn' : 'info'">
+            </p-tag>
+            <p-tag *ngIf="activeAffectation"
+              icon="pi pi-briefcase"
+              [value]="'Affecte : ' + (activeAffectation.posteLibelle || 'poste') + ' (' + activeAffectation.statut + ')'"
+              severity="success">
             </p-tag>
           </div>
         </div>
@@ -61,6 +91,22 @@
                 icon="pi pi-send"
                 class="p-button-outlined hero-btn"
                 (click)="resendInvitation()">
+        </button>
+        <button pButton
+                label="Modifier l'email"
+                icon="pi pi-pencil"
+                class="p-button-outlined hero-btn"
+                [disabled]="!canManageInvitation()"
+                pTooltip="Corriger l'email d'une invitation non encore activee"
+                (click)="openEditInvitationEmail()">
+        </button>
+        <button pButton
+                label="Annuler l'invitation"
+                icon="pi pi-ban"
+                class="p-button-outlined hero-btn p-button-danger"
+                [disabled]="!canCancelInvitation()"
+                pTooltip="Annuler une invitation en attente (le lien deviendra invalide)"
+                (click)="cancelInvitation()">
         </button>
         <button pButton
                 label="Mode assiste"

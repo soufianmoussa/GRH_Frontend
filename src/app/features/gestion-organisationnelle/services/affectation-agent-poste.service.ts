@@ -38,6 +38,11 @@ export class AffectationAgentPosteService {
     return this.http.get<AffectationAgentPosteDto>(`${this.baseUrl}/${id}`);
   }
 
+  /** Historique des affectations d'un agent (la plus récente / active en tête côté backend). */
+  getByAgent(agentId: number): Observable<AffectationAgentPosteDto[]> {
+    return this.http.get<AffectationAgentPosteDto[]>(`${this.baseUrl}/agent/${agentId}`);
+  }
+
   create(payload: AffectationAgentPosteCreateRequest): Observable<AffectationAgentPosteDto> {
     return this.http.post<AffectationAgentPosteDto>(this.baseUrl, payload);
   }

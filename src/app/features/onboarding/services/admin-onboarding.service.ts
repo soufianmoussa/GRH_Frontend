@@ -81,4 +81,14 @@ export class AdminOnboardingService {
   getInvitationStatus(id: number): Observable<InvitationStatusDto> {
     return this.http.get<InvitationStatusDto>(`${this.baseUrl}/${id}/invitation-status`);
   }
+
+  /** Corrige l'email d'une invitation non activée et renvoie un nouveau lien. */
+  updateInvitationEmail(id: number, email: string): Observable<InvitationStatusDto> {
+    return this.http.put<InvitationStatusDto>(`${this.baseUrl}/${id}/invitation`, { email });
+  }
+
+  /** Annule (révoque) l'invitation en attente d'un dossier non activé. */
+  cancelInvitation(id: number): Observable<InvitationStatusDto> {
+    return this.http.delete<InvitationStatusDto>(`${this.baseUrl}/${id}/invitation`);
+  }
 }
