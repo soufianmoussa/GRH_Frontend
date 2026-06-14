@@ -1,0 +1,10 @@
+# Keep sample upload files byte-for-byte (no EOL conversion)
+*.pdf  binary
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+
+# Normalize line endings for text test assets
+*.robot text
+*.sh    text eol=lf
+*.bat   text eol=crlf

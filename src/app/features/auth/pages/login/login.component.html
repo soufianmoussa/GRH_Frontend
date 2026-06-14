@@ -30,6 +30,7 @@
           <label for="username">Nom d'utilisateur</label>
           <input
             pInputText
+            data-testid="login-username"
             id="username"
             [(ngModel)]="username"
             name="username"
@@ -42,6 +43,7 @@
         <div class="field">
           <label for="password">Mot de passe</label>
           <p-password
+            data-testid="login-password"
             id="password"
             [(ngModel)]="password"
             name="password"
@@ -54,6 +56,7 @@
         <!-- Bouton -->
         <button
           pButton
+          data-testid="login-submit"
           [label]="loading ? 'Connexion...' : 'Se connecter'"
           icon="pi pi-sign-in"
           class="btn-login p-button-rounded p-button-lg p-mt-2 w-100"

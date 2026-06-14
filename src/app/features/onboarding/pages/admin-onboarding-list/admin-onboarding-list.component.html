@@ -97,6 +97,7 @@
           <span class="p-input-icon-left search-wrap">
             <i class="pi pi-search"></i>
             <input pInputText
+                   data-testid="admin-onboarding-search"
                    type="text"
                    [(ngModel)]="search"
                    placeholder="Rechercher (nom, matricule, email)..." />
@@ -105,6 +106,7 @@
       </div>
 
       <p-table
+        data-testid="admin-onboarding-table"
         [value]="filteredOnboardings()"
         [loading]="loading"
         [paginator]="true"
@@ -159,6 +161,7 @@
             <td>
               <div class="actions-cell">
                 <a pButton
+                   data-testid="admin-view-onboarding-button"
                    icon="pi pi-eye"
                    class="p-button-rounded p-button-text p-button-success"
                    [routerLink]="['/admin/onboarding', onboarding.id]"
