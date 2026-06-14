@@ -1,0 +1,9 @@
+# Robot Framework outputs (regenerated on every run)
+results/*.html
+results/*.xml
+results/output.xml
+results/screenshots/*.png
+
+# Never commit local secrets
+.env
+*.secret

@@ -203,29 +203,29 @@
                 <div class="form-grid">
                   <div class="field">
                     <label>Nom <span class="req">*</span></label>
-                    <input pInputText formControlName="nom" placeholder="Votre nom" maxlength="50" />
+                    <input pInputText data-testid="identity-nom" formControlName="nom" placeholder="Votre nom" maxlength="50" />
                     <small class="field-error" *ngIf="identityForm.get('nom')?.touched && identityForm.get('nom')?.errors?.['maxlength']">
                       <i class="pi pi-exclamation-circle"></i> Nom : maximum 50 caracteres autorises.
                     </small>
                   </div>
                   <div class="field">
                     <label>Prenom <span class="req">*</span></label>
-                    <input pInputText formControlName="prenom" placeholder="Votre prenom" maxlength="50" />
+                    <input pInputText data-testid="identity-prenom" formControlName="prenom" placeholder="Votre prenom" maxlength="50" />
                     <small class="field-error" *ngIf="identityForm.get('prenom')?.touched && identityForm.get('prenom')?.errors?.['maxlength']">
                       <i class="pi pi-exclamation-circle"></i> Prenom : maximum 50 caracteres autorises.
                     </small>
                   </div>
                   <div class="field" [formGroup]="cinForm">
                     <label>CIN <span class="req">*</span></label>
-                    <input pInputText formControlName="numero" placeholder="Ex : AA123456" maxlength="20" />
+                    <input pInputText data-testid="identity-cin" formControlName="numero" placeholder="Ex : AA123456" maxlength="20" />
                   </div>
                   <div class="field">
                     <label>Sexe <span class="req">*</span></label>
-                    <p-select formControlName="sexe" [options]="sexeOptions" optionLabel="label" optionValue="value" placeholder="Choisir" appendTo="body"></p-select>
+                    <p-select data-testid="identity-sexe" formControlName="sexe" [options]="sexeOptions" optionLabel="label" optionValue="value" placeholder="Choisir" appendTo="body"></p-select>
                   </div>
                   <div class="field">
                     <label>Situation familiale</label>
-                    <p-select formControlName="situation" [options]="situationOptions" optionLabel="label" optionValue="value" placeholder="Choisir" [showClear]="true" appendTo="body"></p-select>
+                    <p-select data-testid="family-status-select" formControlName="situation" [options]="situationOptions" optionLabel="label" optionValue="value" placeholder="Choisir" [showClear]="true" appendTo="body"></p-select>
                   </div>
                   <div class="field">
                     <label>Date de naissance <span class="req">*</span></label>
@@ -233,7 +233,7 @@
                   </div>
                   <div class="field">
                     <label>Nombre d'enfants</label>
-                    <p-inputnumber formControlName="numEnfant" [min]="0" [max]="20" [showButtons]="true" buttonLayout="horizontal"
+                    <p-inputnumber data-testid="children-number-input" formControlName="numEnfant" [min]="0" [max]="20" [showButtons]="true" buttonLayout="horizontal"
                       [disabled]="identityForm.value.situation === 'C'"
                       incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus"></p-inputnumber>
                     <small *ngIf="identityForm.value.situation === 'C'" class="muted">
@@ -264,7 +264,7 @@
                   </div>
                   <div class="upload-zone__actions">
                     <label class="file-input-btn">
-                      <input type="file" accept="application/pdf,image/jpeg,image/png,image/webp" (change)="onCinFileSelected($event)" />
+                      <input type="file" data-testid="document-upload-cin" accept="application/pdf,image/jpeg,image/png,image/webp" (change)="onCinFileSelected($event)" />
                       <i [class]="cinFileIsSet() ? 'pi pi-refresh' : 'pi pi-upload'"></i>
                       <span>{{ cinFileIsSet() ? 'Remplacer' : 'Televerser' }}</span>
                     </label>
@@ -407,7 +407,7 @@
                     <i class="pi pi-info-circle"></i>
                     Document fourni par votre banque attestant de votre RIB. PDF, JPG, PNG ou WebP &mdash; 10&nbsp;Mo max.
                   </p>
-                  <div class="upload-zone" [class.has-file]="ribIsSet()">
+                  <div class="upload-zone" data-testid="document-upload-rib" [class.has-file]="ribIsSet()">
                     <div class="upload-zone__icon">
                       <i [class]="ribIsSet() ? 'pi pi-file-check' : 'pi pi-cloud-upload'"></i>
                     </div>
@@ -510,6 +510,7 @@
                 <div class="children-list">
                   <div *ngFor="let _ of enfants.controls; let i = index"
                        class="child-row"
+                       [attr.data-testid]="'child-form-' + (i + 1)"
                        [formGroup]="$any(enfants.at(i))">
                     <div class="child-row__head">
                       <span class="child-row__index">Enfant #{{ i + 1 }}</span>
@@ -1194,7 +1195,7 @@
             <footer class="step-card__actions">
               <p-button label="Precedent" icon="pi pi-arrow-left" [outlined]="true" (onClick)="goTo(4, activate)"></p-button>
               <span class="spacer"></span>
-              <p-button label="Soumettre mon dossier" icon="pi pi-send" severity="success"
+              <p-button label="Soumettre mon dossier" data-testid="onboarding-submit-button" icon="pi pi-send" severity="success"
                         [loading]="submitting()"
                         [disabled]="locked() || !canSubmit()"
                         [pTooltip]="!canSubmit() ? 'Corrigez les ' + recapErrors() + ' erreur(s) bloquante(s) ci-dessus' : 'Soumettre mon dossier'"
