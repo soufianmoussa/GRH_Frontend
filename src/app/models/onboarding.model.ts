@@ -1,3 +1,4 @@
+import type { AgentDocumentType } from './agent-document.model';
 import type { AgentFullDto } from './agent-full.model';
 import type { AuthResponse } from '../core/auth/auth.models';
 import { Matricule } from './initialisation-matricules.model';
@@ -101,24 +102,60 @@ export interface OnboardingStep {
   position?: number;
 }
 
+/** Verdict de la vérification OCR d'une pièce (backend {@code DocumentVerificationStatus}). */
+export type DocumentVerificationStatus =
+  | 'MATCH'
+  | 'MISMATCH'
+  | 'MISSING'
+  | 'ERROR'
+  | 'UNSUPPORTED';
+
+/** Confrontation d'une information entre le document scanné et la fiche de l'agent. */
+export interface DocumentFieldCheck {
+  field: string;
+  label: string;
+  /** Valeur enregistrée dans le SIRH. */
+  expected?: string;
+  /** Valeur lue sur le document (absente lorsque le statut est MISSING). */
+  extracted?: string;
+  status: DocumentVerificationStatus;
+}
+
+/**
+ * Ligne de revue d'une pièce du dossier d'onboarding — miroir exact du backend
+ * {@code OnboardingDocumentDto}. C'est la SEULE source de la liste de documents côté admin :
+ * les pièces agent y sont projetées, il ne faut donc plus les afficher une seconde fois.
+ */
 export interface OnboardingDocument {
   id: number;
-  code?: string;
-  type?: string;
-  label?: string;
-  name?: string;
+  /** Pièce agent source (AgentDocument) dont cette ligne est la projection. */
+  agentDocumentId?: number;
+  documentType?: AgentDocumentType;
+  title?: string;
   required?: boolean;
   status: DocumentStatus;
+  storedFileId?: number;
   fileName?: string;
+  fileContentType?: string;
+  fileSize?: number;
   fileUrl?: string;
-  rejectionReason?: string;
-  comment?: string;
+  uploadedById?: number;
   uploadedAt?: string;
-  uploadedBy?: string;
-  validatedAt?: string;
-  validatedBy?: string;
-  rejectedAt?: string;
-  rejectedBy?: string;
+  reviewedById?: number;
+  reviewedAt?: string;
+  rejectionReason?: string;
+
+  // --- Vérification OCR (Azure Document Intelligence) ---
+  verificationStatus?: DocumentVerificationStatus;
+  /** Confiance Azure [0..1] sur l'extraction. */
+  confidenceScore?: number;
+  analyzedAt?: string;
+  verificationChecks?: DocumentFieldCheck[];
+  verificationMessage?: string;
+  /** Vrai si la décision manuelle de l'admin contredit le verdict automatique. */
+  manualOverride?: boolean;
+  /** Faux pour les types sans comparaison automatique possible (photo de profil). */
+  verifiable?: boolean;
 }
 
 /**
@@ -231,6 +268,14 @@ export const DOCUMENT_STATUS_LABELS: Record<DocumentStatus, string> = {
   PENDING_REVIEW: 'En revue',
   VALIDATED: 'Valide',
   REJECTED: 'Rejete'
+};
+
+export const VERIFICATION_STATUS_LABELS: Record<DocumentVerificationStatus, string> = {
+  MATCH: 'Concordant',
+  MISMATCH: 'Ecart detecte',
+  MISSING: 'Information absente',
+  ERROR: 'Analyse impossible',
+  UNSUPPORTED: 'Non verifiable'
 };
 
 export const INVITATION_STATUS_LABELS: Record<InvitationStatus, string> = {
