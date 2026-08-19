@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { finalize } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TableModule } from 'primeng/table';
@@ -22,6 +23,11 @@ import {
   CoordonneesBancairesDto,
   EnfantDto
 } from '../../../../models/agent-full.model';
+import {
+  DocumentVerificationStatus,
+  VERIFICATION_STATUS_LABELS
+} from '../../../../models/onboarding.model';
+import { DocumentVerificationPanelComponent } from '../../../../shared/components/document-verification-panel/document-verification-panel.component';
 
 @Component({
   selector: 'app-approbation-modifications',
@@ -33,7 +39,8 @@ import {
     Dialog, InputTextModule, TooltipModule, Toast,
     Tabs, TabList, Tab, TabPanels, TabPanel,
     ConfirmDialog, Textarea,
-    TranslateModule
+    TranslateModule,
+    DocumentVerificationPanelComponent
   ],
   templateUrl: './approbation-modifications.component.html',
   styleUrl: './approbation-modifications.component.scss'
@@ -55,6 +62,9 @@ export class ApprobationModificationsComponent implements OnInit {
   actionType: 'approve' | 'reject' = 'approve';
   actionComment = '';
   actionLoading = false;
+
+  // Verification OCR du justificatif
+  verifying = false;
 
   // Search
   searchText = '';
@@ -112,6 +122,63 @@ export class ApprobationModificationsComponent implements OnInit {
 
   getEnfantPayload(): EnfantDto | null {
     return this.parsedPayload as EnfantDto;
+  }
+
+  // ── Verification OCR du justificatif ───────────────────────────────
+  // Le document est analyse automatiquement au depot ; ce bouton sert a relancer
+  // l'analyse quand elle a echoue (OCR indisponible, document juge illisible).
+
+  verdictOf(req: DemandeModificationDto): DocumentVerificationStatus | undefined {
+    return req.documents?.[0]?.verificationStatus;
+  }
+
+  verdictLabel(status: DocumentVerificationStatus): string {
+    return VERIFICATION_STATUS_LABELS[status];
+  }
+
+  verdictIcon(status: DocumentVerificationStatus): string {
+    switch (status) {
+      case 'MATCH': return 'pi pi-check-circle';
+      case 'MISMATCH': return 'pi pi-times-circle';
+      case 'MISSING': return 'pi pi-exclamation-triangle';
+      case 'ERROR': return 'pi pi-ban';
+      default: return 'pi pi-minus-circle';
+    }
+  }
+
+  verdictTooltip(req: DemandeModificationDto): string {
+    return req.documents?.[0]?.verificationMessage
+      ?? 'Verification automatique du justificatif';
+  }
+
+  verifyDocument(): void {
+    if (!this.selectedRequest) return;
+    this.verifying = true;
+    this.demandeService.verify(this.selectedRequest.id)
+      .pipe(finalize(() => this.verifying = false))
+      .subscribe({
+        next: (updated) => {
+          this.selectedRequest = updated;
+          this.replaceInLists(updated);
+          this.msgService.add({
+            severity: 'success', summary: this.translate.instant('GLOBAL.SUCCES'),
+            detail: updated.documents?.[0]?.verificationMessage ?? 'Document analyse.'
+          });
+        },
+        error: (err) => this.msgService.add({
+          severity: 'error', summary: this.translate.instant('GLOBAL.ERREUR'),
+          detail: err?.error?.message ?? 'Analyse du document impossible.'
+        })
+      });
+  }
+
+  /** Garde les trois listes (toutes / en attente / traitees) alignees sur la demande rafraichie. */
+  private replaceInLists(updated: DemandeModificationDto): void {
+    const swap = (list: DemandeModificationDto[]) =>
+      list.map(r => r.id === updated.id ? updated : r);
+    this.allRequests = swap(this.allRequests);
+    this.pendingRequests = swap(this.pendingRequests);
+    this.treatedRequests = swap(this.treatedRequests);
   }
 
   // ── Approve / Reject ───────────────────────────────────────────────

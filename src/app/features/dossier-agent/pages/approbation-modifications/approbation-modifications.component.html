@@ -60,6 +60,15 @@
                        class="doc-link">
                       <i class="pi pi-file"></i> {{ req.documents[0].originalFileName }}
                     </a>
+                    <!-- Pastille de verdict OCR : reperer d'un coup d'oeil les dossiers a examiner. -->
+                    <span *ngIf="verdictOf(req) as verdict"
+                          class="verif-pill"
+                          [attr.data-verdict]="verdict"
+                          [pTooltip]="verdictTooltip(req)"
+                          tooltipPosition="top">
+                      <i [ngClass]="verdictIcon(verdict)"></i>
+                      {{ verdictLabel(verdict) }}
+                    </span>
                     <span *ngIf="!req.documents?.length">—</span>
                   </td>
                   <td class="actions-cell">
@@ -209,6 +218,18 @@
           <i class="pi pi-external-link"></i> {{ 'GESTION_PERSONNELLE.APPROBATION_MODIFICATIONS.BTN_VOIR' | translate }}
         </a>
       </div>
+
+      <!-- Verification OCR : le justificatif porte-t-il bien ce qui est demande ? -->
+      <app-document-verification-panel
+        *ngIf="selectedRequest.documents.length as n"
+        [status]="selectedRequest.documents[0].verificationStatus"
+        [checks]="selectedRequest.documents[0].verificationChecks"
+        [message]="selectedRequest.documents[0].verificationMessage"
+        [confidence]="selectedRequest.documents[0].verificationConfidence"
+        [analyzedAt]="selectedRequest.documents[0].verifiedAt"
+        [loading]="verifying"
+        (reanalyze)="verifyDocument()">
+      </app-document-verification-panel>
     </div>
 
     <!-- Admin comment (if treated) -->

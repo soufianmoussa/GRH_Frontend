@@ -319,3 +319,27 @@
         align-items: flex-start;
     }
 }
+
+/* Pastille de verdict OCR dans la colonne « Document » : reperer d'un coup d'oeil
+   les demandes dont le justificatif contredit ce qui est demande. */
+.verif-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: .25rem;
+  margin-left: .4rem;
+  padding: .12rem .45rem;
+  border-radius: 999px;
+  font-size: .7rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: #f1f5f9;
+  color: #64748b;
+
+  i { font-size: .68rem; }
+
+  &[data-verdict='MATCH']    { background: rgba(16, 185, 129, .12); color: #047857; }
+  &[data-verdict='MISMATCH'] { background: rgba(220, 38, 38, .12);  color: #b91c1c; }
+  &[data-verdict='MISSING']  { background: rgba(217, 119, 6, .14);  color: #b45309; }
+  &[data-verdict='ERROR']    { background: rgba(100, 116, 139, .14); color: #475569; }
+}
+
