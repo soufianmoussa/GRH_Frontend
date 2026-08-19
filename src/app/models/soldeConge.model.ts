@@ -1,11 +1,12 @@
-export type LeaveType =
-  | 'ANNUEL'
-  | 'MALADIE'
-  | 'MATERNITE'
-  | 'PATERNITE'
-  | 'SANS_SOLDE'
-  | 'EXCEPTIONNEL'
-  | 'COMPENSATOIRE';
+/**
+ * Code d'un type de conge.
+ *
+ * Volontairement un `string` et non une union figee : les types de conge sont administrables
+ * depuis `/TypesConge` et proviennent du referentiel `/api/types-conge`. Une union fermee
+ * mentait des qu'un type etait ajoute — le formulaire proposait un code que le backend
+ * rejetait ensuite.
+ */
+export type LeaveType = string;
 
 export type TypeOperationSoldeConge =
   | 'INITIALISATION'
