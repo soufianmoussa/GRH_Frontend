@@ -23,7 +23,7 @@
               optionLabel="label"
               optionValue="value"
               [(ngModel)]="selectedPoste"
-              placeholder="S�lectionner un poste"
+              placeholder="Sélectionner un poste"
               (onChange)="chargerFiche()"
               styleClass="w-full"
             ></p-dropdown>
@@ -58,11 +58,11 @@
                 <td>{{ fichePoste.nomPoste }}</td>
               </tr>
               <tr>
-                <td><strong>N° Poste :</strong></td>
+                <td><strong>NÂ° Poste :</strong></td>
                 <td>{{ fichePoste.numeroPoste }}</td>
               </tr>
               <tr>
-                <td><strong>R�gion :</strong></td>
+                <td><strong>Région :</strong></td>
                 <td>{{ fichePoste.region }}</td>
               </tr>
             </table>
@@ -70,7 +70,7 @@
             <h3 class="section-title">Missions</h3>
             <p>{{ fichePoste.missions }}</p>
 
-            <h3 class="section-title">Descriptif des activit�s</h3>
+            <h3 class="section-title">Descriptif des activités</h3>
             <ul>
               <li *ngFor="let act of fichePoste.activites">{{ act }}</li>
             </ul>

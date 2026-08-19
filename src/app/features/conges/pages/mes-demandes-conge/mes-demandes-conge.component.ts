@@ -84,13 +84,13 @@ export class MesDemandesCongeComponent implements OnInit {
   cancellingDemande: DemandeCongeDto | null = null;
 
   categories = [
-    { label: 'Cong� annuel', value: 'ANNUEL' },
-    { label: 'Cong� de maladie', value: 'MALADIE' },
-    { label: 'Cong� de maternit�', value: 'MATERNITE' },
-    { label: 'Cong� de paternit�', value: 'PATERNITE' },
-    { label: 'Cong� sans solde', value: 'SANS_SOLDE' },
-    { label: 'Cong� exceptionnel', value: 'EXCEPTIONNEL' },
-    { label: 'Cong� compensatoire', value: 'COMPENSATOIRE' }
+    { label: 'Congé annuel', value: 'ANNUEL' },
+    { label: 'Congé de maladie', value: 'MALADIE' },
+    { label: 'Congé de maternité', value: 'MATERNITE' },
+    { label: 'Congé de paternité', value: 'PATERNITE' },
+    { label: 'Congé sans solde', value: 'SANS_SOLDE' },
+    { label: 'Congé exceptionnel', value: 'EXCEPTIONNEL' },
+    { label: 'Congé compensatoire', value: 'COMPENSATOIRE' }
   ];
 
 
@@ -109,9 +109,9 @@ export class MesDemandesCongeComponent implements OnInit {
   deletingDocument: StoredFileDto | null = null;
 
   fileCategories = [
-    { label: 'Justificatif de cong�', value: 'LEAVE_JUSTIFICATION' },
-    { label: 'Certificat m�dical', value: 'MEDICAL_CERTIFICATE' },
-    { label: 'Pi�ce jointe', value: 'LEAVE_ATTACHMENT' }
+    { label: 'Justificatif de congé', value: 'LEAVE_JUSTIFICATION' },
+    { label: 'Certificat médical', value: 'MEDICAL_CERTIFICATE' },
+    { label: 'Pièce jointe', value: 'LEAVE_ATTACHMENT' }
   ];
 
   constructor(
@@ -132,7 +132,7 @@ export class MesDemandesCongeComponent implements OnInit {
     if (this.agentId == null) {
       this.loading = false;
       ToastHelper.showError(this.messageService,
-        "Aucun agent n'est associ� � votre compte.");
+        "Aucun agent n'est associé à votre compte.");
       return;
     }
     this.loadDemandes();
@@ -153,7 +153,7 @@ export class MesDemandesCongeComponent implements OnInit {
       error: (err: any) => {
         const msg = err.status === 0
           ? 'Erreur de connexion au serveur.'
-          : 'Erreur lors du chargement des donn�es';
+          : 'Erreur lors du chargement des données';
         ToastHelper.showError(this.messageService, msg);
         this.loading = false;
       }
@@ -175,9 +175,9 @@ export class MesDemandesCongeComponent implements OnInit {
   getStatusLabel(statut: string): string {
     switch (statut) {
       case 'EN_ATTENTE': return 'En attente';
-      case 'APPROUVEE': return 'Approuv�e';
-      case 'REJETEE': return 'Rejet�e';
-      case 'ANNULEE': return 'Annul�e';
+      case 'APPROUVEE': return 'Approuvée';
+      case 'REJETEE': return 'Rejetée';
+      case 'ANNULEE': return 'Annulée';
       default: return statut;
     }
   }
@@ -223,7 +223,7 @@ export class MesDemandesCongeComponent implements OnInit {
   onEdit(demande: DemandeCongeDto) {
     if (!this.canEdit(demande)) {
       ToastHelper.showWarn(this.messageService,
-        'Cette demande ne peut pas �tre modifi�e.');
+        'Cette demande ne peut pas être modifiée.');
       return;
     }
 
@@ -282,20 +282,20 @@ export class MesDemandesCongeComponent implements OnInit {
 
     if (end < start) {
       ToastHelper.showWarn(this.messageService,
-        'La date de fin doit �tre apr�s la date de d�but.');
+        'La date de fin doit être après la date de début.');
       return;
     }
 
     const duree = this.calculateEditDuree();
     if (duree <= 0) {
       ToastHelper.showWarn(this.messageService,
-        'Aucun jour ouvrable s�lectionn�.');
+        'Aucun jour ouvrable sélectionné.');
       return;
     }
 
     if (this.agentId == null) {
       ToastHelper.showError(this.messageService,
-        "Aucun agent n'est associ� � votre compte.");
+        "Aucun agent n'est associé à votre compte.");
       return;
     }
 
@@ -312,13 +312,13 @@ export class MesDemandesCongeComponent implements OnInit {
       `${this.API_BASE}/demandes-conges/${this.editingDemande.id}`, request
     ).subscribe({
       next: () => {
-        ToastHelper.showSuccess(this.messageService, 'Demande modifi�e avec succ�s.');
+        ToastHelper.showSuccess(this.messageService, 'Demande modifiée avec succès.');
         this.editDialogVisible = false;
         this.editingDemande = null;
         this.loadDemandes();
       },
       error: (err: any) => {
-        const msg = err?.error?.message || "�chec de la modification.";
+        const msg = err?.error?.message || "Échec de la modification.";
         ToastHelper.showError(this.messageService, msg);
       }
     });
@@ -329,7 +329,7 @@ export class MesDemandesCongeComponent implements OnInit {
   onCancel(demande: DemandeCongeDto) {
     if (!this.isPending(demande)) {
       ToastHelper.showWarn(this.messageService,
-        'Seules les demandes en attente peuvent �tre annul�es.');
+        'Seules les demandes en attente peuvent être annulées.');
       return;
     }
 
@@ -344,13 +344,13 @@ export class MesDemandesCongeComponent implements OnInit {
       `${this.API_BASE}/demandes-conges/${this.cancellingDemande.id}`
     ).subscribe({
       next: () => {
-        ToastHelper.showSuccess(this.messageService, 'Demande annul�e avec succ�s.');
+        ToastHelper.showSuccess(this.messageService, 'Demande annulée avec succès.');
         this.cancelDialogVisible = false;
         this.cancellingDemande = null;
         this.loadDemandes();
       },
       error: (err: any) => {
-        const msg = err?.error?.message || "�chec de l'annulation.";
+        const msg = err?.error?.message || "Échec de l'annulation.";
         ToastHelper.showError(this.messageService, msg);
       }
     });
@@ -393,7 +393,7 @@ export class MesDemandesCongeComponent implements OnInit {
       `${this.API_BASE}/demandes-conges/documents/${this.deletingDocument.id}`
     ).subscribe({
       next: () => {
-        ToastHelper.showSuccess(this.messageService, 'Document supprim� avec succ�s.');
+        ToastHelper.showSuccess(this.messageService, 'Document supprimé avec succès.');
         this.deleteDocDialogVisible = false;
         this.deletingDocument = null;
         this.loadEditDocuments(this.editingDemande!.id);
@@ -440,7 +440,7 @@ export class MesDemandesCongeComponent implements OnInit {
       formData
     ).subscribe({
       next: () => {
-        ToastHelper.showSuccess(this.messageService, 'Document upload� avec succ�s.');
+        ToastHelper.showSuccess(this.messageService, 'Document uploadé avec succès.');
         this.editSelectedFile = null;
         this.editDocCategory = null;
         this.editUploading = false;

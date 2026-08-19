@@ -3,8 +3,8 @@
 <div class="conge-page">
   <div class="page-header">
     <div class="header-titles">
-      <h1 class="titleh1">Demande de CongÈ</h1>
-      <p class="page-subtitle">Soumettez votre demande de congÈ en quelques Ètapes</p>
+      <h1 class="titleh1">Demande de Cong√©</h1>
+      <p class="page-subtitle">Soumettez votre demande de cong√© en quelques √©tapes</p>
     </div>
 
     <div class="agent-info-card">
@@ -16,7 +16,7 @@
         <span class="agent-role" pTooltip="Poste actuel" tooltipPosition="bottom">
           <i class="pi pi-briefcase"></i> {{ currentAgent.poste }}
         </span>
-        <span class="agent-manager" pTooltip="Responsable hiÈrarchique" tooltipPosition="bottom">
+        <span class="agent-manager" pTooltip="Responsable hi√©rarchique" tooltipPosition="bottom">
           <i class="pi pi-sitemap"></i> Resp: {{ currentAgent.responsable }}
         </span>
       </div>
@@ -27,7 +27,7 @@
     <p-stepper [(value)]="activeStep" [linear]="true">
 
       <p-step-list>
-        <p-step [value]="1">Saisie congÈ</p-step>
+        <p-step [value]="1">Saisie cong√©</p-step>
         <p-stepper-separator />
         <p-step [value]="2">Confirmation</p-step>
       </p-step-list>
@@ -47,10 +47,10 @@
 
           <div class="section-card categorie-card">
             <div class="section-header">
-              <h4><i class="pi pi-tag"></i> Type de congÈ</h4>
+              <h4><i class="pi pi-tag"></i> Type de cong√©</h4>
             </div>
             <p-dropdown [options]="categories" optionLabel="label" optionValue="value"
-              placeholder="SÈlectionnez un type de congÈ" formControlName="category" [style]="{ width: '100%' }"
+              placeholder="S√©lectionnez un type de cong√©" formControlName="category" [style]="{ width: '100%' }"
               (onChange)="onCategoryChange()">
             </p-dropdown>
 
@@ -68,15 +68,15 @@
 
           <div class="section-card dates-card">
             <div class="section-header">
-              <h4><i class="pi pi-calendar"></i> PÈriode demandÈe</h4>
+              <h4><i class="pi pi-calendar"></i> P√©riode demand√©e</h4>
               <button type="button" class="reset-btn" (click)="resetDates()">
-                <i class="pi pi-refresh"></i> RÈinitialiser
+                <i class="pi pi-refresh"></i> R√©initialiser
               </button>
             </div>
 
             <div class="date-labels">
               <div class="date-label-box">
-                <span class="date-label-title">Date dÈbut</span>
+                <span class="date-label-title">Date d√©but</span>
                 <span class="date-label-value" *ngIf="selectedDateRange && selectedDateRange.length > 0">
                   {{ selectedDateRange[0] | date: 'dd/MM/yyyy' }}
                 </span>
@@ -107,7 +107,7 @@
               </div>
               <p class="duree-hint">
                 <i class="pi pi-info-circle"></i>
-                SÈlectionnez les dates sur le calendrier ou saisissez le nombre de jours.
+                S√©lectionnez les dates sur le calendrier ou saisissez le nombre de jours.
               </p>
             </div>
           </div>
@@ -115,7 +115,7 @@
 
           <div class="section-card solde-card" *ngIf="showSolde && loadingSolde">
             <div class="section-header">
-              <h4><i class="pi pi-wallet"></i> Solde de congÈ</h4>
+              <h4><i class="pi pi-wallet"></i> Solde de cong√©</h4>
             </div>
             <div class="solde-content" style="text-align: center; padding: 1rem;">
               <p-progressSpinner [style]="{width: '30px', height: '30px'}" strokeWidth="4"></p-progressSpinner>
@@ -126,7 +126,7 @@
 
           <div class="section-card solde-card" *ngIf="showSolde && !loadingSolde && solde">
             <div class="section-header">
-              <h4><i class="pi pi-wallet"></i> Solde de congÈ</h4>
+              <h4><i class="pi pi-wallet"></i> Solde de cong√©</h4>
             </div>
             <div class="solde-content">
               <div class="solde-row">
@@ -134,7 +134,7 @@
                 <span class="solde-value">{{ solde.joursBase || 0 }}</span>
               </div>
               <div class="solde-row">
-                <span class="solde-label">Jours reportÈs</span>
+                <span class="solde-label">Jours report√©s</span>
                 <span class="solde-value">{{ solde.joursReportes || 0 }}</span>
               </div>
               <div class="solde-row">
@@ -152,7 +152,7 @@
               <div *ngIf="soldeRemaining !== null && soldeRemaining <= 0"
                    style="margin-top: 0.75rem; font-size: 0.85rem; color: #6b7280; text-align: center;">
                 <i class="pi pi-info-circle"></i>
-                Solde non initialisÈ ou ÈpuisÈ. Contactez votre administrateur.
+                Solde non initialis√© ou √©puis√©. Contactez votre administrateur.
               </div>
             </div>
           </div>
@@ -162,7 +162,7 @@
             <div class="section-header">
               <h4><i class="pi pi-paperclip"></i> Justificatif</h4>
               <span class="attachment-badge" *ngIf="isAttachmentRecommended">
-                <i class="pi pi-exclamation-circle"></i> RecommandÈ
+                <i class="pi pi-exclamation-circle"></i> Recommand√©
               </span>
             </div>
             <div class="attachment-content">
@@ -170,8 +170,8 @@
                 <label class="file-upload-label">
                   <input type="file" (change)="onFileSelect($event)" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" hidden />
                   <i class="pi pi-cloud-upload"></i>
-                  <span>Cliquer pour sÈlectionner un fichier</span>
-                  <small>PDF, JPG, PNG, DOC ñî Max 5 Mo</small>
+                  <span>Cliquer pour s√©lectionner un fichier</span>
+                  <small>PDF, JPG, PNG, DOC ‚Äì‚Äù Max 5 Mo</small>
                 </label>
               </div>
               <div class="file-selected" *ngIf="attachmentFile">
@@ -190,10 +190,10 @@
               <h4><i class="pi pi-pencil"></i> Commentaire</h4>
             </div>
             <textarea pInputTextarea [(ngModel)]="notes" [ngModelOptions]="{standalone: true}"
-              placeholder="Ajoutez un commentaire ou une prÈcision (optionnel)..."
+              placeholder="Ajoutez un commentaire ou une pr√©cision (optionnel)..."
               [rows]="3" [autoResize]="true" class="notes-textarea" maxlength="500"></textarea>
             <small class="notes-note">
-              <i class="pi pi-info-circle"></i> Optionnel ñî 500 caractËres max.
+              <i class="pi pi-info-circle"></i> Optionnel ‚Äì‚Äù 500 caract√®res max.
             </small>
           </div>
 
@@ -234,7 +234,7 @@
 
 
             <div class="calendar-legend">
-              <span class="legend-title">LÈgende :</span>
+              <span class="legend-title">L√©gende :</span>
               <div class="legend-items">
                 <div class="legend-item" *ngFor="let item of legendItems">
                   <span class="legend-dot" [style.background-color]="item.color"></span>
@@ -242,7 +242,7 @@
                 </div>
                 <div class="legend-item">
                   <span class="legend-dot legend-dot-selected"></span>
-                  <span class="legend-label">SÈlection</span>
+                  <span class="legend-label">S√©lection</span>
                 </div>
               </div>
             </div>
@@ -251,12 +251,12 @@
 
           <div class="section-card summary-card" *ngIf="selectedDateRange && selectedDateRange.length === 2">
             <div class="section-header">
-              <h4><i class="pi pi-check-square"></i> RÈsumÈ de la sÈlection</h4>
+              <h4><i class="pi pi-check-square"></i> R√©sum√© de la s√©lection</h4>
             </div>
             <div class="summary-content">
               <div class="summary-row">
                 <span class="summary-icon"><i class="pi pi-arrow-right"></i></span>
-                <span class="summary-label">DÈbut</span>
+                <span class="summary-label">D√©but</span>
                 <span class="summary-value">{{ selectedDateRange[0] | date: 'dd MMMM yyyy' }}</span>
               </div>
               <div class="summary-row">
@@ -266,7 +266,7 @@
               </div>
               <div class="summary-row summary-duree-row">
                 <span class="summary-icon"><i class="pi pi-clock"></i></span>
-                <span class="summary-label">DurÈe</span>
+                <span class="summary-label">Dur√©e</span>
                 <span class="summary-value">
                   <span class="duree-badge">{{ exceptionalRequestForm.get('duree')?.value }} jour(s) ouvrable(s)</span>
                 </span>
@@ -281,7 +281,7 @@
 
             <div class="overlap-warning" *ngIf="hasOverlapPublic()">
               <i class="pi pi-exclamation-triangle"></i>
-              <span>Attention : cette pÈriode chevauche une demande existante.</span>
+              <span>Attention : cette p√©riode chevauche une demande existante.</span>
             </div>
           </div>
 
@@ -306,15 +306,15 @@
       <div class="confirmation-card">
         <h3 class="step-title">
           <i class="pi pi-check-circle"></i>
-          RÈcapitulatif de votre demande
+          R√©capitulatif de votre demande
         </h3>
-        <p class="step-subtitle">VÈrifiez les informations avant d'envoyer votre demande</p>
+        <p class="step-subtitle">V√©rifiez les informations avant d'envoyer votre demande</p>
 
         <div class="recap-grid">
           <div class="recap-section">
-            <h4>DÈtails de la demande</h4>
+            <h4>D√©tails de la demande</h4>
             <div class="recap-row">
-              <span class="recap-label"><i class="pi pi-calendar"></i> Date de dÈbut</span>
+              <span class="recap-label"><i class="pi pi-calendar"></i> Date de d√©but</span>
               <span class="recap-value" *ngIf="selectedDateRange && selectedDateRange.length > 0">
                 <strong>{{ selectedDateRange[0] | date: 'dd MMMM yyyy' }}</strong>
               </span>
@@ -326,13 +326,13 @@
               </span>
             </div>
             <div class="recap-row">
-              <span class="recap-label"><i class="pi pi-clock"></i> DurÈe</span>
+              <span class="recap-label"><i class="pi pi-clock"></i> Dur√©e</span>
               <span class="recap-value">
                 <span class="duree-badge">{{ exceptionalRequestForm.get('duree')?.value }} jour(s) ouvrable(s)</span>
               </span>
             </div>
             <div class="recap-row">
-              <span class="recap-label"><i class="pi pi-tag"></i> CatÈgorie</span>
+              <span class="recap-label"><i class="pi pi-tag"></i> Cat√©gorie</span>
               <span class="recap-value">{{ getCategoryLabel() }}</span>
             </div>
             <div class="recap-row" *ngIf="soldeRemaining !== null">
@@ -344,7 +344,7 @@
           </div>
 
           <div class="recap-section" *ngIf="attachmentFile || notes">
-            <h4>Informations complÈmentaires</h4>
+            <h4>Informations compl√©mentaires</h4>
             <div class="recap-row" *ngIf="attachmentFile">
               <span class="recap-label"><i class="pi pi-paperclip"></i> Justificatif</span>
               <span class="recap-value">{{ attachmentFile.name }}</span>
@@ -358,10 +358,10 @@
 
         <p class="confirmation-note" style="margin-top: 1.5rem;">
           <i class="pi pi-info-circle"></i>
-          Votre demande va Ítre transmise ‡ votre supÈrieur hiÈrarchique pour validation.        </p>
+          Votre demande va √™tre transmise √† votre sup√©rieur hi√©rarchique pour validation.        </p>
 
         <div class="step-actions">
-          <button pButton label="PrÈcÈdent" icon="pi pi-arrow-left" (click)="prevStep(activateCallback)"
+          <button pButton label="Pr√©c√©dent" icon="pi pi-arrow-left" (click)="prevStep(activateCallback)"
             [outlined]="true" severity="secondary"></button>
           <button pButton label="Envoyer la demande" icon="pi pi-send" (click)="confirmBeforeSubmit()"
             severity="success" [loading]="submitting" [disabled]="submitting"></button>
