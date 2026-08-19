@@ -29,7 +29,9 @@ export const roleGuard: CanActivateFn = (route, state) => {
       ];
       const onboardingStatus = authService.getCurrentUser()?.onboardingStatus;
 
-      if (onboardingStatus && !['VALIDATED', 'ACTIVE'].includes(onboardingStatus)
+      // Statut connu et parcours encore en cours : on ramene l'agent vers son onboarding.
+      // Le cas inverse (parcours termine) est traite par `onboardingCompletedGuard`.
+      if (onboardingStatus && !authService.isOnboardingCompleted()
           && !allowedOnboardingRoutes.includes(currentUrl)) {
         router.navigate([onboardingStatus === 'PENDING_VALIDATION' ? '/mon-onboarding' : '/mon-onboarding/profil']);
         return false;

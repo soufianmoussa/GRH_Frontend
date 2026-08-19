@@ -8,6 +8,7 @@ import { AgentOnboardingWizardComponent } from 'app/features/onboarding/pages/ag
 import { InitialisationMatriculesComponent } from 'app/features/onboarding/pages/initialisation-matricules/initialisation-matricules.component';
 import { OnboardingActivationComponent } from 'app/features/onboarding/pages/onboarding-activation/onboarding-activation.component';
 import { roleGuard } from 'app/core/guards/role.guard';
+import { onboardingCompletedGuard } from 'app/core/guards/onboarding-completed.guard';
 import { unsavedChangesGuard } from 'app/core/guards/unsaved-changes.guard';
 
 // =============================================================================
@@ -22,16 +23,18 @@ export const ONBOARDING_ROUTES: Routes = [
   { path: 'activation', component: OnboardingActivationComponent },
   { path: 'onboarding/activate', redirectTo: 'activation', pathMatch: 'full' },
 
+  // L'onboarding est un parcours a usage unique : une fois le dossier valide par
+  // l'administration, `onboardingCompletedGuard` renvoie l'agent vers l'accueil.
   {
     path: 'mon-onboarding',
     component: AgentOnboardingDashboardComponent,
-    canActivate: [roleGuard],
+    canActivate: [roleGuard, onboardingCompletedGuard],
     data: { roles: ['AGENT'] }
   },
   {
     path: 'mon-onboarding/wizard',
     component: AgentOnboardingWizardComponent,
-    canActivate: [roleGuard],
+    canActivate: [roleGuard, onboardingCompletedGuard],
     canDeactivate: [unsavedChangesGuard],
     data: { roles: ['AGENT'] }
   },

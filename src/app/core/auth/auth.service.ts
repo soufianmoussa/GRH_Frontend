@@ -145,6 +145,42 @@ export class AuthService {
     return roles.some(role => userRoles.includes(role));
   }
 
+  /**
+   * Statuts d'onboarding qui marquent la fin du parcours : le dossier a été validé
+   * par l'administration et n'est plus modifiable.
+   */
+  private static readonly COMPLETED_ONBOARDING_STATUSES = ['VALIDATED', 'ACTIVE'];
+
+  /**
+   * Vrai lorsque l'intégration de l'agent est terminée. Source unique de vérité partagée
+   * par le menu (masquage de « Mon onboarding ») et par {@code onboardingCompletedGuard}
+   * (blocage de l'accès direct par URL), pour que les deux ne puissent pas diverger.
+   *
+   * Faux si le statut est inconnu : on n'interdit jamais l'accès sur une session dont on
+   * ignore l'état, le backend restant l'autorité.
+   */
+  isOnboardingCompleted(): boolean {
+    const status = this.getCurrentUser()?.onboardingStatus;
+    return !!status && AuthService.COMPLETED_ONBOARDING_STATUSES.includes(status);
+  }
+
+  /**
+   * Met à jour le statut d'onboarding mémorisé après lecture du dossier réel.
+   *
+   * Sans cela, un agent connecté avant la validation garderait un statut périmé jusqu'à
+   * l'expiration de son jeton : « Mon onboarding » resterait visible alors que le dossier
+   * est clos.
+   */
+  updateOnboardingStatus(status: string | null | undefined): void {
+    const user = this.getCurrentUser();
+    if (!user || user.onboardingStatus === (status ?? null)) {
+      return;
+    }
+    const updated: UserInfo = { ...user, onboardingStatus: status ?? null };
+    this.storage.setItem(this.USER_KEY, JSON.stringify(updated));
+    this.currentUserSubject.next(updated);
+  }
+
   fetchMe(): Observable<UserInfo> {
     return this.http.get<UserInfo>(`${this.API_URL}/me`).pipe(
       tap(user => {
