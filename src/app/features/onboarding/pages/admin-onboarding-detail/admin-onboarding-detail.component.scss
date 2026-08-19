@@ -505,40 +505,82 @@
     50%      { box-shadow: 0 0 0 2px #2a52be, 0 0 0 10px rgba(42, 82, 190, 0.05); }
   }
 
-  /* ---------- Agent documents grid (RIB, marriage, birth, photo...) -- */
-  .agent-docs-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: .85rem;
-    margin: .25rem 0 .5rem;
-  }
+  /* ---------- Revue documentaire (liste unique des pieces) ----------- */
+  /* Une seule surface de revue : les AgentDocument sont projetes par le backend
+     dans onboarding.documents. Plus de grille "documents personnels" en double. */
 
-  .agent-doc-card {
+  .review-bar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: .75rem;
+    margin-bottom: 1rem;
+  }
+
+  .review-counters {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: .45rem;
+  }
+
+  .review-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .3rem .7rem;
+    border-radius: 999px;
+    font-size: .8rem;
+    font-weight: 600;
+    background: #f1f5f9;
+    color: #475569;
+
+    i { font-size: .75rem; }
+
+    &.is-validated { background: rgba(16, 185, 129, .12); color: #047857; }
+    &.is-pending   { background: rgba(217, 119, 6, .12);  color: #b45309; }
+    &.is-rejected  { background: rgba(220, 38, 38, .1);   color: #b91c1c; }
+  }
+
+  .docs-review-list {
+    display: flex;
+    flex-direction: column;
     gap: .85rem;
-    padding: .85rem 1rem;
+  }
+
+  .doc-card {
     background: #fff;
     border: 1px solid #eef2f7;
     border-left: 4px solid #cbd5e1;
     border-radius: 12px;
-    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    padding: 1rem 1.15rem;
+    transition: box-shadow .15s ease, border-color .15s ease;
 
-    &:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06);
+    &:hover { box-shadow: 0 4px 16px rgba(15, 23, 42, .06); }
+
+    &[data-status='VALIDATED'] { border-left-color: #10b981; }
+    &[data-status='REJECTED']  { border-left-color: #dc2626; background: #fffbfb; }
+    &[data-status='PENDING_REVIEW'] { border-left-color: #f59e0b; }
+
+    &__head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
     }
 
-    &.has-file {
-      border-left-color: #10b981;
-      background: #f0fdf4;
+    &__identity {
+      display: flex;
+      align-items: center;
+      gap: .85rem;
+      min-width: 0;
     }
 
     &__icon {
       width: 44px;
       height: 44px;
       border-radius: 11px;
-      background: rgba(35, 122, 210, 0.1);
+      background: rgba(35, 122, 210, .1);
       color: var(--rh-primary);
       display: grid;
       place-items: center;
@@ -546,99 +588,148 @@
       i { font-size: 1.15rem; }
     }
 
-    &.has-file &__icon {
-      background: rgba(16, 185, 129, 0.12);
-      color: #10b981;
+    &__naming { min-width: 0; }
+
+    &__title {
+      display: block;
+      color: #1f2937;
+      font-size: .96rem;
+      font-weight: 600;
+      overflow-wrap: anywhere;
     }
 
-    &__body {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: .15rem;
-      min-width: 0;
-
-      strong {
-        color: #1f2937;
-        font-size: .92rem;
-        font-weight: 600;
-      }
-
-      small {
-        font-size: .78rem;
-      }
-
-      .agent-doc-card__title {
-        color: #475569;
-      }
-
-      .muted {
-        display: inline-flex;
-        align-items: center;
-        gap: .3rem;
-        color: #94a3b8;
-        i { font-size: .7rem; }
-      }
-    }
-
-    &__actions {
-      flex-shrink: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-      gap: .35rem;
-    }
-
-    &__title-row {
+    &__meta {
       display: flex;
       align-items: center;
-      gap: .5rem;
       flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: .3rem;
+      font-size: .78rem;
     }
 
-    &__validation {
-      display: inline-flex;
-      gap: .15rem;
+    &__type {
+      color: #198897;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .03em;
+      font-size: .72rem;
     }
 
-    &__rejection {
-      display: inline-flex;
+    &__rejection,
+    &__override {
+      display: flex;
       align-items: flex-start;
-      gap: .35rem;
-      color: #b91c1c;
-      background: rgba(220, 38, 38, 0.08);
+      gap: .4rem;
+      margin: .75rem 0 0;
+      padding: .45rem .7rem;
       border-radius: 8px;
-      padding: .3rem .55rem;
+      font-size: .82rem;
       font-style: italic;
 
-      i { margin-top: .15rem; font-size: .7rem; }
+      i { margin-top: .15rem; font-size: .75rem; }
     }
 
-    &[data-status='VALIDATED'] { border-left-color: #10b981; }
-    &[data-status='REJECTED']  { border-left-color: #dc2626; background: #fef2f2; }
+    &__rejection { background: rgba(220, 38, 38, .08); color: #991b1b; }
+    &__override  { background: rgba(124, 58, 237, .08); color: #6d28d9; }
+
+    &__actions {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: .5rem;
+      margin-top: .9rem;
+      padding-top: .75rem;
+      border-top: 1px dashed #e2e8f0;
+    }
+
+    &__spacer { flex: 1 1 auto; }
   }
 
-  /* ---------- Documents table --------------------------------------- */
-  .docs-table {
-    margin-top: 0.25rem;
+  /* ---------- Verdict de la verification OCR ------------------------- */
+  .doc-card__verification {
+    margin-top: .85rem;
+    padding: .7rem .85rem;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #eef2f7;
+
+    &[data-verdict='MATCH']    { background: rgba(16, 185, 129, .06); border-color: rgba(16, 185, 129, .25); }
+    &[data-verdict='MISMATCH'] { background: rgba(220, 38, 38, .06);  border-color: rgba(220, 38, 38, .25); }
+    &[data-verdict='MISSING']  { background: rgba(217, 119, 6, .07);  border-color: rgba(217, 119, 6, .25); }
+    &[data-verdict='ERROR']    { background: rgba(100, 116, 139, .08); }
   }
 
-  .doc-name-col { min-width: 230px; text-align: left !important; }
-
-  ::ng-deep .docs-table .p-datatable-tbody > tr > td:first-child {
-    text-align: left !important;
-  }
-
-  .doc-name-cell {
+  .verification-head {
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    flex-wrap: wrap;
+    gap: .6rem;
+  }
 
-    .doc-icon {
-      color: #dc2626;
-      font-size: 1.1rem;
+  .verification-spacer { flex: 1 1 auto; }
+
+  .verification-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .82rem;
+    font-weight: 600;
+    color: #475569;
+
+    i { font-size: .85rem; }
+  }
+
+  [data-verdict='MATCH']    > .verification-head > .verification-badge,
+  .verification-badge[data-verdict='MATCH']    { color: #047857; }
+  [data-verdict='MISMATCH'] > .verification-head > .verification-badge,
+  .verification-badge[data-verdict='MISMATCH'] { color: #b91c1c; }
+  [data-verdict='MISSING']  > .verification-head > .verification-badge,
+  .verification-badge[data-verdict='MISSING']  { color: #b45309; }
+
+  .verification-message {
+    display: block;
+    margin-top: .4rem;
+    color: #64748b;
+    font-size: .8rem;
+  }
+
+  .verification-table {
+    width: 100%;
+    margin-top: .7rem;
+    border-collapse: collapse;
+    font-size: .8rem;
+
+    th, td {
+      text-align: left;
+      padding: .4rem .55rem;
+      border-bottom: 1px solid #e9eef5;
+      vertical-align: top;
     }
-    strong { color: #1f2937; }
+
+    th {
+      color: #94a3b8;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: .7rem;
+      letter-spacing: .03em;
+    }
+
+    td { color: #334155; overflow-wrap: anywhere; }
+    tr:last-child td { border-bottom: none; }
+
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+    .check-verdict {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      font-weight: 600;
+      i { font-size: .78rem; }
+    }
+
+    tr[data-verdict='MATCH']    .check-verdict { color: #047857; }
+    tr[data-verdict='MISMATCH'] .check-verdict { color: #b91c1c; }
+    tr[data-verdict='MISSING']  .check-verdict { color: #b45309; }
   }
 
   .required-badge {
@@ -863,6 +954,59 @@
       box-shadow: 0 6px 18px rgba(31, 60, 136, 0.25);
 
       &:hover { filter: brightness(1.08); color: #fff !important; background: linear-gradient(135deg, #1f3c88, #2a52be) !important; }
+    }
+  }
+}
+
+/* ---------- Visionneuse de document --------------------------------- */
+/* Consulter la piece sans quitter l'ecran de revue : image en clair, PDF en cadre. */
+::ng-deep .doc-preview-dialog {
+  .p-dialog-content { padding-top: .5rem; }
+
+  .doc-preview__toolbar {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .6rem;
+    margin-bottom: .75rem;
+
+    .verification-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: .35rem;
+      font-size: .82rem;
+      font-weight: 600;
+      color: #475569;
+
+      &[data-verdict='MATCH']    { color: #047857; }
+      &[data-verdict='MISMATCH'] { color: #b91c1c; }
+      &[data-verdict='MISSING']  { color: #b45309; }
+    }
+
+    .muted { color: #94a3b8; font-size: .8rem; }
+  }
+
+  .doc-preview__frame {
+    background: #f8fafc;
+    border: 1px solid #e9eef5;
+    border-radius: 10px;
+    overflow: hidden;
+    display: grid;
+    place-items: center;
+    min-height: 320px;
+
+    img {
+      max-width: 100%;
+      max-height: 68vh;
+      object-fit: contain;
+      display: block;
+    }
+
+    iframe {
+      width: 100%;
+      height: 68vh;
+      border: none;
+      display: block;
     }
   }
 }
