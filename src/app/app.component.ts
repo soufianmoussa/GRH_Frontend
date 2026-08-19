@@ -75,8 +75,25 @@ export class AppComponent implements OnInit {
     return !this.showMainLayout() && !this.showAuthChecking();
   }
 
-  /** Show the assistant only inside the authenticated app shell (not on public/auth pages). */
+  /**
+   * Onboarding flow pages (rendered without the topbar/sidebar) where the assistant must still
+   * be available as an onboarding copilot. {@code /activation} is intentionally excluded: it is
+   * a pre-login page (no JWT yet) and the chat endpoint requires authentication.
+   */
+  private isOnboardingPage(): boolean {
+    const path = this.router.url.split('?')[0].split('#')[0];
+    return path === '/mon-onboarding'
+      || path.startsWith('/mon-onboarding/')
+      || path === '/onboarding/waiting';
+  }
+
+  /**
+   * Show the assistant inside the authenticated app shell AND during the onboarding flow, so a
+   * not-yet-validated agent gets a contextual onboarding copilot. Always requires a session.
+   */
   showChatbot(): boolean {
-    return this.showMainLayout() && this.authService.isAuthenticated();
+    return !this.authChecking
+      && this.authService.isAuthenticated()
+      && (this.showMainLayout() || this.isOnboardingPage());
   }
 }

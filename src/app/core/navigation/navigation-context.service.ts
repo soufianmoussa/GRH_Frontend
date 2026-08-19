@@ -36,6 +36,12 @@ export class NavigationContextService {
     const roles = this.auth.getRoles();
     const currentRoute = this.normalizeUrl(this.router.url);
     const current = this.matchScreen(currentRoute);
+    const onboardingMode = this.isOnboardingRoute(currentRoute);
+
+    // In onboarding mode the agent is not yet validated and must not be pointed at locked
+    // SIRH screens: restrict the catalog to onboarding screens so no chip leads elsewhere.
+    const screens = this.accessibleScreens(activeRole, lang)
+      .filter(s => !onboardingMode || this.isOnboardingRoute(s.route));
 
     return {
       activeRole,
@@ -43,7 +49,8 @@ export class NavigationContextService {
       currentRoute,
       currentScreen: current ? this.tr(current.label, lang) : null,
       locale: lang,
-      accessibleScreens: this.accessibleScreens(activeRole, lang),
+      accessibleScreens: screens,
+      onboardingMode,
     };
   }
 
@@ -60,6 +67,14 @@ export class NavigationContextService {
     const lang = this.language.current();
     const role = this.resolveActiveRole();
     const out: string[] = [];
+
+    // Onboarding copilot starters: the questions an agent mid-integration actually asks.
+    if (this.isOnboardingRoute(this.normalizeUrl(this.router.url))) {
+      const starters = lang === 'en'
+        ? ['What do I still need to complete?', 'Why can’t I submit yet?', 'What happens after I submit?']
+        : ['Que dois-je encore compléter ?', 'Pourquoi je ne peux pas encore soumettre ?', 'Que se passe-t-il après l’envoi ?'];
+      return starters.slice(0, limit);
+    }
 
     const current = this.currentScreen();
     if (current) {
@@ -122,6 +137,16 @@ export class NavigationContextService {
 
   private normalizeUrl(url: string): string {
     return url.split('?')[0].split('#')[0];
+  }
+
+  /**
+   * Whether a route belongs to the pre-validation onboarding flow. Kept in sync with
+   * {@code AppComponent.isOnboardingPage()} (which controls widget visibility).
+   */
+  private isOnboardingRoute(route: string): boolean {
+    return route === '/mon-onboarding'
+      || route.startsWith('/mon-onboarding/')
+      || route === '/onboarding/waiting';
   }
 
   private tr(value: Localized, lang: AppLanguage): string {
