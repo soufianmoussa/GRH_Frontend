@@ -42,26 +42,26 @@ export class PosteTravailComponent {
     chef_cercle: {
       nomPoste: 'Chef de cercle',
       numeroPoste: '00287452',
-      region: 'R�gion Sud',
+      region: 'Région Sud',
       missions:
-        'Charg� de la coordination et du maintien de l\'ordre dans sa circonscription.',
+        'Chargé de la coordination et du maintien de l\'ordre dans sa circonscription.',
       activites: [
-        'Participer aux r�unions de la ville',
-        'Assurer le suivi des activit�s communales',
-        'Veiller au maintien de la s�curit� publique',
-        'Superviser les op�rations administratives',
-        'R�diger les comptes-rendus officiels'
+        'Participer aux réunions de la ville',
+        'Assurer le suivi des activités communales',
+        'Veiller au maintien de la sécurité publique',
+        'Superviser les opérations administratives',
+        'Rédiger les comptes-rendus officiels'
       ]
     },
 
     admin: {
       nomPoste: 'Administrateur',
       numeroPoste: '00354112',
-      region: 'Rabat-Sal�',
+      region: 'Rabat-Salé',
       missions: 'Assurer la gestion administrative interne.',
       activites: [
         'Gestion des dossiers',
-        'R�daction des rapports',
+        'Rédaction des rapports',
         'Suivi du personnel'
       ]
     }

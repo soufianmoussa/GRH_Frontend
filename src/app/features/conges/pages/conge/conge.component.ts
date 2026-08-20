@@ -90,7 +90,7 @@ export class CongeComponent implements OnInit {
 
   currentAgent = {
     nom: 'Jean Dupont',
-    poste: 'D�veloppeur Fullstack',
+    poste: 'Développeur Fullstack',
     responsable: 'Sophie Martin'
   };
 
@@ -129,55 +129,55 @@ export class CongeComponent implements OnInit {
   typeHelpConfig: Record<string, { icon: string; title: string; hint: string; severity: string }> = {
     ANNUEL: {
       icon: 'pi pi-sun',
-      title: 'Cong� annuel',
-      hint: 'Votre solde disponible est affich� ci-dessous. Les jours sont d�compt�s automatiquement.',
+      title: 'Congé annuel',
+      hint: 'Votre solde disponible est affiché ci-dessous. Les jours sont décomptés automatiquement.',
       severity: 'info'
     },
     MALADIE: {
       icon: 'pi pi-heart',
-      title: 'Cong� maladie',
-      hint: 'Un justificatif m�dical (certificat) est requis. Veuillez joindre le document ci-dessous.',
+      title: 'Congé maladie',
+      hint: 'Un justificatif médical (certificat) est requis. Veuillez joindre le document ci-dessous.',
       severity: 'warn'
     },
     MATERNITE: {
       icon: 'pi pi-users',
-      title: 'Cong� de maternit�',
-      hint: 'Dur�e l�gale : 14 semaines (98 jours). Peut �tre prolong� sur avis m�dical.',
+      title: 'Congé de maternité',
+      hint: 'Durée légale : 14 semaines (98 jours). Peut être prolongé sur avis médical.',
       severity: 'info'
     },
     PATERNITE: {
       icon: 'pi pi-user',
-      title: 'Cong� de paternit�',
-      hint: 'Dur�e l�gale : 15 jours cons�cutifs � compter de la naissance.',
+      title: 'Congé de paternité',
+      hint: 'Durée légale : 15 jours consécutifs à compter de la naissance.',
       severity: 'info'
     },
     SANS_SOLDE: {
       icon: 'pi pi-ban',
-      title: 'Cong� sans solde',
-      hint: 'Ce cong� n\'est pas r�mun�r�. Aucun solde ne sera d�compt�.',
+      title: 'Congé sans solde',
+      hint: 'Ce congé n\'est pas rémunéré. Aucun solde ne sera décompté.',
       severity: 'warn'
     },
     EXCEPTIONNEL: {
       icon: 'pi pi-star',
-      title: 'Cong� exceptionnel',
-      hint: 'Accord� pour �v�nement familial (mariage, d�c�s, naissance). Justificatif requis.',
+      title: 'Congé exceptionnel',
+      hint: 'Accordé pour événement familial (mariage, décès, naissance). Justificatif requis.',
       severity: 'info'
     },
     COMPENSATOIRE: {
       icon: 'pi pi-replay',
-      title: 'Cong� compensatoire',
-      hint: 'R�cup�ration de jours travaill�s en heures suppl�mentaires. Limit� au solde acquis.',
+      title: 'Congé compensatoire',
+      hint: 'Récupération de jours travaillés en heures supplémentaires. Limité au solde acquis.',
       severity: 'warn'
     }
   };
 
 
   legendItems = [
-    { label: 'Approuv�', color: '#22c55e', cssClass: 'legend-approved' },
+    { label: 'Approuvé', color: '#22c55e', cssClass: 'legend-approved' },
     { label: 'En attente', color: '#f59e0b', cssClass: 'legend-pending' },
-    { label: 'Refus�', color: '#ef4444', cssClass: 'legend-rejected' },
-    { label: 'Annul�', color: '#9ca3af', cssClass: 'legend-cancelled' },
-    { label: 'Jour f�ri�', color: '#7c3aed', cssClass: 'legend-holiday' },
+    { label: 'Refusé', color: '#ef4444', cssClass: 'legend-rejected' },
+    { label: 'Annulé', color: '#9ca3af', cssClass: 'legend-cancelled' },
+    { label: 'Jour férié', color: '#7c3aed', cssClass: 'legend-holiday' },
     { label: 'Weekend', color: '#e5e7eb', cssClass: 'legend-weekend' }
   ];
 
@@ -202,13 +202,13 @@ export class CongeComponent implements OnInit {
 
   ngOnInit() {
     this.items = [
-      { label: 'Saisie cong�' },
+      { label: 'Saisie congé' },
       { label: 'Confirmation' }
     ];
     this.agentId = this.authService.getAgentId();
     if (this.agentId == null) {
       ToastHelper.showError(this.messageService,
-        "Aucun agent n'est associ� � votre compte. Impossible de charger vos demandes de cong�.");
+        "Aucun agent n'est associé à votre compte. Impossible de charger vos demandes de congé.");
       return;
     }
     this.loadLeaveTypes();
@@ -225,7 +225,7 @@ export class CongeComponent implements OnInit {
         this.categories = types.map(t => ({ label: t.label, value: t.code }));
         types.forEach(t => this.typeCongeMap[t.code] = t);
       },
-      error: () => ToastHelper.showError(this.messageService, 'Erreur lors du chargement des types de cong�.')
+      error: () => ToastHelper.showError(this.messageService, 'Erreur lors du chargement des types de congé.')
     });
   }
 
@@ -238,7 +238,7 @@ export class CongeComponent implements OnInit {
       error: (err: any) => {
         const msg = err.status === 0
           ? 'Erreur de connexion au serveur.'
-          : 'Erreur lors du chargement des donn�es';
+          : 'Erreur lors du chargement des données';
         ToastHelper.showError(this.messageService, msg);
       }
     });
@@ -262,10 +262,10 @@ export class CongeComponent implements OnInit {
       `${this.API_BASE}/soldes-conges/agent/${this.agentId}/year/${year}/type/${type}`
     ).subscribe({
       next: (res: SoldeCongeDto) => {
-        // Backend retourne toujours un DTO (� 0 si pas encore initialis�).
-        // Les demandes APPROUVEE sont d�j� d�compt�es c�t� backend au moment de l'approbation,
-        // on ne recalcule donc pas les "jours utilis�s" ici. On r�serve seulement les
-        // demandes EN_ATTENTE (soft-reservation c�t� UX).
+        // Backend retourne toujours un DTO (à 0 si pas encore initialisé).
+        // Les demandes APPROUVEE sont déjà décomptées côté backend au moment de l'approbation,
+        // on ne recalcule donc pas les "jours utilisés" ici. On réserve seulement les
+        // demandes EN_ATTENTE (soft-reservation côté UX).
         this.solde = res;
         this.loadingSolde = false;
 
@@ -287,7 +287,7 @@ export class CongeComponent implements OnInit {
         const msg = err.status === 0
           ? 'Erreur de connexion au serveur.'
           : (err.status === 403
-            ? "Vous n'�tes pas autoris� � consulter ce solde."
+            ? "Vous n'êtes pas autorisé à consulter ce solde."
             : 'Erreur lors du chargement du solde.');
         ToastHelper.showError(this.messageService, msg);
       }
@@ -359,21 +359,21 @@ export class CongeComponent implements OnInit {
 
       if (!this.selectedDateRange || this.selectedDateRange.length < 2) {
         ToastHelper.showWarn(this.messageService,
-          'Veuillez s�lectionner une date de d�but et une date de fin.');
+          'Veuillez sélectionner une date de début et une date de fin.');
         return;
       }
 
 
       if (this.selectedDateRange[1] < this.selectedDateRange[0]) {
         ToastHelper.showWarn(this.messageService,
-          'La date de fin doit �tre apr�s la date de d�but.');
+          'La date de fin doit être après la date de début.');
         return;
       }
 
 
       if (!this.exceptionalRequestForm.get('category')?.value) {
         ToastHelper.showWarn(this.messageService,
-          "Veuillez s�lectionner une cat�gorie d'absence.");
+          "Veuillez sélectionner une catégorie d'absence.");
         return;
       }
 
@@ -381,7 +381,7 @@ export class CongeComponent implements OnInit {
       const duree = this.exceptionalRequestForm.get('duree')?.value;
       if (!duree || duree <= 0) {
         ToastHelper.showWarn(this.messageService,
-          'Aucun jour ouvrable s�lectionn�.');
+          'Aucun jour ouvrable sélectionné.');
         return;
       }
 
@@ -395,7 +395,7 @@ export class CongeComponent implements OnInit {
 
       if (this.soldeRemaining !== null && duree > this.soldeRemaining) {
         ToastHelper.showWarn(this.messageService,
-          `Solde de cong� insuffisant. Il vous reste ${this.soldeRemaining} jour(s).`);
+          `Solde de congé insuffisant. Il vous reste ${this.soldeRemaining} jour(s).`);
         return;
       }
     }
@@ -416,7 +416,7 @@ export class CongeComponent implements OnInit {
 
   confirmBeforeSubmit() {
     this.confirmationService.confirm({
-      message: '�tes-vous s�r de vouloir envoyer cette demande de cong� ?',
+      message: 'Êtes-vous sûr de vouloir envoyer cette demande de congé ?',
       header: 'Confirmation',
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: 'Oui, envoyer',
@@ -427,13 +427,13 @@ export class CongeComponent implements OnInit {
 
   confirm() {
     if (!this.selectedDateRange || this.selectedDateRange.length < 2) {
-      ToastHelper.showWarn(this.messageService, 'Veuillez s�lectionner une p�riode.');
+      ToastHelper.showWarn(this.messageService, 'Veuillez sélectionner une période.');
       return;
     }
 
     if (this.agentId == null) {
       ToastHelper.showError(this.messageService,
-        "Aucun agent n'est associ� � votre compte.");
+        "Aucun agent n'est associé à votre compte.");
       return;
     }
 
@@ -461,7 +461,7 @@ export class CongeComponent implements OnInit {
         this.submitting = false;
         const msg = err.status === 0
           ? 'Erreur de connexion au serveur.'
-          : (err?.error?.message || "�chec de l'envoi de la demande. Veuillez r�essayer.");
+          : (err?.error?.message || "Échec de l'envoi de la demande. Veuillez réessayer.");
         ToastHelper.showError(this.messageService, msg);
       }
     });
@@ -481,12 +481,12 @@ export class CongeComponent implements OnInit {
       formData
     ).subscribe({
       next: () => {
-        ToastHelper.showSuccess(this.messageService, 'Document joint avec succ�s.');
+        ToastHelper.showSuccess(this.messageService, 'Document joint avec succès.');
         this.onSubmitSuccess();
       },
       error: (err: any) => {
 
-        const msg = err?.error?.message || "La demande a �t� cr��e mais le document n'a pas pu �tre joint.";
+        const msg = err?.error?.message || "La demande a été créée mais le document n'a pas pu être joint.";
         ToastHelper.showWarn(this.messageService, msg);
         this.onSubmitSuccess();
       }
@@ -496,7 +496,7 @@ export class CongeComponent implements OnInit {
   private onSubmitSuccess() {
     this.submitting = false;
     ToastHelper.showSuccess(this.messageService,
-      'Votre demande de cong� a �t� envoy�e avec succ�s !');
+      'Votre demande de congé a été envoyée avec succès !');
     this.loadExistingRequests();
     this.loadSolde();
     this.activeStep = 1;
@@ -717,7 +717,7 @@ export class CongeComponent implements OnInit {
       if (currentTime >= start.getTime() && currentTime <= end.getTime()) {
         const typeLabel = this.categories.find(c => c.value === req.type)?.label || req.type;
         const statusLabel = this.getStatusLabel(req.statut);
-        return `${typeLabel} �� ${statusLabel}`;
+        return `${typeLabel} — ${statusLabel}`;
       }
     }
     return '';
@@ -726,9 +726,9 @@ export class CongeComponent implements OnInit {
   getStatusLabel(statut: string): string {
     const map: Record<string, string> = {
       'EN_ATTENTE': 'En attente',
-      'APPROUVEE': 'Approuv�e',
-      'REJETEE': 'Rejet�e',
-      'ANNULEE': 'Annul�e'
+      'APPROUVEE': 'Approuvée',
+      'REJETEE': 'Rejetée',
+      'ANNULEE': 'Annulée'
     };
     return map[statut] || statut;
   }
@@ -745,16 +745,16 @@ export class CongeComponent implements OnInit {
     const config = this.typeCongeMap[type];
     if (!config) return null;
     const hints: string[] = [];
-    if (config.deductible) hints.push('Les jours sont d�compt�s de votre solde.');
+    if (config.deductible) hints.push('Les jours sont décomptés de votre solde.');
     if (config.requiresAttachment) hints.push('Un justificatif est requis.');
-    if (config.requiresMedicalCertificate) hints.push('Un certificat m�dical est requis.');
-    if (config.maxDurationDays) hints.push(`Dur�e maximale : ${config.maxDurationDays} jours.`);
-    if (config.minAdvanceNoticeDays) hints.push(`Pr�avis minimum : ${config.minAdvanceNoticeDays} jours.`);
+    if (config.requiresMedicalCertificate) hints.push('Un certificat médical est requis.');
+    if (config.maxDurationDays) hints.push(`Durée maximale : ${config.maxDurationDays} jours.`);
+    if (config.minAdvanceNoticeDays) hints.push(`Préavis minimum : ${config.minAdvanceNoticeDays} jours.`);
 
     return {
       icon: 'pi pi-calendar',
       title: config.label,
-      hint: hints.length > 0 ? hints.join(' ') : 'Aucune contrainte particuli�re.',
+      hint: hints.length > 0 ? hints.join(' ') : 'Aucune contrainte particulière.',
       severity: config.requiresAttachment ? 'warn' : 'info'
     };
   }

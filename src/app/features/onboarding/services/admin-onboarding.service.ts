@@ -66,6 +66,16 @@ export class AdminOnboardingService {
     return this.http.post<OnboardingDetail>(`${this.baseUrl}/${id}/documents/${documentId}/reject`, { reason });
   }
 
+  /** Vérification OCR d'une pièce : extraction Azure puis comparaison à la fiche de l'agent. */
+  analyzeDocument(id: number, documentId: number): Observable<OnboardingDetail> {
+    return this.http.post<OnboardingDetail>(`${this.baseUrl}/${id}/documents/${documentId}/analyze`, {});
+  }
+
+  /** Vérification OCR de toutes les pièces du dossier en une passe. */
+  analyzeAllDocuments(id: number): Observable<OnboardingDetail> {
+    return this.http.post<OnboardingDetail>(`${this.baseUrl}/${id}/documents/analyze`, {});
+  }
+
   validateDossier(id: number): Observable<OnboardingDetail> {
     return this.http.post<OnboardingDetail>(`${this.baseUrl}/${id}/validate`, {});
   }

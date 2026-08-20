@@ -2,7 +2,7 @@
 <p-confirmDialog></p-confirmDialog>
 
 <div class="content">
-  <h1 class="titleh1">Mes demandes de congé</h1>
+  <h1 class="titleh1">Mes demandes de congÃ©</h1>
 
   <div class="container primTable">
 
@@ -10,7 +10,7 @@
       [rowsPerPageOptions]="[5, 10, 20]" [showCurrentPageReport]="true"
       currentPageReportTemplate="{first} - {last} sur {totalRecords}"
       [globalFilterFields]="['type', 'statut', 'dateDebut', 'dateFin', 'dateCreation']"
-      emptyMessage="Aucune demande trouvée"
+      emptyMessage="Aucune demande trouvÃ©e"
       [responsiveLayout]="'scroll'"
       styleClass="p-datatable-sm">
 
@@ -31,10 +31,10 @@
       <ng-template pTemplate="header">
         <tr>
           <th pSortableColumn="type">Type <p-sortIcon field="type"></p-sortIcon></th>
-          <th pSortableColumn="dateDebut">Date début <p-sortIcon field="dateDebut"></p-sortIcon></th>
+          <th pSortableColumn="dateDebut">Date dÃ©but <p-sortIcon field="dateDebut"></p-sortIcon></th>
           <th pSortableColumn="dateFin">Date fin <p-sortIcon field="dateFin"></p-sortIcon></th>
-          <th pSortableColumn="duree">Durée <p-sortIcon field="duree"></p-sortIcon></th>
-          <th pSortableColumn="dateCreation">Date création <p-sortIcon field="dateCreation"></p-sortIcon></th>
+          <th pSortableColumn="duree">DurÃ©e <p-sortIcon field="duree"></p-sortIcon></th>
+          <th pSortableColumn="dateCreation">Date crÃ©ation <p-sortIcon field="dateCreation"></p-sortIcon></th>
           <th pSortableColumn="statut">Statut <p-sortIcon field="statut"></p-sortIcon></th>
           <th class="text-center">Actions</th>
         </tr>
@@ -78,7 +78,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="7" class="text-center">Aucune demande trouvée.</td>
+          <td colspan="7" class="text-center">Aucune demande trouvÃ©e.</td>
         </tr>
       </ng-template>
 
@@ -86,7 +86,7 @@
   </div>
 
 
-  <p-dialog header="Détails de la demande" [(visible)]="viewDialogVisible"
+  <p-dialog header="DÃ©tails de la demande" [(visible)]="viewDialogVisible"
             [modal]="true" [style]="{width: '620px'}" [draggable]="false">
     <div class="detail-grid" *ngIf="selectedDemande">
       <div class="detail-row">
@@ -94,7 +94,7 @@
         <span class="detail-value">{{ getTypeLabel(selectedDemande.type) }}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label"><i class="pi pi-calendar"></i> Date début</span>
+        <span class="detail-label"><i class="pi pi-calendar"></i> Date dÃ©but</span>
         <span class="detail-value">{{ selectedDemande.dateDebut | date: 'dd MMMM yyyy' }}</span>
       </div>
       <div class="detail-row">
@@ -102,13 +102,13 @@
         <span class="detail-value">{{ selectedDemande.dateFin | date: 'dd MMMM yyyy' }}</span>
       </div>
       <div class="detail-row">
-        <span class="detail-label"><i class="pi pi-clock"></i> Durée</span>
+        <span class="detail-label"><i class="pi pi-clock"></i> DurÃ©e</span>
         <span class="detail-value">
           <span class="duree-badge">{{ selectedDemande.duree }} jour(s) ouvrable(s)</span>
         </span>
       </div>
       <div class="detail-row">
-        <span class="detail-label"><i class="pi pi-calendar-plus"></i> Date création</span>
+        <span class="detail-label"><i class="pi pi-calendar-plus"></i> Date crÃ©ation</span>
         <span class="detail-value">{{ selectedDemande.dateCreation | date: 'dd MMMM yyyy' }}</span>
       </div>
       <div class="detail-row">
@@ -169,10 +169,10 @@
     <div class="cancel-confirm" *ngIf="deletingDocument">
       <p>
         <i class="pi pi-exclamation-triangle" style="color: #e74c3c; font-size: 1.2rem;"></i>
-        Êtes-vous sûr de vouloir supprimer le document
+        ÃŠtes-vous sÃ»r de vouloir supprimer le document
         <strong>{{ deletingDocument.originalFileName }}</strong> ?
       </p>
-      <p class="cancel-warning">Cette action est irréversible.</p>
+      <p class="cancel-warning">Cette action est irrÃ©versible.</p>
       <div class="dialog-actions">
         <button pButton label="Non, garder" icon="pi pi-arrow-left"
                 class="btn-dialog btn-dialog-cancel"
@@ -185,7 +185,7 @@
   </p-dialog>
 
 
-  <p-dialog [header]="isApproved(editingDemande) ? 'Documents –” Demande approuvée' : 'Modifier la demande'"
+  <p-dialog [header]="isApproved(editingDemande) ? 'Documents â€“â€ Demande approuvÃ©e' : 'Modifier la demande'"
             [(visible)]="editDialogVisible"
             [modal]="true" [style]="{width: '620px'}" [draggable]="false">
     <div *ngIf="editingDemande">
@@ -193,19 +193,19 @@
 
       <div class="approved-banner" *ngIf="isApproved(editingDemande)">
         <i class="pi pi-info-circle"></i>
-        Cette demande est approuvée. Vous pouvez uniquement ajouter des documents.
+        Cette demande est approuvÃ©e. Vous pouvez uniquement ajouter des documents.
       </div>
 
 
       <form [formGroup]="editForm" class="edit-form" *ngIf="isPending(editingDemande)">
         <div class="form-field">
-          <label>Type de congé</label>
+          <label>Type de congÃ©</label>
           <p-dropdown [options]="categories" optionLabel="label" optionValue="value"
                       formControlName="type" [style]="{width: '100%'}"></p-dropdown>
         </div>
 
         <div class="form-field">
-          <label>Date de début</label>
+          <label>Date de dÃ©but</label>
           <p-calendar formControlName="dateDebut" dateFormat="dd/mm/yy"
                       [showIcon]="true" [style]="{width: '100%'}"
                       [disabledDays]="[0, 6]"></p-calendar>
@@ -219,14 +219,14 @@
         </div>
 
         <div class="form-field duree-preview">
-          <span class="duree-preview-label">Durée calculée :</span>
+          <span class="duree-preview-label">DurÃ©e calculÃ©e :</span>
           <span class="duree-badge">{{ calculateEditDuree() }} jour(s)</span>
         </div>
 
         <div class="form-field">
           <label>Commentaire (optionnel)</label>
           <textarea pInputTextarea formControlName="commentaire"
-                    placeholder="Ajoutez un commentaire ou une précision..."
+                    placeholder="Ajoutez un commentaire ou une prÃ©cision..."
                     [rows]="3" [autoResize]="true" maxlength="500"
                     [style]="{width: '100%'}"></textarea>
         </div>
@@ -277,7 +277,7 @@
         <div class="upload-section">
           <div class="upload-row">
             <p-dropdown [options]="fileCategories" optionLabel="label" optionValue="value"
-                        [(ngModel)]="editDocCategory" placeholder="Catégorie"
+                        [(ngModel)]="editDocCategory" placeholder="CatÃ©gorie"
                         [style]="{width: '100%'}"></p-dropdown>
           </div>
           <div class="upload-row">
@@ -314,12 +314,12 @@
     <div class="cancel-confirm" *ngIf="cancellingDemande">
       <p>
         <i class="pi pi-exclamation-triangle" style="color: #e74c3c; font-size: 1.2rem;"></i>
-        Êtes-vous sûr de vouloir annuler cette demande de
+        ÃŠtes-vous sÃ»r de vouloir annuler cette demande de
         <strong>{{ getTypeLabel(cancellingDemande.type) }}</strong>
         du <strong>{{ cancellingDemande.dateDebut | date: 'dd/MM/yyyy' }}</strong>
         au <strong>{{ cancellingDemande.dateFin | date: 'dd/MM/yyyy' }}</strong> ?
       </p>
-      <p class="cancel-warning">Cette action est irréversible.</p>
+      <p class="cancel-warning">Cette action est irrÃ©versible.</p>
       <div class="dialog-actions">
         <button pButton label="Non, garder" icon="pi pi-arrow-left"
                 class="btn-dialog btn-dialog-cancel"

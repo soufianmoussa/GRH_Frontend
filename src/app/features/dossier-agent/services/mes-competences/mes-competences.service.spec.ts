@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { MesCompetences } from '../../../models/mesCompetences.model';
-import { PageResponse } from '../../../models/PageResponse.model';
+import { MesCompetences } from '../../../../models/mesCompetences.model';
+import { PageResponse } from '../../../../models/PageResponse.model';
 import { environment } from '../../../../../../environment';
 
 @Injectable({

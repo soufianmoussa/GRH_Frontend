@@ -25,16 +25,6 @@ export const APP_NAVIGATION_CATALOG: NavScreen[] = [
     keywords: ['home', 'accueil', 'tableau'],
   },
   {
-    id: 'agent-fiche',
-    route: '/Agent',
-    label: { fr: 'Ma fiche agent', en: 'My profile' },
-    module: { fr: 'Mon profil', en: 'My profile' },
-    description: { fr: "Fiche principale de l'agent : identité et informations générales.", en: 'Main employee record: identity and general information.' },
-    actions: [{ fr: 'Consulter sa fiche', en: 'View profile' }],
-    roles: ['AGENT'],
-    keywords: ['profil', 'fiche', 'identité'],
-  },
-  {
     id: 'agent-mydata',
     route: '/myData',
     label: { fr: 'Mes données personnelles', en: 'My personal data' },
@@ -71,14 +61,29 @@ export const APP_NAVIGATION_CATALOG: NavScreen[] = [
     id: 'agent-onboarding',
     route: '/mon-onboarding',
     label: { fr: 'Mon onboarding', en: 'My onboarding' },
-    module: { fr: 'Mon profil', en: 'My profile' },
-    description: { fr: 'Suivi de son intégration : étapes, documents à fournir, état d\'avancement.', en: 'Onboarding tracking: steps, required documents, progress.' },
+    module: { fr: 'Mon intégration', en: 'My onboarding' },
+    description: { fr: 'Tableau de bord de l\'intégration : statut, progression, étapes et accès au formulaire.', en: 'Onboarding dashboard: status, progress, steps and access to the wizard.' },
     actions: [
-      { fr: "Compléter le formulaire d'intégration", en: 'Complete the onboarding wizard' },
-      { fr: 'Téléverser les documents requis', en: 'Upload required documents' },
+      { fr: 'Consulter son avancement et son statut', en: 'View progress and status' },
+      { fr: "Ouvrir le formulaire d'intégration", en: 'Open the onboarding wizard' },
     ],
     roles: ['AGENT'],
-    keywords: ['onboarding', 'intégration', 'accueil', 'documents', 'activation'],
+    keywords: ['onboarding', 'intégration', 'accueil', 'documents', 'activation', 'avancement', 'statut'],
+  },
+  {
+    id: 'agent-onboarding-wizard',
+    route: '/mon-onboarding/wizard',
+    label: { fr: 'Formulaire d\'intégration', en: 'Onboarding wizard' },
+    module: { fr: 'Mon intégration', en: 'My onboarding' },
+    description: { fr: 'Formulaire pas à pas : identité, coordonnées et famille, documents requis, puis récapitulatif avant soumission.', en: 'Step-by-step wizard: identity, contact & family, required documents, then a summary before submission.' },
+    actions: [
+      { fr: 'Renseigner son identité et ses coordonnées', en: 'Fill in identity and contact details' },
+      { fr: 'Déclarer sa situation familiale (conjoint, enfants)', en: 'Declare family situation (spouse, children)' },
+      { fr: 'Téléverser les documents requis (CIN, RIB, photo, diplômes, actes)', en: 'Upload required documents (ID, bank details, photo, diplomas, certificates)' },
+      { fr: 'Vérifier le récapitulatif et soumettre le dossier', en: 'Review the summary and submit the file' },
+    ],
+    roles: ['AGENT'],
+    keywords: ['formulaire', 'wizard', 'étapes', 'identité', 'famille', 'conjoint', 'enfant', 'documents', 'cin', 'rib', 'photo', 'diplôme', 'récapitulatif', 'soumettre'],
   },
   {
     id: 'agent-carriere',
@@ -210,6 +215,19 @@ export const APP_NAVIGATION_CATALOG: NavScreen[] = [
   },
 
   // ============================ ADMIN ============================
+  {
+    id: 'admin-gestion-agents',
+    route: '/Agent',
+    label: { fr: 'Gestion des agents', en: 'Employee management' },
+    module: { fr: 'Gestion des agents', en: 'Employee management' },
+    description: { fr: "Liste de tous les agents : création, modification et suppression d'une fiche agent.", en: 'List of all employees: create, edit and delete an employee record.' },
+    actions: [
+      { fr: 'Consulter la liste des agents', en: 'Browse the employee list' },
+      { fr: 'Ajouter ou supprimer un agent', en: 'Add or delete an employee' },
+    ],
+    roles: ['ADMIN'],
+    keywords: ['agents', 'liste', 'annuaire', 'personnel'],
+  },
   {
     id: 'admin-dashboard',
     route: '/dashboard',

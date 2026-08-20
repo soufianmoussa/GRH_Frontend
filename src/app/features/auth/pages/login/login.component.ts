@@ -72,7 +72,7 @@ export class LoginComponent {
       this.router.navigate(['/DemandesCongeAttestation']);
     } else {
       const status = this.authService.getCurrentUser()?.onboardingStatus;
-      if (status && !['VALIDATED', 'ACTIVE'].includes(status)) {
+      if (status && !this.authService.isOnboardingCompleted()) {
         const route = status === 'PENDING_VALIDATION'
           ? '/mon-onboarding'
           : '/mon-onboarding/profil';

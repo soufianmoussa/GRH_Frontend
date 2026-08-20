@@ -701,13 +701,14 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     this.uploadCinScan(file);
   }
 
-  /** Find the CIN OnboardingDocument slot created by the backend at initialization. */
+  /**
+   * Find the CIN OnboardingDocument slot created by the backend at initialization.
+   * `documentType` is the canonical discriminator sent by the API — the old fallback on
+   * "the first required row" now matched any bridged document since every projected row
+   * is required.
+   */
   private findCinDocument() {
-    return (this.onboarding?.documents ?? []).find(d =>
-      d.type === 'CARTE_NATIONALE' ||
-      d.code === 'CARTE_NATIONALE' ||
-      (d.required === true)
-    );
+    return (this.onboarding?.documents ?? []).find(d => d.documentType === 'CARTE_NATIONALE');
   }
 
   /** Upload the CIN scan to the matching OnboardingDocument slot. */
@@ -1271,7 +1272,7 @@ export class AdminOnboardingAssistedCompleteComponent implements OnInit {
     const missing = (this.onboarding?.documents ?? [])
       .filter(d => d.required && !d.fileName && !d.fileUrl);
     if (missing.length > 0) {
-      const labels = missing.map(d => d.label || d.name || d.type || d.code).join(', ');
+      const labels = missing.map(d => d.title || d.documentType).join(', ');
       ToastHelper.showError(this.messageService,
         `Documents obligatoires manquants : ${labels}.`);
       return;

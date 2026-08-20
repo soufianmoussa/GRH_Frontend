@@ -14,7 +14,10 @@ export const DOSSIER_AGENT_ROUTES: Routes = [
   { path: 'dossiers-agents/new', component: DossierAgentWizardComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
   { path: 'dossiers-agents/:id', component: AgentDetailComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
   { path: 'ApprobationModifications', component: ApprobationModificationsComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
-  { path: 'Agent', component: AgentComponent, canActivate: [roleGuard], data: { roles: ['AGENT'] } },
+  // « Gestion des agents » : liste de TOUS les agents, avec creation et suppression.
+  // C'est un ecran d'administration ; il etait ouvert au role AGENT, ce qui exposait
+  // l'annuaire complet du personnel a chaque agent connecte.
+  { path: 'Agent', component: AgentComponent, canActivate: [roleGuard], data: { roles: ['ADMIN'] } },
   { path: 'myData', component: MydataComponent, canActivate: [roleGuard], data: { roles: ['AGENT'] } },
   { path: 'dataAdministrative', component: DataadministrativeComponent, canActivate: [roleGuard], data: { roles: ['AGENT'] } },
   { path: 'carriere', component: CarriereComponent, canActivate: [roleGuard], data: { roles: ['AGENT'] } },

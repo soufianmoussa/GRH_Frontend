@@ -1,4 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
+import { finalize } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
@@ -17,6 +18,7 @@ import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { MessageService, ConfirmationService, PrimeTemplate } from 'primeng/api';
 
 import { environment } from '../../../../../../environment';
+import { DocumentVerificationPanelComponent } from '../../../../shared/components/document-verification-panel/document-verification-panel.component';
 import { SoldeCongeService } from '../../services/solde-conge/solde-conge.service';
 import { UniteStructurelleService } from '../../../gestion-organisationnelle/services/unite-structurelle.service';
 import { UniteStructurelle } from '../../../../models/gestionOrganisationelle/unite-structurelle.model';
@@ -31,6 +33,10 @@ import {
 import { ToastHelper } from '../../../../shared/utils/toast-helper';
 import { TypeConge } from '../../../../models/typeConge.model';
 import { TypeCongeService } from '../../services/type-conge/type-conge.service';
+import type {
+  DocumentFieldCheck,
+  DocumentVerificationStatus
+} from '../../../../models/onboarding.model';
 
 interface DemandeCongeDto {
   id: number;
@@ -57,6 +63,17 @@ interface StoredFileDto {
   agentId: number | null;
   demandeCongeId: number | null;
   url: string;
+
+  /**
+   * Verdict OCR du justificatif, calcule automatiquement au depot du document :
+   * le certificat concerne-t-il bien cet agent, et couvre-t-il la periode demandee ?
+   * Consultatif — l'approbation et le refus restent la decision du valideur.
+   */
+  verificationStatus?: DocumentVerificationStatus;
+  verificationChecks?: DocumentFieldCheck[];
+  verificationMessage?: string;
+  verificationConfidence?: number;
+  verifiedAt?: string;
 }
 
 @Component({
@@ -66,7 +83,8 @@ interface StoredFileDto {
   imports: [
     CommonModule, FormsModule, TableModule, Dialog, Button, ButtonDirective,
     InputText, Textarea, DropdownModule, FloatLabelModule, TooltipModule,
-    Toast, ConfirmDialogModule, TagModule, Tab, TabList, TabPanel, TabPanels, Tabs, PrimeTemplate
+    Toast, ConfirmDialogModule, TagModule, Tab, TabList, TabPanel, TabPanels, Tabs, PrimeTemplate,
+    DocumentVerificationPanelComponent
   ],
   templateUrl: './gestion-conges-agents.component.html',
   styleUrl: './gestion-conges-agents.component.scss'
@@ -119,6 +137,8 @@ export class GestionCongesAgentsComponent implements OnInit {
   selectedDemande: DemandeCongeDto | null = null;
   demandeDocuments: StoredFileDto[] = [];
   loadingDocuments = false;
+  /** Identifiant du justificatif dont la verification OCR est en cours. */
+  verifyingDocumentId: number | null = null;
 
   // Dialogues d'action dédiés
   displayApprove = false;
@@ -354,6 +374,29 @@ export class GestionCongesAgentsComponent implements OnInit {
 
   onViewDocument(doc: StoredFileDto) {
     window.open(doc.url, '_blank');
+  }
+
+  /**
+   * Relance la verification OCR d'un justificatif. Le document est deja analyse au depot ;
+   * ce bouton sert aux cas ou l'analyse avait echoue (OCR indisponible, document illisible).
+   */
+  onVerifyDocument(doc: StoredFileDto) {
+    this.verifyingDocumentId = doc.id;
+    this.http.post<StoredFileDto>(`${this.API_BASE}/demandes-conges/documents/${doc.id}/verify`, {})
+      .pipe(finalize(() => this.verifyingDocumentId = null))
+      .subscribe({
+        next: (updated) => {
+          this.demandeDocuments = this.demandeDocuments.map(d => d.id === updated.id ? updated : d);
+          this.messageService.add({
+            severity: 'success', summary: 'Verification',
+            detail: updated.verificationMessage ?? 'Document analyse.'
+          });
+        },
+        error: (err) => this.messageService.add({
+          severity: 'error', summary: 'Verification',
+          detail: err?.error?.message ?? 'Analyse du document impossible.'
+        })
+      });
   }
 
   getCategoryLabel(category: string): string {

@@ -102,7 +102,6 @@ export class SidebarComponent implements OnInit {
     '/HistoriqueActesVises': 'admin-visa',
 
     // AGENT
-    '/Agent': 'agent-profil',
     '/myData': 'agent-profil',
     '/dataAdministrative': 'agent-profil',
     '/SituationActuelle': 'agent-profil',
@@ -154,6 +153,16 @@ export class SidebarComponent implements OnInit {
 
   isOpen(key: string): boolean {
     return this.openSections.has(key);
+  }
+
+  /**
+   * Masque « Mon onboarding » quand l'intégration est terminée. Le lecteur est
+   * `currentUser`, auquel on est abonné : le menu se met donc à jour tout seul dès que
+   * le statut change (connexion, rafraîchissement de jeton, ou lecture du dossier réel
+   * par le tableau de bord onboarding).
+   */
+  isOnboardingCompleted(): boolean {
+    return this.authService.isOnboardingCompleted();
   }
 
   /** Display name for the user info card. */

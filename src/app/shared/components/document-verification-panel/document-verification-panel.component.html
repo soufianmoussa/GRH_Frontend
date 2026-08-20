@@ -1,0 +1,65 @@
+<div class="verif-panel" [attr.data-verdict]="status || 'NONE'">
+  <div class="verif-panel__head">
+    <span class="verif-panel__badge">
+      <i [ngClass]="icon(status)"></i>
+      {{ label(status) }}
+    </span>
+
+    <small class="verif-panel__meta" *ngIf="confidencePercent() !== undefined">
+      Confiance {{ confidencePercent() }}%
+    </small>
+    <small class="verif-panel__meta" *ngIf="analyzedAt">
+      Analyse le {{ analyzedAt | date:'dd/MM/yyyy HH:mm' }}
+    </small>
+
+    <span class="verif-panel__spacer"></span>
+
+    <button *ngIf="hasChecks"
+            type="button"
+            pButton
+            [icon]="expanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+            class="p-button-text p-button-sm p-button-secondary"
+            [pTooltip]="expanded ? 'Masquer le detail' : 'Voir le detail de la verification'"
+            tooltipPosition="top"
+            (click)="toggle()">
+    </button>
+    <button *ngIf="showReanalyze"
+            type="button"
+            pButton
+            [label]="analyzed ? 'Re-verifier' : 'Verifier'"
+            icon="pi pi-search"
+            class="p-button-text p-button-sm"
+            [loading]="loading"
+            pTooltip="Extraire les informations du document et les comparer aux donnees attendues"
+            tooltipPosition="top"
+            (click)="reanalyze.emit()">
+    </button>
+  </div>
+
+  <small class="verif-panel__message" *ngIf="message">{{ message }}</small>
+
+  <!-- Comparaison champ par champ : document scanne vs valeurs attendues -->
+  <table class="verif-panel__table" *ngIf="expanded && hasChecks">
+    <thead>
+      <tr>
+        <th>Information</th>
+        <th>Attendu</th>
+        <th>Lu sur le document</th>
+        <th>Resultat</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let check of checks" [attr.data-verdict]="check.status">
+        <td>{{ check.label }}</td>
+        <td class="mono">{{ check.expected || '-' }}</td>
+        <td class="mono">{{ check.extracted || 'Introuvable' }}</td>
+        <td>
+          <span class="verif-panel__verdict">
+            <i [ngClass]="icon(check.status)"></i>
+            {{ label(check.status) }}
+          </span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>

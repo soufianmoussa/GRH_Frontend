@@ -26,6 +26,54 @@
   </ng-template>
 </p-dialog>
 
+<!-- Visionneuse : consulter la piece sans quitter l'ecran de revue -->
+<p-dialog [header]="previewedDocument ? documentLabel(previewedDocument) : 'Document'"
+          [visible]="!!previewedDocument"
+          (visibleChange)="$event ? null : closePreview()"
+          [modal]="true" [draggable]="false" [dismissableMask]="true"
+          styleClass="doc-preview-dialog"
+          [style]="{ width: 'min(920px, 94vw)' }">
+  <ng-container *ngIf="previewedDocument as doc">
+    <div class="doc-preview__toolbar">
+      <p-tag [value]="documentStatusLabel(doc.status)" [severity]="statusSeverity(doc.status)" [rounded]="true"></p-tag>
+      <span class="verification-badge" *ngIf="doc.verificationStatus"
+            [attr.data-verdict]="doc.verificationStatus">
+        <i [ngClass]="verificationIcon(doc.verificationStatus)"></i>
+        {{ verificationLabel(doc.verificationStatus) }}
+      </span>
+      <span class="muted">{{ doc.fileName }}</span>
+    </div>
+
+    <div class="doc-preview__frame">
+      <img *ngIf="isImage(doc)" [src]="doc.fileUrl" [alt]="documentLabel(doc)" />
+      <iframe *ngIf="isPdf(doc) && previewFrameUrl" [src]="previewFrameUrl" [title]="documentLabel(doc)"></iframe>
+      <div *ngIf="!isImage(doc) && !isPdf(doc)" class="empty-state">
+        <i class="pi pi-file"></i>
+        <span>Apercu indisponible pour ce format. Telechargez le fichier pour le consulter.</span>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template pTemplate="footer">
+    <a *ngIf="previewedDocument?.fileUrl"
+       [href]="previewedDocument?.fileUrl"
+       target="_blank" rel="noopener noreferrer"
+       pButton icon="pi pi-download" label="Telecharger"
+       class="p-button-text">
+    </a>
+    <button pButton type="button" label="Rejeter" icon="pi pi-times"
+            class="p-button-outlined p-button-danger"
+            [disabled]="!isPendingValidation()"
+            (click)="askRejectDocument(previewedDocument!)">
+    </button>
+    <button pButton type="button" label="Valider" icon="pi pi-check"
+            class="primary-gradient"
+            [disabled]="!isPendingValidation() || previewedDocument?.status === 'VALIDATED'"
+            (click)="validateDocument(previewedDocument!)">
+    </button>
+  </ng-template>
+</p-dialog>
+
 <div class="content onboarding-detail">
   <!-- Back link -->
   <a routerLink="/admin/onboarding" class="back-link">
@@ -316,171 +364,197 @@
             </span>
           </ng-template>
 
+          <!-- Barre de revue : compteurs + verification OCR de tout le dossier -->
+          <div class="review-bar">
+            <div class="review-counters">
+              <span class="review-chip is-validated">
+                <i class="pi pi-check-circle"></i>
+                {{ validatedDocumentsCount() }} valide(s)
+              </span>
+              <span class="review-chip is-pending">
+                <i class="pi pi-clock"></i>
+                {{ awaitingReviewCount() }} en attente
+              </span>
+              <span class="review-chip is-rejected" *ngIf="rejectedDocumentsCount()">
+                <i class="pi pi-times-circle"></i>
+                {{ rejectedDocumentsCount() }} rejete(s)
+              </span>
+            </div>
+            <button pButton
+                    type="button"
+                    label="Verifier tous les documents"
+                    icon="pi pi-sparkles"
+                    class="p-button-outlined p-button-sm"
+                    pTooltip="Extraction OCR puis comparaison avec la fiche de l'agent"
+                    tooltipPosition="left"
+                    [loading]="analyzingAll"
+                    [disabled]="!documents.length"
+                    (click)="analyzeAllDocuments()">
+            </button>
+          </div>
+
           <div *ngIf="!isPendingValidation()" class="info-banner">
             <i class="pi pi-info-circle"></i>
             <span>La validation des documents est disponible quand le dossier est en attente de validation.</span>
           </div>
 
-          <div class="container primTable docs-table">
-            <p-table [value]="onboarding.documents || []" [responsiveLayout]="'scroll'">
-              <ng-template pTemplate="header">
-                <tr>
-                  <th class="doc-name-col">Document</th>
-                  <th>Obligatoire</th>
-                  <th>Statut</th>
-                  <th>Fichier</th>
-                  <th>Commentaire</th>
-                  <th class="actions-col">Actions</th>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="body" let-document>
-                <tr>
-                  <td class="doc-name-cell">
-                    <i class="pi pi-file-pdf doc-icon"></i>
-                    <strong>{{ document.title || document.label || document.name || document.type || document.code }}</strong>
-                  </td>
-                  <td>
-                    <span class="required-badge" [class.is-required]="document.required">
-                      <i class="pi" [ngClass]="document.required ? 'pi-asterisk' : 'pi-minus'"></i>
-                      {{ document.required ? 'Obligatoire' : 'Optionnel' }}
-                    </span>
-                  </td>
-                  <td>
-                    <p-tag
-                      [value]="documentStatusLabel(document.status)"
-                      [severity]="statusSeverity(document.status)">
-                    </p-tag>
-                  </td>
-                  <td>
-                    <a *ngIf="document.fileUrl"
-                       [href]="document.fileUrl"
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       class="doc-link">
-                      <i class="pi pi-download"></i>
-                      {{ document.fileName || 'Telecharger' }}
-                    </a>
-                    <span *ngIf="!document.fileUrl" class="muted">
-                      <i class="pi pi-clock"></i>
-                      {{ document.fileName || 'En attente' }}
-                    </span>
-                  </td>
-                  <td class="comment-cell">
-                    <span *ngIf="document.rejectionReason || document.comment"
-                          [class.rejection-comment]="document.rejectionReason">
-                      {{ document.rejectionReason || document.comment }}
-                    </span>
-                    <span *ngIf="!document.rejectionReason && !document.comment" class="muted">-</span>
-                  </td>
-                  <td>
-                    <div class="actions-cell">
-                      <button pButton
-                              icon="pi pi-check"
-                              class="p-button-rounded p-button-text p-button-success"
-                              pTooltip="Valider le document"
-                              tooltipPosition="top"
-                              [disabled]="!isPendingValidation() || !document.fileName || document.status === 'VALIDATED'"
-                              (click)="validateDocument(document)">
-                      </button>
-                      <button pButton
-                              icon="pi pi-times"
-                              class="p-button-rounded p-button-text p-button-danger"
-                              pTooltip="Rejeter le document"
-                              tooltipPosition="top"
-                              [disabled]="!isPendingValidation() || !document.fileName"
-                              (click)="askRejectDocument(document)">
-                      </button>
+          <!-- Liste UNIQUE des pieces : les documents de l'agent y sont deja projetes par le backend. -->
+          <div class="docs-review-list" *ngIf="documents.length">
+            <article *ngFor="let document of documents"
+                     class="doc-card"
+                     [attr.data-status]="document.status">
+              <header class="doc-card__head">
+                <div class="doc-card__identity">
+                  <span class="doc-card__icon"><i [ngClass]="documentIcon(document)"></i></span>
+                  <div class="doc-card__naming">
+                    <strong class="doc-card__title">{{ documentLabel(document) }}</strong>
+                    <div class="doc-card__meta">
+                      <span class="doc-card__type">{{ documentTypeLabel(document) }}</span>
+                      <span class="required-badge" [class.is-required]="document.required">
+                        <i class="pi" [ngClass]="document.required ? 'pi-asterisk' : 'pi-minus'"></i>
+                        {{ document.required ? 'Obligatoire' : 'Optionnel' }}
+                      </span>
+                      <span class="muted" *ngIf="document.uploadedAt">
+                        Depose le {{ document.uploadedAt | date:'dd/MM/yyyy' }}
+                      </span>
+                      <span class="muted" *ngIf="fileSizeLabel(document)">{{ fileSizeLabel(document) }}</span>
                     </div>
-                  </td>
-                </tr>
-              </ng-template>
-              <ng-template pTemplate="emptymessage">
-                <tr>
-                  <td colspan="6">
-                    <div class="empty-state">
-                      <i class="pi pi-inbox"></i>
-                      <span>Aucun document attendu.</span>
-                    </div>
-                  </td>
-                </tr>
-              </ng-template>
-            </p-table>
-          </div>
-
-          <!-- ====== Documents personnels (AgentDocument) ====== -->
-          <h3 class="section-title" style="margin-top: 2rem;">
-            <i class="pi pi-folder-open"></i>
-            Documents personnels
-            <span class="tab-badge" *ngIf="agentDocuments.length">{{ agentDocuments.length }}</span>
-          </h3>
-
-          <div *ngIf="agentDocuments.length" class="agent-docs-grid">
-            <article *ngFor="let doc of agentDocuments"
-                     class="agent-doc-card"
-                     [class.has-file]="!!doc.fileUrl"
-                     [attr.data-status]="doc.status">
-              <div class="agent-doc-card__icon">
-                <i class="pi" [ngClass]="agentDocIcon(doc.documentType)"></i>
-              </div>
-              <div class="agent-doc-card__body">
-                <div class="agent-doc-card__title-row">
-                  <strong>{{ agentDocLabel(doc.documentType) }}</strong>
-                  <p-tag *ngIf="doc.fileUrl"
-                         [severity]="agentDocSeverity(doc.status)"
-                         [value]="agentDocStatusLabel(doc.status)"
-                         [rounded]="true">
-                  </p-tag>
+                  </div>
                 </div>
-                <small *ngIf="doc.title && doc.title !== agentDocLabel(doc.documentType)" class="agent-doc-card__title">
-                  {{ doc.title }}
+                <p-tag [value]="documentStatusLabel(document.status)"
+                       [severity]="statusSeverity(document.status)"
+                       [rounded]="true">
+                </p-tag>
+              </header>
+
+              <!-- Verdict de la verification automatique -->
+              <div class="doc-card__verification"
+                   *ngIf="hasFile(document)"
+                   [attr.data-verdict]="document.verificationStatus || 'NONE'">
+                <div class="verification-head">
+                  <span class="verification-badge">
+                    <i [ngClass]="verificationIcon(document.verificationStatus)"></i>
+                    {{ verificationLabel(document.verificationStatus) }}
+                  </span>
+                  <small class="muted" *ngIf="confidencePercent(document) !== undefined">
+                    Confiance {{ confidencePercent(document) }}%
+                  </small>
+                  <small class="muted" *ngIf="document.analyzedAt">
+                    Analyse le {{ document.analyzedAt | date:'dd/MM/yyyy HH:mm' }}
+                  </small>
+                  <span class="verification-spacer"></span>
+                  <button pButton
+                          type="button"
+                          [label]="document.analyzedAt ? 'Re-verifier' : 'Verifier'"
+                          icon="pi pi-search"
+                          class="p-button-text p-button-sm"
+                          [loading]="isAnalyzing(document)"
+                          [disabled]="!canAnalyze(document)"
+                          [pTooltip]="canAnalyze(document)
+                            ? 'Extraire les informations et les comparer a la fiche de l\'agent'
+                            : 'Ce type de document ne se prete pas a une verification automatique'"
+                          tooltipPosition="top"
+                          (click)="analyzeDocument(document)">
+                  </button>
+                  <button pButton
+                          type="button"
+                          [icon]="areChecksExpanded(document) ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+                          class="p-button-text p-button-sm p-button-secondary"
+                          *ngIf="document.verificationChecks?.length"
+                          [pTooltip]="areChecksExpanded(document) ? 'Masquer le detail' : 'Voir le detail'"
+                          tooltipPosition="top"
+                          (click)="toggleChecks(document)">
+                  </button>
+                </div>
+
+                <small class="verification-message" *ngIf="document.verificationMessage">
+                  {{ document.verificationMessage }}
                 </small>
-                <small class="muted" *ngIf="doc.createdAt">
-                  <i class="pi pi-calendar"></i>
-                  Ajoute le {{ doc.createdAt | date:'dd/MM/yyyy' }}
-                </small>
-                <small class="agent-doc-card__rejection" *ngIf="doc.status === 'REJECTED' && doc.rejectionReason">
-                  <i class="pi pi-exclamation-circle"></i>
-                  Motif : {{ doc.rejectionReason }}
-                </small>
+
+                <!-- Comparaison champ par champ : document scanne vs fiche agent -->
+                <table class="verification-table"
+                       *ngIf="areChecksExpanded(document) && document.verificationChecks?.length">
+                  <thead>
+                    <tr>
+                      <th>Information</th>
+                      <th>Enregistre au SIRH</th>
+                      <th>Lu sur le document</th>
+                      <th>Resultat</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let check of document.verificationChecks"
+                        [attr.data-verdict]="check.status">
+                      <td>{{ check.label }}</td>
+                      <td class="mono">{{ check.expected || '-' }}</td>
+                      <td class="mono">{{ check.extracted || 'Introuvable' }}</td>
+                      <td>
+                        <span class="check-verdict">
+                          <i [ngClass]="verificationIcon(check.status)"></i>
+                          {{ verificationLabel(check.status) }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
-              <div class="agent-doc-card__actions">
-                <a *ngIf="doc.fileUrl"
-                   [href]="doc.fileUrl"
+
+              <p class="doc-card__rejection" *ngIf="document.status === 'REJECTED' && document.rejectionReason">
+                <i class="pi pi-exclamation-circle"></i>
+                Motif du rejet : {{ document.rejectionReason }}
+              </p>
+              <p class="doc-card__override" *ngIf="document.manualOverride">
+                <i class="pi pi-user-edit"></i>
+                Decision manuelle contraire au resultat de la verification automatique.
+              </p>
+
+              <footer class="doc-card__actions">
+                <button pButton
+                        type="button"
+                        label="Consulter"
+                        icon="pi pi-eye"
+                        class="p-button-text p-button-sm"
+                        [disabled]="!hasFile(document)"
+                        (click)="openPreview(document)">
+                </button>
+                <a *ngIf="hasFile(document)"
+                   [href]="document.fileUrl"
                    target="_blank"
                    rel="noopener noreferrer"
                    class="doc-link">
                   <i class="pi pi-download"></i>
                   Telecharger
                 </a>
-                <span *ngIf="!doc.fileUrl" class="muted">
+                <span *ngIf="!hasFile(document)" class="muted">
                   <i class="pi pi-clock"></i>
-                  En attente
+                  Aucun fichier depose
                 </span>
 
-                <div class="agent-doc-card__validation" *ngIf="isPendingValidation() && doc.fileUrl">
-                  <button pButton
-                          icon="pi pi-check"
-                          class="p-button-rounded p-button-text p-button-success p-button-sm"
-                          pTooltip="Valider le document"
-                          tooltipPosition="top"
-                          [disabled]="doc.status === 'VALIDATED'"
-                          (click)="validateAgentDocument(doc)">
-                  </button>
-                  <button pButton
-                          icon="pi pi-times"
-                          class="p-button-rounded p-button-text p-button-danger p-button-sm"
-                          pTooltip="Rejeter le document"
-                          tooltipPosition="top"
-                          (click)="askRejectAgentDocument(doc)">
-                  </button>
-                </div>
-              </div>
+                <span class="doc-card__spacer"></span>
+
+                <button pButton
+                        type="button"
+                        label="Rejeter"
+                        icon="pi pi-times"
+                        class="p-button-outlined p-button-danger p-button-sm"
+                        [disabled]="!isPendingValidation() || !hasFile(document)"
+                        (click)="askRejectDocument(document)">
+                </button>
+                <button pButton
+                        type="button"
+                        label="Valider"
+                        icon="pi pi-check"
+                        class="p-button-sm primary-gradient"
+                        [disabled]="!isPendingValidation() || !hasFile(document) || document.status === 'VALIDATED'"
+                        (click)="validateDocument(document)">
+                </button>
+              </footer>
             </article>
           </div>
 
-          <div *ngIf="!agentDocuments.length" class="empty-state" style="padding: 1.5rem 0;">
-            <i class="pi pi-folder-open"></i>
-            <span>Aucun document personnel televerse.</span>
+          <div *ngIf="!documents.length" class="empty-state" style="padding: 1.5rem 0;">
+            <i class="pi pi-inbox"></i>
+            <span>Aucune piece deposee pour le moment.</span>
           </div>
 
           <!-- ====== Diplomes (separate table) ====== -->

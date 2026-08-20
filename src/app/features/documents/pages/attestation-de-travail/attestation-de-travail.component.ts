@@ -16,10 +16,10 @@ export class AttestationDeTravailComponent {
 
   attestation = {
     entreprise: 'INOVAT SARL',
-    domaine: 'Soci�t� sp�cialis�e en ing�nierie et innovation technologique',
+    domaine: 'Société spécialisée en ingénierie et innovation technologique',
     nomEmploye: 'RAMDANI ABDELLAHLEK',
     fonction: 'Stagiaire Professionnel',
-    dateDebut: '10 D�cembre 2019',
+    dateDebut: '10 Décembre 2019',
     dateGeneration: new Date().toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: 'long',

@@ -42,6 +42,11 @@ export class DemandeModificationService {
     return this.http.get<DemandeModificationDto>(`${this.apiBase}/${id}`);
   }
 
+  // ── Admin: relancer la verification OCR du justificatif ───────────────
+  verify(id: number): Observable<DemandeModificationDto> {
+    return this.http.post<DemandeModificationDto>(`${this.apiBase}/${id}/verify`, {});
+  }
+
   // ── Admin: approve ────────────────────────────────────────────────────
   approve(id: number, commentaire?: string): Observable<DemandeModificationDto> {
     return this.http.put<DemandeModificationDto>(`${this.apiBase}/${id}/approve`, { commentaire });

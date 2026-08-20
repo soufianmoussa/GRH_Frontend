@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { UserRoleService } from '../core/services/user-role.service';
+import { UserRoleService } from './user-role.service';
 
 describe('UserRoleService', () => {
   let service: UserRoleService;

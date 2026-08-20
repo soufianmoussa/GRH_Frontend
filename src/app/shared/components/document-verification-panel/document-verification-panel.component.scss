@@ -1,0 +1,94 @@
+/* =====================================================================
+   Verdict de verification OCR — partage par les ecrans de validation
+   (onboarding, demandes de modification, justificatifs de conge).
+   La couleur porte le sens : vert concordant, rouge ecart, orange absent.
+   ===================================================================== */
+
+.verif-panel {
+  margin-top: .75rem;
+  padding: .7rem .85rem;
+  border-radius: 10px;
+  background: #f8fafc;
+  border: 1px solid #eef2f7;
+
+  &[data-verdict='MATCH']    { background: rgba(16, 185, 129, .06); border-color: rgba(16, 185, 129, .25); }
+  &[data-verdict='MISMATCH'] { background: rgba(220, 38, 38, .06);  border-color: rgba(220, 38, 38, .25); }
+  &[data-verdict='MISSING']  { background: rgba(217, 119, 6, .07);  border-color: rgba(217, 119, 6, .25); }
+  &[data-verdict='ERROR']    { background: rgba(100, 116, 139, .08); }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: .6rem;
+  }
+
+  &__spacer { flex: 1 1 auto; }
+
+  &__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    font-size: .82rem;
+    font-weight: 600;
+    color: #475569;
+
+    i { font-size: .85rem; }
+  }
+
+  &[data-verdict='MATCH']    &__badge { color: #047857; }
+  &[data-verdict='MISMATCH'] &__badge { color: #b91c1c; }
+  &[data-verdict='MISSING']  &__badge { color: #b45309; }
+
+  &__meta {
+    color: #94a3b8;
+    font-size: .76rem;
+  }
+
+  &__message {
+    display: block;
+    margin-top: .4rem;
+    color: #64748b;
+    font-size: .8rem;
+  }
+
+  &__table {
+    width: 100%;
+    margin-top: .7rem;
+    border-collapse: collapse;
+    font-size: .8rem;
+
+    th, td {
+      text-align: left;
+      padding: .4rem .55rem;
+      border-bottom: 1px solid #e9eef5;
+      vertical-align: top;
+    }
+
+    th {
+      color: #94a3b8;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: .7rem;
+      letter-spacing: .03em;
+    }
+
+    td { color: #334155; overflow-wrap: anywhere; }
+    tr:last-child td { border-bottom: none; }
+
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+  }
+
+  &__verdict {
+    display: inline-flex;
+    align-items: center;
+    gap: .3rem;
+    font-weight: 600;
+    i { font-size: .78rem; }
+  }
+
+  &__table tr[data-verdict='MATCH']    &__verdict,
+  &__table tr[data-verdict='MATCH']    .verif-panel__verdict { color: #047857; }
+  &__table tr[data-verdict='MISMATCH'] .verif-panel__verdict { color: #b91c1c; }
+  &__table tr[data-verdict='MISSING']  .verif-panel__verdict { color: #b45309; }
+}

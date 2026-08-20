@@ -55,4 +55,6 @@ export interface AssistantContext {
   currentScreen: string | null;
   locale: string;
   accessibleScreens: NavScreenContext[];
+  /** True when the user is inside the pre-validation onboarding flow (copilot mode). */
+  onboardingMode?: boolean;
 }

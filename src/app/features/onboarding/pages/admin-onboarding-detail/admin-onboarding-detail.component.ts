@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { finalize } from 'rxjs';
 import { ButtonModule } from 'primeng/button';
@@ -19,12 +20,14 @@ import {
   AGENT_STATUS_LABELS,
   COMPLETION_MODE_LABELS,
   DOCUMENT_STATUS_LABELS,
+  DocumentVerificationStatus,
   INVITATION_STATUS_LABELS,
   OnboardingDetail,
   OnboardingDocument,
   OnboardingStep,
   OnboardingStepType,
-  ONBOARDING_STATUS_LABELS
+  ONBOARDING_STATUS_LABELS,
+  VERIFICATION_STATUS_LABELS
 } from '../../../../models/onboarding.model';
 import { AdminOnboardingService } from '../../services/admin-onboarding.service';
 import { ToastHelper } from '../../../../shared/utils/toast-helper';
@@ -34,13 +37,9 @@ import { DiplomesService } from '../../../documents/services/diplomes/diplomes.s
 import { FormationService } from '../../../documents/services/formation/formation.service';
 import { Diplome } from '../../../documents/models/diplomes/diplome.model';
 import { Formation } from '../../../../models/formation.model';
-import { AgentDocumentsService } from '../../../dossier-agent/services/dossiers-agents/agent-documents.service';
 import { AffectationAgentPosteService } from '../../../gestion-organisationnelle/services/affectation-agent-poste.service';
 import { AffectationAgentPosteDto } from '../../../../models/gestionOrganisationelle/affectation-agent-poste.model';
 import {
-  AgentDocument,
-  AgentDocumentStatus,
-  AGENT_DOCUMENT_STATUS_LABELS,
   AGENT_DOCUMENT_TYPE_ICONS,
   AGENT_DOCUMENT_TYPE_LABELS
 } from '../../../../models/agent-document.model';
@@ -49,8 +48,7 @@ import { catchError } from 'rxjs/operators';
 
 type RejectionTarget =
   | { kind: 'dossier' }
-  | { kind: 'document'; documentId: number }
-  | { kind: 'agent-document'; documentId: number };
+  | { kind: 'document'; documentId: number };
 
 const STEP_LABELS: Record<OnboardingStepType, string> = {
   MATRICULE_ALLOCATION: 'Matricule attribue',
@@ -94,7 +92,9 @@ const ACTION_LABELS: Record<string, string> = {
   SELF_SUBMIT: 'Dossier soumis par l\'agent',
   ONBOARDING_VALIDATE: 'Dossier valide',
   ONBOARDING_POSTE_ASSIGNED: 'Agent affecte au poste',
-  ONBOARDING_REJECT: 'Dossier rejete'
+  ONBOARDING_REJECT: 'Dossier rejete',
+  DOCUMENT_OCR_ANALYZE: 'Document verifie par OCR',
+  DOCUMENT_OCR_ANALYZE_ALL: 'Verification OCR du dossier'
 };
 
 const ACTION_ICONS: Record<string, string> = {
@@ -120,7 +120,9 @@ const ACTION_ICONS: Record<string, string> = {
   ADMIN_SUBMIT: 'pi-send',
   SELF_SUBMIT: 'pi-send',
   ONBOARDING_VALIDATE: 'pi-verified',
-  ONBOARDING_REJECT: 'pi-ban'
+  ONBOARDING_REJECT: 'pi-ban',
+  DOCUMENT_OCR_ANALYZE: 'pi-search',
+  DOCUMENT_OCR_ANALYZE_ALL: 'pi-sparkles'
 };
 
 const ACTION_SEVERITY: Record<string, 'success' | 'info' | 'warn' | 'danger' | 'secondary'> = {
@@ -147,7 +149,9 @@ const ACTION_SEVERITY: Record<string, 'success' | 'info' | 'warn' | 'danger' | '
   SELF_SUBMIT: 'info',
   ONBOARDING_VALIDATE: 'success',
   ONBOARDING_POSTE_ASSIGNED: 'success',
-  ONBOARDING_REJECT: 'danger'
+  ONBOARDING_REJECT: 'danger',
+  DOCUMENT_OCR_ANALYZE: 'info',
+  DOCUMENT_OCR_ANALYZE_ALL: 'info'
 };
 
 @Component({
@@ -177,7 +181,6 @@ export class AdminOnboardingDetailComponent implements OnInit {
   onboarding?: OnboardingDetail;
   diplomes: Diplome[] = [];
   formations: Formation[] = [];
-  agentDocuments: AgentDocument[] = [];
   loading = true;
 
   /** Affectation active de l'agent (poste/unité), créée automatiquement à la validation. */
@@ -188,10 +191,22 @@ export class AdminOnboardingDetailComponent implements OnInit {
   invitationEmailValue = '';
   savingInvitation = false;
 
+  // --- Revue documentaire ---
+  /** Document ouvert dans la visionneuse ; `undefined` = dialogue fermé. */
+  previewedDocument?: OnboardingDocument;
+  /** URL assainie du PDF affiché dans l'iframe de la visionneuse. */
+  previewFrameUrl: SafeResourceUrl | null = null;
+  /** Identifiants des documents dont le détail de vérification est déplié. */
+  private expandedChecks = new Set<number>();
+  /** Documents dont l'analyse OCR est en cours (désactive les boutons et affiche le spinner). */
+  private analyzing = new Set<number>();
+  analyzingAll = false;
+
   readonly agentDocLabels = AGENT_DOCUMENT_TYPE_LABELS;
   readonly agentDocIcons = AGENT_DOCUMENT_TYPE_ICONS;
-  readonly agentDocStatusLabels = AGENT_DOCUMENT_STATUS_LABELS;
+  readonly verificationLabels = VERIFICATION_STATUS_LABELS;
 
+  private readonly sanitizer = inject(DomSanitizer);
   private onboardingId!: number;
   private pendingReject?: RejectionTarget;
 
@@ -208,7 +223,6 @@ export class AdminOnboardingDetailComponent implements OnInit {
     private onboardingService: AdminOnboardingService,
     private diplomesService: DiplomesService,
     private formationService: FormationService,
-    private agentDocumentsService: AgentDocumentsService,
     private affectationService: AffectationAgentPosteService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
@@ -249,14 +263,6 @@ export class AdminOnboardingDetailComponent implements OnInit {
     }
 
     if (agentId) {
-      // All ad-hoc agent documents (RIB, marriage cert, birth cert, photo, etc.)
-      this.agentDocumentsService.getByAgent(agentId)
-        .pipe(catchError(() => of([] as AgentDocument[])))
-        .subscribe(list => {
-          // The CIN slot is already shown in the OnboardingDocument table — skip it here.
-          this.agentDocuments = list.filter(d => d.documentType !== 'CARTE_NATIONALE');
-        });
-
       // Affectation poste/unité (créée automatiquement à la validation finale).
       this.affectationService.getByAgent(agentId)
         .pipe(catchError(() => of([] as AffectationAgentPosteDto[])))
@@ -266,29 +272,172 @@ export class AdminOnboardingDetailComponent implements OnInit {
     }
   }
 
-  agentDocLabel(type: string): string {
-    return (this.agentDocLabels as Record<string, string>)[type] ?? type;
+  // --- Presentation des pieces ---------------------------------------------
+
+  /**
+   * Les pièces téléversées par l'agent sont projetées par le backend dans `onboarding.documents` :
+   * c'est la seule liste à afficher. L'écran montrait auparavant, en plus, les `AgentDocument`
+   * bruts — chaque pièce apparaissait donc deux fois, avec deux workflows de validation distincts.
+   */
+  get documents(): OnboardingDocument[] {
+    return this.onboarding?.documents ?? [];
   }
 
-  agentDocIcon(type: string): string {
-    return (this.agentDocIcons as Record<string, string>)[type] ?? 'pi pi-file';
+  documentLabel(document: OnboardingDocument): string {
+    return document.title
+      || (document.documentType ? this.agentDocLabels[document.documentType] : undefined)
+      || 'Document';
+  }
+
+  documentTypeLabel(document: OnboardingDocument): string {
+    return document.documentType ? this.agentDocLabels[document.documentType] : 'Piece jointe';
+  }
+
+  documentIcon(document: OnboardingDocument): string {
+    return (document.documentType ? this.agentDocIcons[document.documentType] : undefined) ?? 'pi pi-file';
+  }
+
+  hasFile(document: OnboardingDocument): boolean {
+    return !!document.fileUrl;
+  }
+
+  fileSizeLabel(document: OnboardingDocument): string {
+    const size = document.fileSize;
+    if (!size) return '';
+    return size < 1024 * 1024
+      ? `${Math.round(size / 1024)} Ko`
+      : `${(size / (1024 * 1024)).toFixed(1)} Mo`;
   }
 
   // --- Counters for tab badges ---------------------------------------------
 
   totalDocumentsCount(): number {
-    return (this.onboarding?.documents?.length ?? 0)
-      + this.agentDocuments.length
-      + this.diplomes.length
-      + this.formations.length;
+    return this.documents.length + this.diplomes.length + this.formations.length;
   }
 
   totalValidatedCount(): number {
-    const cinValidated = (this.onboarding?.documents ?? []).filter(d => d.status === 'VALIDATED').length;
-    const agentDocsWithFile = this.agentDocuments.filter(d => !!d.fileUrl).length;
+    const validated = this.documents.filter(d => d.status === 'VALIDATED').length;
     const diplomesWithScan = this.diplomes.filter(d => !!d.scanUrl).length;
     const formationsWithCert = this.formations.filter(f => !!f.certificateUrl).length;
-    return cinValidated + agentDocsWithFile + diplomesWithScan + formationsWithCert;
+    return validated + diplomesWithScan + formationsWithCert;
+  }
+
+  rejectedDocumentsCount(): number {
+    return this.documents.filter(d => d.status === 'REJECTED').length;
+  }
+
+  /** Pièces encore à relire — ni validées, ni rejetées. */
+  awaitingReviewCount(): number {
+    return this.documents.filter(d => d.status === 'PENDING_REVIEW').length;
+  }
+
+  // --- Visionneuse ----------------------------------------------------------
+
+  openPreview(document: OnboardingDocument): void {
+    if (!this.hasFile(document)) return;
+    this.previewedDocument = document;
+    // URL assainie une seule fois : la recalculer à chaque détection de changement
+    // rechargerait l'iframe en boucle (nouvelle identité d'objet à chaque cycle).
+    this.previewFrameUrl = this.isPdf(document)
+      ? this.sanitizer.bypassSecurityTrustResourceUrl(document.fileUrl!)
+      : null;
+  }
+
+  closePreview(): void {
+    this.previewedDocument = undefined;
+    this.previewFrameUrl = null;
+  }
+
+  /** Les images s'affichent en clair ; les PDF dans un cadre ; le reste se télécharge. */
+  isImage(document?: OnboardingDocument): boolean {
+    return !!document?.fileContentType?.startsWith('image/');
+  }
+
+  isPdf(document?: OnboardingDocument): boolean {
+    return document?.fileContentType === 'application/pdf';
+  }
+
+  // --- Verification OCR -----------------------------------------------------
+
+  isAnalyzing(document: OnboardingDocument): boolean {
+    return this.analyzing.has(document.id);
+  }
+
+  /** Une pièce sans fichier ou d'un type non comparable (photo) n'est jamais analysée. */
+  canAnalyze(document: OnboardingDocument): boolean {
+    return this.hasFile(document) && document.verifiable !== false;
+  }
+
+  analyzeDocument(document: OnboardingDocument): void {
+    if (!this.onboarding || !this.canAnalyze(document)) return;
+    this.analyzing.add(document.id);
+    this.onboardingService.analyzeDocument(this.onboarding.id, document.id)
+      .pipe(finalize(() => this.analyzing.delete(document.id)))
+      .subscribe({
+        next: (updated) => {
+          this.applyDetail(updated);
+          this.expandedChecks.add(document.id);
+          ToastHelper.showSuccess(this.messageService, 'Document analyse.');
+        },
+        error: (error) => ToastHelper.handleApiError(
+          this.messageService, error, 'Analyse du document impossible.')
+      });
+  }
+
+  analyzeAllDocuments(): void {
+    if (!this.onboarding) return;
+    this.analyzingAll = true;
+    this.onboardingService.analyzeAllDocuments(this.onboarding.id)
+      .pipe(finalize(() => this.analyzingAll = false))
+      .subscribe({
+        next: (updated) => {
+          this.applyDetail(updated);
+          ToastHelper.showSuccess(this.messageService, 'Verification des documents terminee.');
+        },
+        error: (error) => ToastHelper.handleApiError(
+          this.messageService, error, 'Verification des documents impossible.')
+      });
+  }
+
+  toggleChecks(document: OnboardingDocument): void {
+    if (this.expandedChecks.has(document.id)) {
+      this.expandedChecks.delete(document.id);
+    } else {
+      this.expandedChecks.add(document.id);
+    }
+  }
+
+  areChecksExpanded(document: OnboardingDocument): boolean {
+    return this.expandedChecks.has(document.id);
+  }
+
+  verificationLabel(status?: DocumentVerificationStatus): string {
+    return status ? this.verificationLabels[status] : 'Non verifie';
+  }
+
+  verificationSeverity(status?: DocumentVerificationStatus): PrimengSeverity {
+    switch (status) {
+      case 'MATCH': return 'success';
+      case 'MISMATCH': return 'danger';
+      case 'MISSING': return 'warn';
+      case 'ERROR': return 'danger';
+      default: return 'secondary';
+    }
+  }
+
+  verificationIcon(status?: DocumentVerificationStatus): string {
+    switch (status) {
+      case 'MATCH': return 'pi pi-check-circle';
+      case 'MISMATCH': return 'pi pi-times-circle';
+      case 'MISSING': return 'pi pi-exclamation-triangle';
+      case 'ERROR': return 'pi pi-ban';
+      case 'UNSUPPORTED': return 'pi pi-minus-circle';
+      default: return 'pi pi-question-circle';
+    }
+  }
+
+  confidencePercent(document: OnboardingDocument): number | undefined {
+    return document.confidenceScore == null ? undefined : Math.round(document.confidenceScore * 100);
   }
 
   // --- Dossier-level actions ------------------------------------------------
@@ -375,7 +524,7 @@ export class AdminOnboardingDetailComponent implements OnInit {
     if (!this.onboarding) return;
     this.onboardingService.startAssisted(this.onboarding.id).subscribe({
       next: (updated) => {
-        this.onboarding = { ...updated, invitation: this.onboarding?.invitation };
+        this.applyDetail(updated);
         ToastHelper.showSuccess(this.messageService, 'Mode assiste active.');
       },
       error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Activation du mode assiste impossible.')
@@ -391,7 +540,7 @@ export class AdminOnboardingDetailComponent implements OnInit {
       () => {
         this.onboardingService.validateDossier(this.onboarding!.id).subscribe({
           next: (updated) => {
-            this.onboarding = { ...updated, invitation: this.onboarding?.invitation };
+            this.applyDetail(updated);
             ToastHelper.showSuccess(this.messageService, 'Dossier valide.');
           },
           error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Validation impossible.')
@@ -409,82 +558,79 @@ export class AdminOnboardingDetailComponent implements OnInit {
 
   validateDocument(document: OnboardingDocument): void {
     if (!this.onboarding) return;
-    this.onboardingService.validateDocument(this.onboarding.id, document.id).subscribe({
+    const warning = document.verificationStatus === 'MISMATCH' || document.verificationStatus === 'MISSING'
+      ? `La verification automatique a releve un ecart (${this.verificationLabel(document.verificationStatus)}). `
+        + 'Valider quand meme ce document ?'
+      : null;
+
+    const run = () => this.onboardingService.validateDocument(this.onboarding!.id, document.id).subscribe({
       next: (updated) => {
-        this.onboarding = { ...updated, invitation: this.onboarding?.invitation };
+        this.applyDetail(updated);
         ToastHelper.showSuccess(this.messageService, 'Document valide.');
       },
       error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Validation du document impossible.')
     });
+
+    // Le verdict OCR n'interdit rien : il demande simplement une confirmation explicite.
+    if (warning) {
+      ToastHelper.confirmAction(this.confirmationService, warning, 'Validation malgre un ecart', run);
+    } else {
+      run();
+    }
   }
 
   askRejectDocument(document: OnboardingDocument): void {
     this.pendingReject = { kind: 'document', documentId: document.id };
-    this.rejectDialog?.show(document.rejectionReason ?? '');
+    this.rejectDialog?.show(document.rejectionReason ?? this.suggestedRejectionReason(document));
   }
 
-  // --- AgentDocument (Photo, RIB, mariage, naissance, etc.) actions ---------
-  validateAgentDocument(doc: AgentDocument): void {
-    this.agentDocumentsService.validate(doc.id).subscribe({
-      next: (updated) => {
-        this.replaceAgentDocument(updated);
-        ToastHelper.showSuccess(this.messageService, 'Document valide.');
-      },
-      error: (e) => ToastHelper.handleApiError(this.messageService, e, 'Validation du document impossible.')
-    });
-  }
-
-  askRejectAgentDocument(doc: AgentDocument): void {
-    this.pendingReject = { kind: 'agent-document', documentId: doc.id };
-    this.rejectDialog?.show(doc.rejectionReason ?? '');
-  }
-
-  private replaceAgentDocument(updated: AgentDocument): void {
-    this.agentDocuments = this.agentDocuments.map(d => d.id === updated.id ? updated : d);
+  /** Pré-remplit le motif avec les écarts relevés par l'OCR : l'admin n'a plus qu'à confirmer. */
+  private suggestedRejectionReason(document: OnboardingDocument): string {
+    const issues = (document.verificationChecks ?? []).filter(c => c.status !== 'MATCH');
+    if (!issues.length) return '';
+    return 'Verification automatique : '
+      + issues.map(c => c.status === 'MISSING'
+          ? `${c.label} introuvable sur le document`
+          : `${c.label} lu "${c.extracted}" au lieu de "${c.expected}"`)
+        .join(' ; ')
+      + '.';
   }
 
   confirmRejection(reason: string): void {
-    if (!this.pendingReject) return;
+    if (!this.pendingReject || !this.onboarding) return;
     const target = this.pendingReject;
+    this.pendingReject = undefined;
 
     if (target.kind === 'dossier') {
-      if (!this.onboarding) return;
       this.onboardingService.rejectDossier(this.onboarding.id, reason).subscribe({
         next: (updated) => {
-          this.onboarding = { ...updated, invitation: this.onboarding?.invitation };
+          this.applyDetail(updated);
           ToastHelper.showSuccess(this.messageService, 'Dossier rejete.');
         },
         error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Rejet impossible.')
       });
-    } else if (target.kind === 'document') {
-      if (!this.onboarding) return;
-      this.onboardingService.rejectDocument(this.onboarding.id, target.documentId, reason).subscribe({
-        next: (updated) => {
-          this.onboarding = { ...updated, invitation: this.onboarding?.invitation };
-          ToastHelper.showSuccess(this.messageService, 'Document rejete.');
-        },
-        error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Rejet du document impossible.')
-      });
-    } else if (target.kind === 'agent-document') {
-      this.agentDocumentsService.reject(target.documentId, reason).subscribe({
-        next: (updated) => {
-          this.replaceAgentDocument(updated);
-          ToastHelper.showSuccess(this.messageService, 'Document rejete.');
-        },
-        error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Rejet du document impossible.')
-      });
+      return;
     }
-    this.pendingReject = undefined;
+
+    this.onboardingService.rejectDocument(this.onboarding.id, target.documentId, reason).subscribe({
+      next: (updated) => {
+        this.applyDetail(updated);
+        ToastHelper.showSuccess(this.messageService, 'Document rejete.');
+      },
+      error: (error) => ToastHelper.handleApiError(this.messageService, error, 'Rejet du document impossible.')
+    });
   }
 
-  agentDocSeverity(status?: AgentDocumentStatus): PrimengSeverity {
-    return status === 'VALIDATED' ? 'success'
-         : status === 'REJECTED'  ? 'danger'
-         : 'warn';
-  }
-
-  agentDocStatusLabel(status?: AgentDocumentStatus): string {
-    return status ? this.agentDocStatusLabels[status] : 'En attente';
+  /**
+   * Remplace le dossier affiché en conservant le statut d'invitation, chargé par un appel séparé
+   * et absent des réponses de mutation. Garde aussi la visionneuse synchronisée avec le document
+   * rafraîchi (statut et verdict OCR à jour sans refermer le dialogue).
+   */
+  private applyDetail(updated: OnboardingDetail): void {
+    this.onboarding = { ...updated, invitation: this.onboarding?.invitation };
+    if (this.previewedDocument) {
+      this.previewedDocument = this.documents.find(d => d.id === this.previewedDocument!.id);
+    }
   }
 
   // --- Derived helpers ------------------------------------------------------

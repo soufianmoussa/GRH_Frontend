@@ -46,10 +46,6 @@
           <i class="fa-solid fa-chevron-down nav-group__caret"></i>
         </button>
         <div class="nav-group__body" *ngIf="isOpen('agent-profil')">
-          <a class="nav-item nav-item--sub" routerLink="/Agent" routerLinkActive="is-active">
-            <i class="fa-solid fa-user-tie"></i>
-            <span>{{ 'LAYOUT.SIDEBAR.AGENT' | translate }}</span>
-          </a>
           <a class="nav-item nav-item--sub" routerLink="/myData" routerLinkActive="is-active">
             <i class="fa-solid fa-id-card"></i>
             <span>{{ 'LAYOUT.SIDEBAR.MES_DONNEES_PERSONNELLES' | translate }}</span>
@@ -62,7 +58,9 @@
             <i class="fa-solid fa-gauge-high"></i>
             <span>{{ 'LAYOUT.SIDEBAR.SITUATION_ACTUELLE' | translate }}</span>
           </a>
-          <a class="nav-item nav-item--sub" routerLink="/mon-onboarding" routerLinkActive="is-active">
+          <!-- Parcours a usage unique : disparait une fois le dossier valide par l'administration. -->
+          <a class="nav-item nav-item--sub" routerLink="/mon-onboarding" routerLinkActive="is-active"
+             *ngIf="!isOnboardingCompleted()">
             <i class="fa-solid fa-clipboard-list"></i>
             <span>Mon onboarding</span>
           </a>

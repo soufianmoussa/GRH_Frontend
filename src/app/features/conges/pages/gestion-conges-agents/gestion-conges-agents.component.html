@@ -263,23 +263,36 @@
       <h4 class="documents-title"><i class="pi pi-paperclip"></i> Documents joints</h4>
 
       <div class="documents-list" *ngIf="!loadingDocuments">
-        <div class="document-item" *ngFor="let doc of demandeDocuments">
-          <div class="document-info">
-            <span class="document-name" [pTooltip]="doc.originalFileName" tooltipPosition="top">
-              <i class="pi pi-file"></i> {{ doc.originalFileName }}
-            </span>
-            <div class="document-meta">
-              <p-tag [value]="getCategoryLabel(doc.fileCategory)" [severity]="getCategorySeverity(doc.fileCategory)" [style]="{'font-size': '0.7rem'}"></p-tag>
-              <span class="document-size">{{ formatFileSize(doc.size) }}</span>
-              <span class="document-date">{{ doc.uploadedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+        <div class="document-item document-item--verifiable" *ngFor="let doc of demandeDocuments">
+          <div class="document-row">
+            <div class="document-info">
+              <span class="document-name" [pTooltip]="doc.originalFileName" tooltipPosition="top">
+                <i class="pi pi-file"></i> {{ doc.originalFileName }}
+              </span>
+              <div class="document-meta">
+                <p-tag [value]="getCategoryLabel(doc.fileCategory)" [severity]="getCategorySeverity(doc.fileCategory)" [style]="{'font-size': '0.7rem'}"></p-tag>
+                <span class="document-size">{{ formatFileSize(doc.size) }}</span>
+                <span class="document-date">{{ doc.uploadedAt | date:'dd/MM/yyyy HH:mm' }}</span>
+              </div>
+            </div>
+            <div class="document-actions">
+              <button pButton type="button" icon="pi pi-eye"
+                      class="p-button-rounded p-button-text p-button-success p-button-sm"
+                      pTooltip="Voir" tooltipPosition="top"
+                      (click)="onViewDocument(doc)"></button>
             </div>
           </div>
-          <div class="document-actions">
-            <button pButton type="button" icon="pi pi-eye"
-                    class="p-button-rounded p-button-text p-button-success p-button-sm"
-                    pTooltip="Voir" tooltipPosition="top"
-                    (click)="onViewDocument(doc)"></button>
-          </div>
+
+          <!-- Verification OCR : le justificatif concerne-t-il bien cet agent et cette periode ? -->
+          <app-document-verification-panel
+            [status]="doc.verificationStatus"
+            [checks]="doc.verificationChecks"
+            [message]="doc.verificationMessage"
+            [confidence]="doc.verificationConfidence"
+            [analyzedAt]="doc.verifiedAt"
+            [loading]="verifyingDocumentId === doc.id"
+            (reanalyze)="onVerifyDocument(doc)">
+          </app-document-verification-panel>
         </div>
 
         <div class="documents-empty" *ngIf="demandeDocuments.length === 0">

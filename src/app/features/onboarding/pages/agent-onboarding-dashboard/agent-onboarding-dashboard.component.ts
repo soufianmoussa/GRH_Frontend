@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../../../core/auth/auth.service';
 import { ButtonModule } from 'primeng/button';
 import { MessageService } from 'primeng/api';
 import { ProgressBarModule } from 'primeng/progressbar';
@@ -65,7 +66,9 @@ export class AgentOnboardingDashboardComponent implements OnInit {
 
   constructor(
     private onboardingService: AgentOnboardingService,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private authService: AuthService,
+    private router: Router
   ) {}
 
   ngOnInit(): void {
@@ -78,6 +81,13 @@ export class AgentOnboardingDashboardComponent implements OnInit {
       next: (onboarding) => {
         this.onboarding = onboarding;
         this.loading = false;
+        // Le statut memorise a la connexion peut dater d'avant la validation par
+        // l'administration. On le realigne sur le dossier reel : le menu se met a jour,
+        // et si l'integration vient de s'achever cet ecran n'a plus lieu d'etre.
+        this.authService.updateOnboardingStatus(onboarding.status);
+        if (this.authService.isOnboardingCompleted()) {
+          this.router.navigate(['/accueil']);
+        }
       },
       error: (error) => {
         this.loading = false;
